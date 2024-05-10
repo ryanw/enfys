@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<style>
+			html, body {
+				display: flex;
+				flex-direction: column;
+				justify-content: strent;
+				height: 100%;
+			}
+			#app {
+				border: 6px inset black;
+				flex: 1;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app"> </div>
+		<script type="module">
+			const { main } = await import('./bundle.js');
+			main('#app')
+		</script>
+	</body>
+</html>
+

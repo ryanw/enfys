@@ -1,0 +1,6 @@
+{
+	"entryPoints": ["./src/engines/index.ts"],
+	"exclude": ["src/**/*.test.ts"],
+	"excludeExternals": true,
+	"out": "public/docs"
+}
