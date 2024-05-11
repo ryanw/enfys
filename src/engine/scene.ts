@@ -1,7 +1,16 @@
-import { Color, GBuffer } from "engine";
-import { Mesh, PointVertex } from "./mesh";
+import { Color, GBuffer, Gfx } from "engine";
+import { Mesh } from "./mesh";
+import { Point2, Point3, Vector3, } from "./math";
 
-export type SimpleMesh = Mesh<PointVertex>;
+export type TexVertex = { position: Point3, normal: Vector3, uv: Point2 }
+
+export class SimpleMesh extends Mesh<TexVertex> {
+	attributeOrder: Array<keyof TexVertex> = ["position", "normal", "uv"];
+	constructor(gfx: Gfx, vertices: Array<TexVertex>) {
+		super(gfx);
+		this.uploadVertices(vertices);
+	}
+}
 
 export interface Drawable {
 	draw(encoder: GPUCommandEncoder, scene: Scene, target: GBuffer): void;
@@ -11,7 +20,7 @@ export interface Drawable {
  * Contains all GPU resources that can be rendered in a scene
  */
 export default class Scene {
-	clearColor: Color = [100, 10, 200, 255];
+	clearColor: Color = [70, 10, 130, 255];
 	drawables: Array<Drawable> = [];
 	meshes: Array<SimpleMesh> = [];
 

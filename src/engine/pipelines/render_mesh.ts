@@ -3,15 +3,26 @@ import Pipeline from '../pipeline';
 import shaderSource from './render_mesh.wgsl';
 import { SimpleMesh } from 'engine/scene';
 import { Camera } from 'engine/camera';
-import { multiply, rotation, translation } from 'engine/math/transform';
+import { identity, multiply, rotation, translation } from 'engine/math/transform';
 
 const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
 	attributes: [{
+		// Position
 		shaderLocation: 0,
 		offset: 0,
-		format: 'float32x4'
+		format: 'float32x3'
+	},{
+		// Normal
+		shaderLocation: 1,
+		offset: 12,
+		format: 'float32x3'
+	},{
+		// UV
+		shaderLocation: 2,
+		offset: 24,
+		format: 'float32x2'
 	}],
-	arrayStride: 16,
+	arrayStride: 32,
 }];
 
 /**
@@ -77,8 +88,8 @@ export default class RenderMeshPipeline extends Pipeline {
 			...target.size,
 			performance.now() / 1000.0,
 		]));
-		// FIXME source fro mesh
-		const model = rotation(performance.now() / 300.0, performance.now() / 200.0, 0);
+		// FIXME source from mesh
+		const model = rotation(performance.now() / 3000.0, performance.now() / 2000.0, 0);
 		device.queue.writeBuffer(this.entityBuffer, 0, new Float32Array(model));
 
 		const passDescriptor: GPURenderPassDescriptor = {

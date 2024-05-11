@@ -10,12 +10,15 @@ struct Entity {
 }
 
 struct VertexIn {
-	@location(0) position: vec4f,
+	@location(0) position: vec3f,
+	@location(1) normal: vec3f,
+	@location(2) uv: vec2f,
 }
 
 struct VertexOut {
 	@builtin(position) position: vec4f,
 	@location(0) uv: vec2f,
+	@location(1) normal: vec3f,
 }
 
 @group(0) @binding(0)
@@ -30,9 +33,9 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 	let vp = camera.projection * camera.view;
 	let mvp = vp * entity.model;
-	out.position = mvp * in.position;
-	//out.position = pv * in.position;
+	out.position = mvp * vec4(in.position, 1.0);
 	out.uv = in.position.xy * 0.5 + 0.5;
+	out.normal = (entity.model * vec4(in.normal, 0.0)).xyz;
 
 	return out;
 }
@@ -40,5 +43,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	return vec4(in.uv, 0.0, 1.0);
+	var lightDir = normalize(vec3(-0.3, -0.1, 0.6));
+	var color = vec4(0.3, 0.8, 0.1, 1.0);
+	var shade = dot(lightDir, in.normal);
+	return vec4(color.rgb * shade, color.a);
 }
