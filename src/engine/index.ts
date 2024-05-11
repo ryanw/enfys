@@ -1,19 +1,21 @@
-import { GBuffer } from "./gbuffer";
-import { Vector2, Vector4 } from "./math";
-import ComposePipeline from "./pipelines/compose";
+import { GBuffer } from './gbuffer';
+import { Vector2, Vector4 } from './math';
+import ComposePipeline from './pipelines/compose';
+import Renderer from './renderer';
+import Scene from './scene';
 
-export { GBuffer };
-export * as math from "./math";
+export { GBuffer, Scene, Renderer };
+export * as math from './math';
 
 export type Color = Vector4;
 export type Size = Vector2;
 
 export class Gfx {
-	public clearColor: Color = [0, 0, 0, 0];
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
 	private composePipeline: ComposePipeline;
+	private renderer: Renderer;
 
 	/**
 	 * Initialise the WebGPU Context and return a new Gfx instance
@@ -44,6 +46,8 @@ export class Gfx {
 		this.gbuffer = new GBuffer(this);
 		this.updateSize();
 
+		this.renderer = new Renderer(this);
+
 		const resizeObserver = new ResizeObserver(() => this.updateSize());
 		resizeObserver.observe(this.canvas);
 
@@ -57,6 +61,33 @@ export class Gfx {
 		const w = this.canvas.clientWidth;
 		const h = this.canvas.clientHeight;
 		return [w, h];
+	}
+
+	/**
+	 * Updates the HTMLCanvasElement's width and height attributes to match its actual rendered pixel size
+	 */
+	updateSize() {
+		const [w, h] = this.size;
+		this.canvas.setAttribute('width', w.toString());
+		this.canvas.setAttribute('height', h.toString());
+	}
+
+	async draw(scene: Scene) {
+		this.gbuffer.size = this.size;
+		await this.encode(async (encoder) => {
+			this.renderer.drawScene(encoder, scene, this.gbuffer);
+			this.composePipeline.compose(encoder, this.gbuffer, this.currentTexture);
+		});
+	}
+
+	/**
+	 * Create and submit a GPUCommandEncoder filled using an async callback
+	 */
+	async encode(callback: (encoder: GPUCommandEncoder) => Promise<void>) {
+		const { device } = this;
+		const encoder = device.createCommandEncoder();
+		await callback(encoder);
+		device.queue.submit([encoder.finish()]);
 	}
 
 	createTexture(format: GPUTextureFormat, size: GPUExtent3DStrict = [1, 1], label?: string): GPUTexture {
@@ -78,53 +109,8 @@ export class Gfx {
 		});
 	}
 
-	/**
-	 * Updates the HTMLCanvasElement's width and height attributes to match its actual rendered pixel size
-	 */
-	updateSize() {
-		const [w, h] = this.size;
-		this.canvas.setAttribute('width', w.toString());
-		this.canvas.setAttribute('height', h.toString());
-	}
-
-	async draw() {
-		this.gbuffer.size = this.size;
-		await this.encode(async (enc) => {
-			this.composePipeline.compose(enc, this.currentTexture, this.gbuffer);
-			this.clear(enc);
-		});
-	}
-
-	clear(encoder: GPUCommandEncoder) {
-		const [r, g, b, a] = this.clearColor.map(v => v / 255.0);
-		const clearValue = { r, g, b, a };
-		const albedoView = this.gbuffer.albedo.createView();
-		const depthView = this.gbuffer.depth.createView();
-
-		encoder.beginRenderPass({
-			colorAttachments: [{
-				view: albedoView,
-				clearValue,
-				loadOp: 'clear',
-				storeOp: 'store',
-			}],
-			depthStencilAttachment: {
-				view: depthView,
-				depthClearValue: 1.0,
-				depthLoadOp: 'clear',
-				depthStoreOp: 'store',
-			}
-		}).end();
-	}
-
-	/**
-	 * Create and submit a GPUCommandEncoder filled using an async callback
-	 */
-	async encode(callback: (encoder: GPUCommandEncoder) => Promise<void>) {
-		const { device } = this;
-		const encoder = device.createCommandEncoder();
-		await callback(encoder);
-		device.queue.submit([encoder.finish()]);
+	createBuffer(size: number, usage: GPUBufferUsageFlags): GPUBuffer {
+		return this.device.createBuffer({ size, usage });
 	}
 }
 

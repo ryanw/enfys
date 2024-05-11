@@ -1,20 +1,30 @@
 import { GBuffer, Gfx } from 'engine';
 import Pipeline from '../pipeline';
-import shaderSource from './compose.wgsl';
+import shaderSource from './render_mesh.wgsl';
+import { SimpleMesh } from 'engine/scene';
+
+const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
+	attributes: [{
+		shaderLocation: 0,
+		offset: 0,
+		format: 'float32x4'
+	}],
+	arrayStride: 16,
+}];
 
 /**
- * Composes a GBuffer into a single GPUTexture
+ * Pipeline to render Meshes to a GBuffer
  */
-export default class ComposePipeline extends Pipeline {
+export default class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
 	private uniformBuffer: GPUBuffer;
 
-	constructor(gfx: Gfx, format?: GPUTextureFormat) {
+	constructor(gfx: Gfx) {
 		super(gfx);
 
 		const { device } = gfx;
 
-		const shader = device.createShaderModule({ label: 'ComposePipeline Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: shaderSource });
 
 		const bindGroupLayout = device.createBindGroupLayout({
 			entries: [
@@ -23,11 +33,6 @@ export default class ComposePipeline extends Pipeline {
 					visibility: GPUShaderStage.VERTEX,
 					buffer: {}
 				},
-				{
-					binding: 1,
-					visibility: GPUShaderStage.FRAGMENT,
-					texture: {}
-				}
 			]
 		});
 		const pipelineLayout = device.createPipelineLayout({
@@ -35,10 +40,10 @@ export default class ComposePipeline extends Pipeline {
 		});
 
 		this.pipeline = device.createRenderPipeline({
-			label: 'ComposePipeline',
+			label: 'RenderMeshPipeline',
 			layout: pipelineLayout,
-			vertex: { module: shader, entryPoint: 'vs_main' },
-			fragment: { module: shader, entryPoint: 'fs_main', targets: [{ format: format || gfx.format }] },
+			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
+			fragment: { module: shader, entryPoint: 'fs_main', targets: [{ format: 'rgba8unorm' }] },
 			primitive: { topology: 'triangle-strip' },
 		});
 
@@ -48,10 +53,10 @@ export default class ComposePipeline extends Pipeline {
 		});
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, target: GPUTexture) {
+	draw(encoder: GPUCommandEncoder, src: SimpleMesh, target: GBuffer) {
 		const { device } = this.gfx;
 
-		const view = target.createView();
+		const view = target.albedo.createView();
 		device.queue.writeBuffer(this.uniformBuffer, 0, new Float32Array([performance.now() / 1000.0]));
 
 		const passDescriptor: GPURenderPassDescriptor = {
@@ -66,19 +71,20 @@ export default class ComposePipeline extends Pipeline {
 		};
 
 		const bindGroup = device.createBindGroup({
-			label: 'ComposePipeline Bind Group',
+			label: 'RenderMeshPipeline Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: { buffer: this.uniformBuffer } },
-				{ binding: 1, resource: src.albedo.createView() },
 			],
 		});
 
 
 		const pass = encoder.beginRenderPass(passDescriptor);
 		pass.setPipeline(this.pipeline);
+		pass.setVertexBuffer(0, src.buffer);
 		pass.setBindGroup(0, bindGroup);
-		pass.draw(4, 1, 0, 0);
+		pass.draw(src.count, 1, 0, 0);
 		pass.end();
 	}
 }
+

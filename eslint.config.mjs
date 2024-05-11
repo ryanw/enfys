@@ -4,11 +4,13 @@ import tseslint from "typescript-eslint";
 
 
 export default [
-	{ languageOptions: { globals: globals.browser } },
 	pluginJs.configs.recommended,
 	...tseslint.configs.recommended,
 	{
-		"rules": {
+		languageOptions: {
+			globals: globals.browser
+		},
+		rules: {
 			"indent": [
 				"error",
 				"tab"
@@ -34,5 +36,5 @@ export default [
 				{ "checkLoops": false }
 			]
 		}
-	}
+	},
 ];

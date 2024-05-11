@@ -1,11 +1,11 @@
-import { Gfx, Size } from "engine";
+import { Gfx, Size } from 'engine';
 
 export const DEPTH_FORMAT: GPUTextureFormat = 'depth16unorm';
 
 export class GBuffer {
-	private _size: Size = [1, 1];
 	albedo!: GPUTexture;
 	depth!: GPUTexture;
+	private _size: Size = [1, 1];
 
 	constructor(readonly gfx: Gfx, size: Size = [0, 0]) {
 		this.size = size;
