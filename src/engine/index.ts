@@ -1,3 +1,4 @@
+import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { Vector2, Vector4 } from './math';
 import ComposePipeline from './pipelines/compose';
@@ -11,6 +12,7 @@ export type Color = Vector4;
 export type Size = Vector2;
 
 export class Gfx {
+	pixelRatio: number = 1/4;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
@@ -72,10 +74,10 @@ export class Gfx {
 		this.canvas.setAttribute('height', h.toString());
 	}
 
-	async draw(scene: Scene) {
-		this.gbuffer.size = this.size;
+	async draw(scene: Scene, camera: Camera) {
+		this.gbuffer.size = this.size.map(v => v * this.pixelRatio) as Vector2;
 		await this.encode(async (encoder) => {
-			this.renderer.drawScene(encoder, scene, this.gbuffer);
+			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
 			this.composePipeline.compose(encoder, this.gbuffer, this.currentTexture);
 		});
 	}

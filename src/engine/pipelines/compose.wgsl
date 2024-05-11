@@ -11,6 +11,9 @@ struct Uniforms {
 var<uniform> u: Uniforms;
 
 @group(0) @binding(1)
+var colorSampler: sampler;
+
+@group(0) @binding(2)
 var albedo: texture_2d<f32>;
 
 @vertex
@@ -34,6 +37,6 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let coord = vec2<u32>(in.position.xy);
-	var albedo = textureLoad(albedo, coord, 0);
+	var albedo = textureSample(albedo, colorSampler, in.uv);
 	return albedo;
 }

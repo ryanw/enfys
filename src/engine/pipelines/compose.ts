@@ -8,6 +8,7 @@ import shaderSource from './compose.wgsl';
 export default class ComposePipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
 	private uniformBuffer: GPUBuffer;
+	private sampler: GPUSampler;
 
 	constructor(gfx: Gfx, format?: GPUTextureFormat) {
 		super(gfx);
@@ -25,6 +26,11 @@ export default class ComposePipeline extends Pipeline {
 				},
 				{
 					binding: 1,
+					visibility: GPUShaderStage.FRAGMENT,
+					sampler: {}
+				},
+				{
+					binding: 2,
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: {}
 				}
@@ -45,6 +51,18 @@ export default class ComposePipeline extends Pipeline {
 		this.uniformBuffer = device.createBuffer({
 			size: 4,
 			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+		});
+
+		this.sampler = device.createSampler({
+			addressModeU: 'clamp-to-edge',
+			addressModeV: 'clamp-to-edge',
+			addressModeW: 'clamp-to-edge',
+			magFilter: 'nearest',
+			minFilter: 'linear',
+			mipmapFilter: 'linear',
+			lodMinClamp: 0,
+			lodMaxClamp: 1000,
+			maxAnisotropy: 1,
 		});
 	}
 
@@ -70,7 +88,8 @@ export default class ComposePipeline extends Pipeline {
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: { buffer: this.uniformBuffer } },
-				{ binding: 1, resource: src.albedo.createView() },
+				{ binding: 1, resource: this.sampler },
+				{ binding: 2, resource: src.albedo.createView() },
 			],
 		});
 

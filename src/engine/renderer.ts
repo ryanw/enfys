@@ -2,6 +2,7 @@ import { Color, GBuffer, Gfx } from "engine";
 import Scene from "./scene";
 import ComposePipeline from "./pipelines/compose";
 import RenderMeshPipeline from "./pipelines/render_mesh";
+import { Camera } from "./camera";
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -15,10 +16,12 @@ export default class Renderer {
 		this.pipelines = createRenderPipelines(gfx);
 	}
 
-	drawScene(encoder: GPUCommandEncoder, scene: Scene, target: GBuffer) {
+	drawScene(encoder: GPUCommandEncoder, scene: Scene, camera: Camera, target: GBuffer) {
+		const [w, h] = target.size;
+		camera.aspect = w / h;
 		this.clear(encoder, scene.clearColor, target);
 		for (const mesh of scene.meshes) {
-			this.pipelines.mesh.draw(encoder, mesh, target)
+			this.pipelines.mesh.draw(encoder, mesh, camera, target)
 		}
 	}
 

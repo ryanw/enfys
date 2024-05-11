@@ -2,6 +2,8 @@ import { GBuffer, Gfx } from 'engine';
 import Pipeline from '../pipeline';
 import shaderSource from './render_mesh.wgsl';
 import { SimpleMesh } from 'engine/scene';
+import { Camera } from 'engine/camera';
+import { multiply, rotation, translation } from 'engine/math/transform';
 
 const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
 	attributes: [{
@@ -17,7 +19,9 @@ const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
  */
 export default class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
-	private uniformBuffer: GPUBuffer;
+	// FIXME replace with ring buffers
+	private cameraBuffer: GPUBuffer;
+	private entityBuffer: GPUBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -26,17 +30,22 @@ export default class RenderMeshPipeline extends Pipeline {
 
 		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: shaderSource });
 
-		const bindGroupLayout = device.createBindGroupLayout({
+		const cameraBindGroupLayout = device.createBindGroupLayout({
 			entries: [
 				{
 					binding: 0,
-					visibility: GPUShaderStage.VERTEX,
+					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+					buffer: {}
+				},
+				{
+					binding: 1,
+					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
 			]
 		});
 		const pipelineLayout = device.createPipelineLayout({
-			bindGroupLayouts: [bindGroupLayout],
+			bindGroupLayouts: [cameraBindGroupLayout],
 		});
 
 		this.pipeline = device.createRenderPipeline({
@@ -44,20 +53,33 @@ export default class RenderMeshPipeline extends Pipeline {
 			layout: pipelineLayout,
 			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
 			fragment: { module: shader, entryPoint: 'fs_main', targets: [{ format: 'rgba8unorm' }] },
-			primitive: { topology: 'triangle-strip' },
+			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
 		});
 
-		this.uniformBuffer = device.createBuffer({
-			size: 4,
+		this.cameraBuffer = device.createBuffer({
+			size: 256,
+			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+		});
+		this.entityBuffer = device.createBuffer({
+			size: 256,
 			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
 		});
 	}
 
-	draw(encoder: GPUCommandEncoder, src: SimpleMesh, target: GBuffer) {
+	draw(encoder: GPUCommandEncoder, src: SimpleMesh, camera: Camera, target: GBuffer) {
 		const { device } = this.gfx;
 
 		const view = target.albedo.createView();
-		device.queue.writeBuffer(this.uniformBuffer, 0, new Float32Array([performance.now() / 1000.0]));
+		device.queue.writeBuffer(this.cameraBuffer, 0, new Float32Array([
+			// struct Camera
+			...camera.view,
+			...camera.projection,
+			...target.size,
+			performance.now() / 1000.0,
+		]));
+		// FIXME source fro mesh
+		const model = rotation(performance.now() / 300.0, performance.now() / 200.0, 0);
+		device.queue.writeBuffer(this.entityBuffer, 0, new Float32Array(model));
 
 		const passDescriptor: GPURenderPassDescriptor = {
 			colorAttachments: [
@@ -74,7 +96,8 @@ export default class RenderMeshPipeline extends Pipeline {
 			label: 'RenderMeshPipeline Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
-				{ binding: 0, resource: { buffer: this.uniformBuffer } },
+				{ binding: 0, resource: { buffer: this.cameraBuffer } },
+				{ binding: 1, resource: { buffer: this.entityBuffer } },
 			],
 		});
 
@@ -83,7 +106,7 @@ export default class RenderMeshPipeline extends Pipeline {
 		pass.setPipeline(this.pipeline);
 		pass.setVertexBuffer(0, src.buffer);
 		pass.setBindGroup(0, bindGroup);
-		pass.draw(src.count, 1, 0, 0);
+		pass.draw(src.count);
 		pass.end();
 	}
 }

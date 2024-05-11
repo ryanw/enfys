@@ -1,5 +1,6 @@
 {
 	"name": "coeden",
+	"author": "Ryan Williams <git@ryan.nz>",
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.ts",
@@ -11,7 +12,6 @@
 		"lint": "eslint -c eslint.config.mjs src",
 		"docs": "typedoc src/engine/index.ts --plugin typedoc-plugin-missing-exports"
 	},
-	"author": "",
 	"license": "ISC",
 	"devDependencies": {
 		"@eslint/js": "^9.2.0",

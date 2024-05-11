@@ -1,5 +1,5 @@
 import { Gfx } from "engine";
-import { Point4 } from "./math";
+import { Point3, Point4 } from "./math";
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
@@ -88,13 +88,68 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 
 export type PointVertex = { position: Point4 };
 
+export class Cube extends Mesh<PointVertex> {
+	constructor(gfx: Gfx) {
+		super(gfx, CUBE_VERTS.map(position => ({ position: [...position, 1.0] })));
+	}
+}
+
 export class Tri extends Mesh<PointVertex> {
 	constructor(gfx: Gfx) {
 		super(gfx, [
 			{ position: [-1, -1, 0, 1] },
-			{ position: [ 0,  1, 0, 1] },
-			{ position: [ 1, -1, 0, 1] },
+			{ position: [0, 1, 0, 1] },
+			{ position: [1, -1, 0, 1] },
 		]);
 	}
 }
 
+const CUBE_VERTS: Array<Point3> = [
+	[-1, -1, 1],
+	[1, -1, 1],
+	[1, 1, 1],
+
+	[-1, -1, 1],
+	[1, 1, 1],
+	[-1, 1, 1],
+
+	[1, -1, 1],
+	[1, -1, -1],
+	[1, 1, -1],
+
+	[1, -1, 1],
+	[1, 1, -1],
+	[1, 1, 1],
+
+	[1, -1, -1],
+	[-1, -1, -1],
+	[-1, 1, -1],
+
+	[1, -1, -1],
+	[-1, 1, -1],
+	[1, 1, -1],
+
+	[-1, -1, -1],
+	[-1, -1, 1],
+	[-1, 1, 1],
+
+	[-1, -1, -1],
+	[-1, 1, 1],
+	[-1, 1, -1],
+
+	[-1, 1, 1],
+	[1, 1, 1],
+	[1, 1, -1],
+
+	[-1, 1, 1],
+	[1, 1, -1],
+	[-1, 1, -1],
+
+	[1, -1, 1],
+	[-1, -1, -1],
+	[1, -1, -1],
+
+	[1, -1, 1],
+	[-1, -1, 1],
+	[-1, -1, -1]
+];
