@@ -3,7 +3,7 @@ import { Gfx, Size } from "engine";
 export const DEPTH_FORMAT: GPUTextureFormat = 'depth16unorm';
 
 export class GBuffer {
-	_size: Size = [1, 1];
+	private _size: Size = [1, 1];
 	albedo!: GPUTexture;
 	depth!: GPUTexture;
 
@@ -23,7 +23,7 @@ export class GBuffer {
 		if (this._size[0] < 1 || this._size[1] < 1) {
 			return;
 		}
-		this.albedo = this.gfx.createTexture('rgba16float', this.size, 'Line GBuffer Albedo Texture');
-		this.depth = this.gfx.createTexture('depth32float', this.size, 'Line GBuffer Depth Texture');
+		this.albedo = this.gfx.createTexture('rgba8unorm', this.size, 'GBuffer Albedo Texture');
+		this.depth = this.gfx.createTexture('depth32float', this.size, 'GBuffer Depth Texture');
 	}
 }

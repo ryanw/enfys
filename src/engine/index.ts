@@ -1,14 +1,19 @@
 import { GBuffer } from "./gbuffer";
 import { Vector2, Vector4 } from "./math";
+import ComposePipeline from "./pipelines/compose";
+
+export { GBuffer };
+export * as math from "./math";
 
 export type Color = Vector4;
 export type Size = Vector2;
 
 export class Gfx {
+	public clearColor: Color = [0, 0, 0, 0];
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
-	private _clearColor: Color = [0, 0, 0, 0];
+	private composePipeline: ComposePipeline;
 
 	/**
 	 * Initialise the WebGPU Context and return a new Gfx instance
@@ -34,6 +39,7 @@ export class Gfx {
 			format: this.format,
 			alphaMode: 'premultiplied',
 		});
+		this.composePipeline = new ComposePipeline(this);
 
 		this.gbuffer = new GBuffer(this);
 		this.updateSize();
@@ -41,14 +47,6 @@ export class Gfx {
 		const resizeObserver = new ResizeObserver(() => this.updateSize());
 		resizeObserver.observe(this.canvas);
 
-	}
-
-	get clearColor(): Color {
-		return [...this._clearColor];
-	}
-
-	set clearColor(color: Color) {
-		this._clearColor = color;
 	}
 
 	get currentTexture(): GPUTexture {
@@ -63,25 +61,13 @@ export class Gfx {
 
 	createTexture(format: GPUTextureFormat, size: GPUExtent3DStrict = [1, 1], label?: string): GPUTexture {
 		const device = this.device;
-		let usage =
-			GPUTextureUsage.TEXTURE_BINDING |
-			GPUTextureUsage.COPY_DST;
+		let usage = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
 
-		switch (format) {
-			case 'rgba8unorm':
-			case 'rgba8uint':
-			case 'r32float': {
-				usage |= GPUTextureUsage.STORAGE_BINDING;
-				break;
-			}
-
-			case 'rgba8unorm':
-			case 'rgba8snorm':
-			case 'rgba16float':
-			case 'rgba32float':
-			case 'depth32float':
-				usage |= GPUTextureUsage.RENDER_ATTACHMENT;
-				break;
+		if (['rgba8unorm', 'rgba8uint', 'r32float'].includes(format)) {
+			usage |= GPUTextureUsage.STORAGE_BINDING;
+		}
+		if (['rgba8unorm', 'rgba8snorm', 'rgba16float', 'rgba32float', 'depth32float'].includes(format)) {
+			usage |= GPUTextureUsage.RENDER_ATTACHMENT;
 		}
 
 		return device.createTexture({
@@ -102,15 +88,16 @@ export class Gfx {
 	}
 
 	async draw() {
-		//this.gbuffer.size = this.size;
-		// FIXME temp hack
-		this.gbuffer.size = [this.currentTexture.width, this.currentTexture.height];
-		this.gbuffer.albedo = this.currentTexture;
-		await this.encode(async (enc) => this.clear(enc));
+		this.gbuffer.size = this.size;
+		await this.encode(async (enc) => {
+			this.composePipeline.compose(enc, this.currentTexture, this.gbuffer);
+			this.clear(enc);
+		});
 	}
 
 	clear(encoder: GPUCommandEncoder) {
-		const clearValue = { r: 0.4, g: 0.1, b: 0.5, a: 1.0 };
+		const [r, g, b, a] = this.clearColor.map(v => v / 255.0);
+		const clearValue = { r, g, b, a };
 		const albedoView = this.gbuffer.albedo.createView();
 		const depthView = this.gbuffer.depth.createView();
 
