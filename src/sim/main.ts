@@ -4,6 +4,7 @@ import { Camera } from 'engine/camera';
 import Scene, { SimpleMesh, TexVertex } from 'engine/scene';
 import { cross, normalize, subtract } from 'engine/math/vectors';
 import { Point2, Point3, Vector3 } from 'engine/math';
+import { rotation } from 'engine/math/transform';
 
 export async function main(el: HTMLCanvasElement) {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
@@ -25,6 +26,7 @@ export async function main(el: HTMLCanvasElement) {
 
 	async function draw() {
 		await gfx.draw(scene, camera);
+		shape.transform = rotation(performance.now() / 3000.0, performance.now() / 2000.0, 0);
 		requestAnimationFrame(draw);
 	}
 	await draw();

@@ -1,7 +1,6 @@
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { Vector2, Vector4 } from './math';
-import ComposePipeline from './pipelines/compose';
 import Renderer from './renderer';
 import Scene from './scene';
 

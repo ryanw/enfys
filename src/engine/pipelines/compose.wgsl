@@ -25,6 +25,13 @@ var normalTex: texture_2d<f32>;
 @group(0) @binding(5)
 var depthTex: texture_2d<f32>;
 
+const ditherMatrix = mat4x4(
+	0.0000, 0.5000, 0.1250, 0.6250,
+	0.7500, 0.2500, 0.8750, 0.3750,
+	0.1875, 0.6875, 0.0625, 0.5625,
+	0.9375, 0.4375, 0.8125, 0.3125
+);
+
 @vertex
 fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 	var out: VertexOut;
@@ -45,6 +52,8 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
+	let pixelSize = 4;
+
 	let albedo = textureSample(albedoTex, colorSampler, in.uv);
 
 	let posSize = vec2f(textureDimensions(positionTex));
@@ -61,13 +70,16 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 	let lightPos = vec3(sin(u.t) * 8.0, 2.0, -3.0);
 	let lightDir = normalize(pos - lightPos);
-	let shade = dot(normal, lightDir);
-	let brightness = 0.5 + shade;
-	var color = vec4(albedo.rgb * brightness, 1.0) * albedo;
+	let shade = dot(normal, lightDir) + 0.1;
 
-	if color.a == 0.0 {
-		discard;
-	}
+
+	let shadeLevels = 3.0;
+	let div = f32(pixelSize);
+	let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
+	let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
+	let brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
+
+	var color = vec4(albedo.rgb * brightness, 1.0) * albedo;
 
 	return color;
 }

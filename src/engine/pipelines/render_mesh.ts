@@ -89,14 +89,12 @@ export default class RenderMeshPipeline extends Pipeline {
 
 	draw(encoder: GPUCommandEncoder, src: SimpleMesh, camera: Camera, target: GBuffer) {
 		const { device } = this.gfx;
-		// FIXME test rotation
-		const model = rotation(performance.now() / 3000.0, performance.now() / 2000.0, 0);
-		const entityId = this.entityBuffer.push(new Float32Array(model));
 
 		const positionView = target.position.createView();
 		const albedoView = target.albedo.createView();
 		const normalView = target.normal.createView();
 		const depthView = target.depth.createView();
+		const entityId = this.entityBuffer.push(new Float32Array(src.transform));
 		const cameraId = this.cameraBuffer.push(new Float32Array([
 			// struct Camera
 			...camera.view,
@@ -105,29 +103,16 @@ export default class RenderMeshPipeline extends Pipeline {
 			performance.now() / 1000.0,
 		]));
 
+		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
+			clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+			loadOp: 'load',
+			storeOp: 'store',
+		};
 		const passDescriptor: GPURenderPassDescriptor = {
 			colorAttachments: [
-				// Position
-				{
-					view: positionView,
-					clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-					loadOp: 'load',
-					storeOp: 'store',
-				},
-				// Albedo
-				{
-					view: albedoView,
-					clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-					loadOp: 'load',
-					storeOp: 'store',
-				},
-				// Normal
-				{
-					view: normalView,
-					clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-					loadOp: 'load',
-					storeOp: 'store',
-				},
+				{ view: positionView, ...baseAttachment },
+				{ view: albedoView, ...baseAttachment },
+				{ view: normalView, ...baseAttachment },
 			],
 			depthStencilAttachment: {
 				view: depthView,
@@ -151,7 +136,7 @@ export default class RenderMeshPipeline extends Pipeline {
 		pass.setPipeline(this.pipeline);
 		pass.setVertexBuffer(0, src.buffer);
 		pass.setBindGroup(0, bindGroup);
-		pass.draw(src.count);
+		pass.draw(src.vertexCount);
 		pass.end();
 	}
 }
