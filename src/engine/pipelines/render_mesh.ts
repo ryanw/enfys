@@ -1,9 +1,8 @@
 import { GBuffer, Gfx } from 'engine';
 import Pipeline from '../pipeline';
 import shaderSource from './render_mesh.wgsl';
-import { SimpleMesh } from 'engine/scene';
+import { Drawable, SimpleMesh } from 'engine/scene';
 import { Camera } from 'engine/camera';
-import { rotation } from 'engine/math/transform';
 import { RingBuffer } from 'engine/ring_buffer';
 
 const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
@@ -33,6 +32,7 @@ export default class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
 	private cameraBuffer: RingBuffer;
 	private entityBuffer: RingBuffer;
+	private materialBuffer: RingBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -43,13 +43,21 @@ export default class RenderMeshPipeline extends Pipeline {
 
 		const cameraBindGroupLayout = device.createBindGroupLayout({
 			entries: [
+				// Camera
 				{
 					binding: 0,
 					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
+				// Entity
 				{
 					binding: 1,
+					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+					buffer: {}
+				},
+				// Material
+				{
+					binding: 2,
 					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
@@ -83,25 +91,34 @@ export default class RenderMeshPipeline extends Pipeline {
 			}
 		});
 
+		this.materialBuffer = new RingBuffer(gfx, 1024);
 		this.entityBuffer = new RingBuffer(gfx, 1024);
 		this.cameraBuffer = new RingBuffer(gfx, 1024);
 	}
 
-	draw(encoder: GPUCommandEncoder, src: SimpleMesh, camera: Camera, target: GBuffer) {
+	draw(encoder: GPUCommandEncoder, src: Drawable<SimpleMesh>, camera: Camera, target: GBuffer) {
 		const { device } = this.gfx;
 
 		const positionView = target.position.createView();
 		const albedoView = target.albedo.createView();
 		const normalView = target.normal.createView();
 		const depthView = target.depth.createView();
-		const entityId = this.entityBuffer.push(new Float32Array(src.transform));
-		const cameraId = this.cameraBuffer.push(new Float32Array([
-			// struct Camera
-			...camera.view,
-			...camera.projection,
-			...target.size,
-			performance.now() / 1000.0,
-		]));
+
+		const materialId = this.materialBuffer.push(
+			new Float32Array(src.material.toArrayBuffer())
+		);
+		const entityId = this.entityBuffer.push(
+			new Float32Array(src.transform)
+		);
+		const cameraId = this.cameraBuffer.push(
+			new Float32Array([
+				// struct Camera
+				...camera.view,
+				...camera.projection,
+				...target.size,
+				performance.now() / 1000.0,
+			])
+		);
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
 			clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
@@ -128,15 +145,16 @@ export default class RenderMeshPipeline extends Pipeline {
 			entries: [
 				{ binding: 0, resource: this.cameraBuffer.bindingResource(cameraId) },
 				{ binding: 1, resource: this.entityBuffer.bindingResource(entityId) },
+				{ binding: 2, resource: this.materialBuffer.bindingResource(materialId) },
 			],
 		});
 
 
 		const pass = encoder.beginRenderPass(passDescriptor);
 		pass.setPipeline(this.pipeline);
-		pass.setVertexBuffer(0, src.buffer);
+		pass.setVertexBuffer(0, src.object.buffer);
 		pass.setBindGroup(0, bindGroup);
-		pass.draw(src.vertexCount);
+		pass.draw(src.object.vertexCount);
 		pass.end();
 	}
 }

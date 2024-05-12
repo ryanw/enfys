@@ -52,7 +52,7 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	let pixelSize = 3;
+	let pixelSize = 4;
 
 	let albedo = textureSample(albedoTex, colorSampler, in.uv);
 
@@ -70,14 +70,14 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 	let lightPos = vec3(sin(u.t) * 8.0, 2.0, -3.0);
 	let lightDir = normalize(pos - lightPos);
-	let shade = dot(normal, lightDir) * 0.5 + 0.55;
+	let shade = dot(normal, lightDir) * 0.5 + 0.5;
 
 
 	let shadeLevels = 3.0;
 	let div = f32(pixelSize);
 	let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
 	let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
-	let brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0) / 1.7;
+	let brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
 
 	var color = albedo * pow(brightness, 1.5);
 

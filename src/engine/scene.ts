@@ -1,6 +1,7 @@
 import { Color, GBuffer, Gfx } from "engine";
 import { Mesh } from "./mesh";
-import { Point2, Point3, Vector3, } from "./math";
+import { Matrix4, Point2, Point3, Vector3, } from "./math";
+import { Material } from "./material";
 
 export type TexVertex = { position: Point3, normal: Vector3, uv: Point2 }
 
@@ -12,8 +13,10 @@ export class SimpleMesh extends Mesh<TexVertex> {
 	}
 }
 
-export interface Drawable {
-	draw(encoder: GPUCommandEncoder, scene: Scene, target: GBuffer): void;
+export interface Drawable<T> {
+	object: T;
+	transform: Matrix4;
+	material: Material;
 }
 
 /**
@@ -21,14 +24,9 @@ export interface Drawable {
  */
 export default class Scene {
 	clearColor: Color = [0, 0, 0, 0];
-	drawables: Array<Drawable> = [];
-	meshes: Array<SimpleMesh> = [];
+	meshes: Drawable<SimpleMesh>[] = [];
 
-	add(drawable: Drawable) {
-		this.drawables.push(drawable);
-	}
-
-	addMesh(drawable: SimpleMesh) {
+	addMesh(drawable: Drawable<SimpleMesh>) {
 		this.meshes.push(drawable);
 	}
 }

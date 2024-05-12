@@ -11,7 +11,7 @@ export type Color = Vector4;
 export type Size = Vector2;
 
 export class Gfx {
-	pixelRatio: number = 1/3;
+	pixelRatio: number = 1/4;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;

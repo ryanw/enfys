@@ -19,14 +19,19 @@ struct FragmentOut {
 }
 
 struct Camera {
-	view: mat4x4<f32>,
-	projection: mat4x4<f32>,
-	resolution: vec2<f32>,
+	view: mat4x4f,
+	projection: mat4x4f,
+	resolution: vec2f,
 	t: f32,
 }
 
 struct Entity {
-	model: mat4x4<f32>,
+	model: mat4x4f,
+}
+
+struct Material {
+	color: vec4f,
+	dither: u32,
 }
 
 
@@ -35,6 +40,9 @@ var<uniform> camera: Camera;
 
 @group(0) @binding(1)
 var<uniform> entity: Entity;
+
+@group(0) @binding(2)
+var<uniform> material: Material;
 
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
@@ -56,8 +64,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 @fragment
 fn fs_main(in: VertexOut) -> FragmentOut {
 	var out: FragmentOut;
-	//var color = vec4(0.6, 0.8, 0.05, 1.0);
-	var color = vec4(0.0, 0.0, 0.0, 1.0);
+	var color = material.color;
 
 	var lightDir = normalize(vec3(-0.3, -0.1, 0.6));
 	var shade = dot(lightDir, in.normal);

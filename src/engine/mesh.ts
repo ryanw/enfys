@@ -1,7 +1,6 @@
 import { Gfx } from "engine";
 import { Matrix4, PHI, Point3, Point4 } from "./math";
 import { normalize } from "./math/vectors";
-import { identity } from "./math/transform";
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
@@ -19,7 +18,6 @@ export class Mesh<V extends Vertex<V>> {
 	attributeOrder: Array<keyof V> = [];
 	buffer!: GPUBuffer;
 	vertexCount: number = 0;
-	transform: Matrix4 = identity();
 
 	/**
 	 * @param vertices Array of Vertices
