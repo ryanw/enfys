@@ -13,7 +13,7 @@ export async function main(el: HTMLCanvasElement) {
 	const camera = new Camera();
 	camera.translate([0.0, 0.0, -4.0]);
 	const scene = new Scene();
-	scene.clearColor = [70, 10, 130, 200];
+	scene.clearColor = [20, 20, 20, 255];
 
 	const vertices = buildIcosahedron(position => ({
 		position: [...position] as Point3,

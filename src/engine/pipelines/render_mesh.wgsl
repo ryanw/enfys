@@ -56,9 +56,9 @@ fn vs_main(in: VertexIn) -> VertexOut {
 @fragment
 fn fs_main(in: VertexOut) -> FragmentOut {
 	var out: FragmentOut;
+	var color = vec4(0.6, 0.8, 0.05, 1.0);
 
 	var lightDir = normalize(vec3(-0.3, -0.1, 0.6));
-	var color = vec4(0.8, 0.2, 0.4, 1.0);
 	var shade = dot(lightDir, in.normal);
 
 	out.albedo =  color;

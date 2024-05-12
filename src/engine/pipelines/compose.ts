@@ -59,11 +59,26 @@ export default class ComposePipeline extends Pipeline {
 			bindGroupLayouts: [bindGroupLayout],
 		});
 
+		const blendOver: GPUBlendComponent = {
+			srcFactor: 'one',
+			dstFactor: 'one-minus-src-alpha',
+			operation: 'add',
+		};
 		this.pipeline = device.createRenderPipeline({
 			label: 'ComposePipeline',
 			layout: pipelineLayout,
 			vertex: { module: shader, entryPoint: 'vs_main' },
-			fragment: { module: shader, entryPoint: 'fs_main', targets: [{ format: format || gfx.format }] },
+			fragment: {
+				module: shader,
+				entryPoint: 'fs_main',
+				targets: [{
+					format: format || gfx.format,
+					blend: {
+						color: blendOver,
+						alpha: blendOver,
+					}
+				}]
+			},
 			primitive: { topology: 'triangle-strip' },
 		});
 
@@ -91,7 +106,7 @@ export default class ComposePipeline extends Pipeline {
 		const targetView = target.createView();
 		device.queue.writeBuffer(this.uniformBuffer, 0, new Float32Array([performance.now() / 1000.0]));
 
-		const clearColor = clear.map(v => v/255);
+		const clearColor = clear.map(v => v / 255);
 		const clearValue = { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: clearColor[3] }
 		const passDescriptor: GPURenderPassDescriptor = {
 			colorAttachments: [
