@@ -45,9 +45,6 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	let depthSize = vec2f(textureDimensions(depthTex));
-	let coord = vec2u(depthSize * in.uv);
-	let depth = 1.0 - textureLoad(depthTex, coord, 0).r;
 	let albedo = textureSample(albedoTex, colorSampler, in.uv);
 
 	let posSize = vec2f(textureDimensions(positionTex));
@@ -58,12 +55,19 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let normalCoord = vec2u(normalSize * in.uv);
 	let normal = textureLoad(normalTex, normalCoord, 0).xyz;
 
+	let depthSize = vec2f(textureDimensions(depthTex));
+	let depthCoord = vec2u(depthSize * in.uv);
+	let depth = 1.0 - textureLoad(depthTex, depthCoord, 0).r;
 
-	let lightPos = vec3(10.0, 2.0, -3.0);
+	let lightPos = vec3(sin(u.t) * 8.0, 2.0, -3.0);
 	let lightDir = normalize(pos - lightPos);
 	let shade = dot(normal, lightDir);
 	let brightness = 0.5 + shade;
-	var color = vec4(albedo.rgb * brightness, albedo.a);
+	var color = vec4(albedo.rgb * brightness, 1.0) * albedo;
+
+	if color.a == 0.0 {
+		discard;
+	}
 
 	return color;
 }

@@ -1,4 +1,4 @@
-import { GBuffer, Gfx } from 'engine';
+import { Color, GBuffer, Gfx } from 'engine';
 import Pipeline from '../pipeline';
 import shaderSource from './compose.wgsl';
 
@@ -21,7 +21,7 @@ export default class ComposePipeline extends Pipeline {
 			entries: [
 				{
 					binding: 0,
-					visibility: GPUShaderStage.VERTEX,
+					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
 				{
@@ -33,7 +33,7 @@ export default class ComposePipeline extends Pipeline {
 				{
 					binding: 2,
 					visibility: GPUShaderStage.FRAGMENT,
-					texture: {sampleType: 'unfilterable-float'}
+					texture: { sampleType: 'unfilterable-float' }
 				},
 				// Albedo
 				{
@@ -85,18 +85,20 @@ export default class ComposePipeline extends Pipeline {
 		});
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, target: GPUTexture) {
+	compose(encoder: GPUCommandEncoder, src: GBuffer, target: GPUTexture, clear: Color = [0, 0, 0, 0]) {
 		const { device } = this.gfx;
 
-		const view = target.createView();
+		const targetView = target.createView();
 		device.queue.writeBuffer(this.uniformBuffer, 0, new Float32Array([performance.now() / 1000.0]));
 
+		const clearColor = clear.map(v => v/255);
+		const clearValue = { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: clearColor[3] }
 		const passDescriptor: GPURenderPassDescriptor = {
 			colorAttachments: [
 				{
-					view,
-					clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-					loadOp: 'load',
+					view: targetView,
+					clearValue,
+					loadOp: 'clear',
 					storeOp: 'store',
 				},
 			],

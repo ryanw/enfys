@@ -20,7 +20,7 @@ export interface Drawable {
  * Contains all GPU resources that can be rendered in a scene
  */
 export default class Scene {
-	clearColor: Color = [70, 10, 130, 255];
+	clearColor: Color = [0, 0, 0, 0];
 	drawables: Array<Drawable> = [];
 	meshes: Array<SimpleMesh> = [];
 

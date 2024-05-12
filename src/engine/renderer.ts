@@ -19,15 +19,18 @@ export default class Renderer {
 	drawScene(encoder: GPUCommandEncoder, scene: Scene, camera: Camera, target: GBuffer) {
 		const [w, h] = target.size;
 		camera.aspect = w / h;
-		this.clear(encoder, scene.clearColor, target);
+		this.clear(encoder, target);
 		for (const mesh of scene.meshes) {
 			this.pipelines.mesh.draw(encoder, mesh, camera, target)
 		}
 	}
 
-	clear(encoder: GPUCommandEncoder, color: Color, target: GBuffer) {
-		const [r, g, b, a] = color.map(v => v / 255.0);
-		const clearValue = { r, g, b, a };
+	compose(encoder: GPUCommandEncoder, src: GBuffer, target: GPUTexture, clear?: Color) {
+		this.pipelines.compose.compose(encoder, src, target, clear);
+	}
+
+	clear(encoder: GPUCommandEncoder, target: GBuffer) {
+		const clearValue = { r: 0, g: 0, b: 0, a: 0 };
 		const positionView = target.position.createView();
 		const albedoView = target.albedo.createView();
 		const normalView = target.normal.createView();

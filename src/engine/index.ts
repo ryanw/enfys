@@ -16,7 +16,6 @@ export class Gfx {
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
-	private composePipeline: ComposePipeline;
 	private renderer: Renderer;
 
 	/**
@@ -43,7 +42,6 @@ export class Gfx {
 			format: this.format,
 			alphaMode: 'premultiplied',
 		});
-		this.composePipeline = new ComposePipeline(this);
 
 		this.gbuffer = new GBuffer(this);
 		this.updateSize();
@@ -78,7 +76,7 @@ export class Gfx {
 		this.gbuffer.size = this.size.map(v => v * this.pixelRatio) as Vector2;
 		await this.encode(async (encoder) => {
 			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
-			this.composePipeline.compose(encoder, this.gbuffer, this.currentTexture);
+			this.renderer.compose(encoder, this.gbuffer, this.currentTexture, scene.clearColor);
 		});
 	}
 
