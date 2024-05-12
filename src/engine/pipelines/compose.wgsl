@@ -73,13 +73,13 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let shade = dot(normal, lightDir) * 0.5 + 0.55;
 
 
-	let shadeLevels = 1.0;
+	let shadeLevels = 3.0;
 	let div = f32(pixelSize);
 	let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
 	let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
-	let brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
+	let brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0) / 1.7;
 
-	var color = albedo * brightness;
+	var color = albedo * pow(brightness, 1.5);
 
 	return color;
 }
