@@ -14,7 +14,10 @@ var<uniform> u: Uniforms;
 var colorSampler: sampler;
 
 @group(0) @binding(2)
-var albedo: texture_2d<f32>;
+var albedoTex: texture_2d<f32>;
+
+@group(0) @binding(3)
+var depthTex: texture_2d<f32>;
 
 @vertex
 fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
@@ -36,7 +39,13 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	let coord = vec2<u32>(in.position.xy);
-	var albedo = textureSample(albedo, colorSampler, in.uv);
-	return albedo;
+	let albedo = textureSample(albedoTex, colorSampler, in.uv);
+	let depthSize = vec2f(textureDimensions(depthTex));
+	let coord = vec2u(depthSize * in.uv);
+	let depth = textureLoad(depthTex, coord, 0).r;
+	if false {
+		return albedo;
+	} else {
+		return vec4(vec3(depth), 1.0);
+	}
 }

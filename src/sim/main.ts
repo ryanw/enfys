@@ -1,7 +1,6 @@
 import { Gfx } from 'engine';
-import { Mesh, buildIcosahedron } from 'engine/mesh';
+import { buildIcosahedron } from 'engine/mesh';
 import { Camera } from 'engine/camera';
-import { Cube, Icosahedron } from 'engine/mesh';
 import Scene, { SimpleMesh, TexVertex } from 'engine/scene';
 import { cross, normalize, subtract } from 'engine/math/vectors';
 import { Point2, Point3, Vector3 } from 'engine/math';

@@ -3,7 +3,8 @@ import Pipeline from '../pipeline';
 import shaderSource from './render_mesh.wgsl';
 import { SimpleMesh } from 'engine/scene';
 import { Camera } from 'engine/camera';
-import { identity, multiply, rotation, translation } from 'engine/math/transform';
+import { rotation } from 'engine/math/transform';
+import { RingBuffer } from 'engine/ring_buffer';
 
 const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
 	attributes: [{
@@ -11,12 +12,12 @@ const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
 		shaderLocation: 0,
 		offset: 0,
 		format: 'float32x3'
-	},{
+	}, {
 		// Normal
 		shaderLocation: 1,
 		offset: 12,
 		format: 'float32x3'
-	},{
+	}, {
 		// UV
 		shaderLocation: 2,
 		offset: 24,
@@ -30,9 +31,8 @@ const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
  */
 export default class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
-	// FIXME replace with ring buffers
-	private cameraBuffer: GPUBuffer;
-	private entityBuffer: GPUBuffer;
+	private cameraBuffer: RingBuffer;
+	private entityBuffer: RingBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -65,50 +65,54 @@ export default class RenderMeshPipeline extends Pipeline {
 			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
 			fragment: { module: shader, entryPoint: 'fs_main', targets: [{ format: 'rgba8unorm' }] },
 			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
+			depthStencil: {
+				format: 'depth24plus',
+				depthWriteEnabled: true,
+				depthCompare: 'less',
+			}
 		});
 
-		this.cameraBuffer = device.createBuffer({
-			size: 256,
-			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-		});
-		this.entityBuffer = device.createBuffer({
-			size: 256,
-			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-		});
+		this.entityBuffer = new RingBuffer(gfx, 1024);
+		this.cameraBuffer = new RingBuffer(gfx, 1024);
 	}
 
 	draw(encoder: GPUCommandEncoder, src: SimpleMesh, camera: Camera, target: GBuffer) {
 		const { device } = this.gfx;
+		// FIXME test rotation
+		const model = rotation(performance.now() / 3000.0, performance.now() / 2000.0, 0);
+		const entityId = this.entityBuffer.push(new Float32Array(model));
 
 		const view = target.albedo.createView();
-		device.queue.writeBuffer(this.cameraBuffer, 0, new Float32Array([
+		const depthView = target.depth.createView();
+		const cameraId = this.cameraBuffer.push(new Float32Array([
 			// struct Camera
 			...camera.view,
 			...camera.projection,
 			...target.size,
 			performance.now() / 1000.0,
 		]));
-		// FIXME source from mesh
-		const model = rotation(performance.now() / 3000.0, performance.now() / 2000.0, 0);
-		device.queue.writeBuffer(this.entityBuffer, 0, new Float32Array(model));
 
 		const passDescriptor: GPURenderPassDescriptor = {
-			colorAttachments: [
-				{
-					view,
-					clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-					loadOp: 'load',
-					storeOp: 'store',
-				},
-			],
+			colorAttachments: [{
+				view,
+				clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+				loadOp: 'load',
+				storeOp: 'store',
+			}],
+			depthStencilAttachment: {
+				view: depthView,
+				depthClearValue: 1.0,
+				depthLoadOp: 'load',
+				depthStoreOp: 'store',
+			}
 		};
 
 		const bindGroup = device.createBindGroup({
 			label: 'RenderMeshPipeline Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
-				{ binding: 0, resource: { buffer: this.cameraBuffer } },
-				{ binding: 1, resource: { buffer: this.entityBuffer } },
+				{ binding: 0, resource: this.cameraBuffer.bindingResource(cameraId) },
+				{ binding: 1, resource: this.entityBuffer.bindingResource(entityId) },
 			],
 		});
 

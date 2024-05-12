@@ -46,5 +46,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	var lightDir = normalize(vec3(-0.3, -0.1, 0.6));
 	var color = vec4(0.3, 0.8, 0.1, 1.0);
 	var shade = dot(lightDir, in.normal);
-	return vec4(color.rgb * shade, color.a);
+	//return vec4(color.rgb * shade, color.a);
+	return vec4(in.normal, color.a);
 }

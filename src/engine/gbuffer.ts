@@ -24,6 +24,6 @@ export class GBuffer {
 			return;
 		}
 		this.albedo = this.gfx.createTexture('rgba8unorm', this.size, 'GBuffer Albedo Texture');
-		this.depth = this.gfx.createTexture('depth32float', this.size, 'GBuffer Depth Texture');
+		this.depth = this.gfx.createTexture('depth24plus', this.size, 'GBuffer Depth Texture');
 	}
 }
