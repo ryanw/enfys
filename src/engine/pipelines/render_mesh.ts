@@ -63,7 +63,18 @@ export default class RenderMeshPipeline extends Pipeline {
 			label: 'RenderMeshPipeline',
 			layout: pipelineLayout,
 			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
-			fragment: { module: shader, entryPoint: 'fs_main', targets: [{ format: 'rgba8unorm' }] },
+			fragment: {
+				module: shader,
+				entryPoint: 'fs_main',
+				targets: [
+					// Position output
+					{ format: 'rgba32float' },
+					// Albedo output
+					{ format: 'rgba8unorm' },
+					// Normal output
+					{ format: 'rgba16float' },
+				]
+			},
 			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
 			depthStencil: {
 				format: 'depth24plus',
@@ -82,7 +93,9 @@ export default class RenderMeshPipeline extends Pipeline {
 		const model = rotation(performance.now() / 3000.0, performance.now() / 2000.0, 0);
 		const entityId = this.entityBuffer.push(new Float32Array(model));
 
-		const view = target.albedo.createView();
+		const positionView = target.position.createView();
+		const albedoView = target.albedo.createView();
+		const normalView = target.normal.createView();
 		const depthView = target.depth.createView();
 		const cameraId = this.cameraBuffer.push(new Float32Array([
 			// struct Camera
@@ -93,12 +106,29 @@ export default class RenderMeshPipeline extends Pipeline {
 		]));
 
 		const passDescriptor: GPURenderPassDescriptor = {
-			colorAttachments: [{
-				view,
-				clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-				loadOp: 'load',
-				storeOp: 'store',
-			}],
+			colorAttachments: [
+				// Position
+				{
+					view: positionView,
+					clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+					loadOp: 'load',
+					storeOp: 'store',
+				},
+				// Albedo
+				{
+					view: albedoView,
+					clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+					loadOp: 'load',
+					storeOp: 'store',
+				},
+				// Normal
+				{
+					view: normalView,
+					clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+					loadOp: 'load',
+					storeOp: 'store',
+				},
+			],
 			depthStencilAttachment: {
 				view: depthView,
 				depthClearValue: 1.0,

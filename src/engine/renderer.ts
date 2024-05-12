@@ -28,16 +28,32 @@ export default class Renderer {
 	clear(encoder: GPUCommandEncoder, color: Color, target: GBuffer) {
 		const [r, g, b, a] = color.map(v => v / 255.0);
 		const clearValue = { r, g, b, a };
+		const positionView = target.position.createView();
 		const albedoView = target.albedo.createView();
+		const normalView = target.normal.createView();
 		const depthView = target.depth.createView();
 
 		encoder.beginRenderPass({
-			colorAttachments: [{
-				view: albedoView,
-				clearValue,
-				loadOp: 'clear',
-				storeOp: 'store',
-			}],
+			colorAttachments: [
+				{
+					view: positionView,
+					clearValue,
+					loadOp: 'clear',
+					storeOp: 'store',
+				},
+				{
+					view: albedoView,
+					clearValue,
+					loadOp: 'clear',
+					storeOp: 'store',
+				},
+				{
+					view: normalView,
+					clearValue,
+					loadOp: 'clear',
+					storeOp: 'store',
+				},
+			],
 			depthStencilAttachment: {
 				view: depthView,
 				depthClearValue: 1.0,

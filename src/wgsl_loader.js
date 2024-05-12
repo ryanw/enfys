@@ -14,7 +14,11 @@ function wgsl(config = {}) {
 
 function stripWhitespace(source) {
 	return source
+		// Remove comments
+		.replace(/\/\/.*/g, '')
+		// Collapse whitespace
 		.replace(/\s+/gm, ' ')
+		// Remove unneeded whitespce
 		.replace(/([,:;=+-/*{}()[\]])\s/g, '$1')
 		.replace(/\s([,:;=+-/*{}()[\]])/g, '$1');
 }

@@ -14,9 +14,15 @@ var<uniform> u: Uniforms;
 var colorSampler: sampler;
 
 @group(0) @binding(2)
-var albedoTex: texture_2d<f32>;
+var positionTex: texture_2d<f32>;
 
 @group(0) @binding(3)
+var albedoTex: texture_2d<f32>;
+
+@group(0) @binding(4)
+var normalTex: texture_2d<f32>;
+
+@group(0) @binding(5)
 var depthTex: texture_2d<f32>;
 
 @vertex
@@ -39,13 +45,25 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	let albedo = textureSample(albedoTex, colorSampler, in.uv);
 	let depthSize = vec2f(textureDimensions(depthTex));
 	let coord = vec2u(depthSize * in.uv);
-	let depth = textureLoad(depthTex, coord, 0).r;
-	if false {
-		return albedo;
-	} else {
-		return vec4(vec3(depth), 1.0);
-	}
+	let depth = 1.0 - textureLoad(depthTex, coord, 0).r;
+	let albedo = textureSample(albedoTex, colorSampler, in.uv);
+
+	let posSize = vec2f(textureDimensions(positionTex));
+	let posCoord = vec2u(posSize * in.uv);
+	let pos = textureLoad(positionTex, posCoord, 0).xyz;
+
+	let normalSize = vec2f(textureDimensions(normalTex));
+	let normalCoord = vec2u(normalSize * in.uv);
+	let normal = textureLoad(normalTex, normalCoord, 0).xyz;
+
+
+	let lightPos = vec3(10.0, 2.0, -3.0);
+	let lightDir = normalize(pos - lightPos);
+	let shade = dot(normal, lightDir);
+	let brightness = 0.5 + shade;
+	var color = vec4(albedo.rgb * brightness, albedo.a);
+
+	return color;
 }

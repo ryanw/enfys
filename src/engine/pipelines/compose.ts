@@ -29,13 +29,27 @@ export default class ComposePipeline extends Pipeline {
 					visibility: GPUShaderStage.FRAGMENT,
 					sampler: {}
 				},
+				// Position
 				{
 					binding: 2,
 					visibility: GPUShaderStage.FRAGMENT,
-					texture: {}
+					texture: {sampleType: 'unfilterable-float'}
 				},
+				// Albedo
 				{
 					binding: 3,
+					visibility: GPUShaderStage.FRAGMENT,
+					texture: {}
+				},
+				// Normal
+				{
+					binding: 4,
+					visibility: GPUShaderStage.FRAGMENT,
+					texture: {}
+				},
+				// Depth
+				{
+					binding: 5,
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: { sampleType: 'unfilterable-float' }
 				},
@@ -94,8 +108,10 @@ export default class ComposePipeline extends Pipeline {
 			entries: [
 				{ binding: 0, resource: { buffer: this.uniformBuffer } },
 				{ binding: 1, resource: this.sampler },
-				{ binding: 2, resource: src.albedo.createView() },
-				{ binding: 3, resource: src.depth.createView() },
+				{ binding: 2, resource: src.position.createView() },
+				{ binding: 3, resource: src.albedo.createView() },
+				{ binding: 4, resource: src.normal.createView() },
+				{ binding: 5, resource: src.depth.createView() },
 			],
 		});
 
