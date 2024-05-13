@@ -12,6 +12,9 @@ export function magnitude<T extends number[]>(v: T): number {
 	return Math.sqrt(acc);
 }
 
+/**
+ * Normalize a Vector of any size
+ */
 export function normalize<T extends number[]>(v: T): T {
 	const mag = magnitude(v);
 	return v.map(n => n / mag) as T;

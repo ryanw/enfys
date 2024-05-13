@@ -1,4 +1,4 @@
-import { Gfx } from "engine";
+import { Gfx } from 'engine';
 
 export class RingBuffer<T extends ArrayBufferView = Float32Array> {
 	buffer: GPUBuffer;
@@ -23,7 +23,7 @@ export class RingBuffer<T extends ArrayBufferView = Float32Array> {
 
 	push(item: T): number {
 		if (item.byteLength > this.itemByteLength) {
-			throw new Error(`Item is too big, expected ${this.itemByteLength} got ${item.byteLength}`)
+			throw new Error(`Item is too big, expected ${this.itemByteLength} got ${item.byteLength}`);
 		}
 		const index = this.nextIndex;
 		this.nextIndex = (index + 1) % this.capacity;

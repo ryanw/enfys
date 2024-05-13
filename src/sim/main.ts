@@ -48,13 +48,13 @@ export async function main(el: HTMLCanvasElement) {
 
 function calculateNormals(vertices: Array<TexVertex>) {
 	for (let i = 0; i < vertices.length; i += 3) {
-		let p0 = vertices[i + 0].position;
-		let p1 = vertices[i + 1].position;
-		let p2 = vertices[i + 2].position;
+		const p0 = vertices[i + 0].position;
+		const p1 = vertices[i + 1].position;
+		const p2 = vertices[i + 2].position;
 
-		let v0 = subtract(p2, p0);
-		let v1 = subtract(p1, p0);
-		let normal = normalize(cross(v0, v1));
+		const v0 = subtract(p2, p0);
+		const v1 = subtract(p1, p0);
+		const normal = normalize(cross(v0, v1));
 		vertices[i + 0].normal = normal;
 		vertices[i + 1].normal = normal;
 		vertices[i + 2].normal = normal;

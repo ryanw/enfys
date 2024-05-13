@@ -1,9 +1,9 @@
-import { Color, Gfx } from "engine";
-import { Scene } from "./scene";
-import { ComposePipeline } from "./pipelines/compose";
-import { RenderMeshPipeline } from "./pipelines/render_mesh";
-import { Camera } from "./camera";
-import { GBuffer } from "./gbuffer";
+import { Color, Gfx } from 'engine';
+import { Scene } from './scene';
+import { ComposePipeline } from './pipelines/compose';
+import { RenderMeshPipeline } from './pipelines/render_mesh';
+import { Camera } from './camera';
+import { GBuffer } from './gbuffer';
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -22,7 +22,7 @@ export default class Renderer {
 		camera.aspect = w / h;
 		this.clear(encoder, target);
 		for (const mesh of scene.meshes) {
-			this.pipelines.mesh.draw(encoder, mesh, camera, target)
+			this.pipelines.mesh.draw(encoder, mesh, camera, target);
 		}
 	}
 

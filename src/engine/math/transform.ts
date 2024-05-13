@@ -5,6 +5,9 @@ import { cross, dot } from './vectors';
 export type Columns = [Vector4, Vector4, Vector4, Vector4];
 export type Rows = [Vector4, Vector4, Vector4, Vector4];
 
+/**
+ * Create an identity transform matrix
+ */
 export function identity(): Matrix4 {
 	return [
 		1, 0, 0, 0,
@@ -38,6 +41,9 @@ export function matrixToRows(m: Matrix4): Rows {
 	return rows as Rows;
 }
 
+/**
+ * Create a translation transform matrix
+ */
 export function translation(x: number, y: number, z: number): Matrix4 {
 	return [
 		1, 0, 0, 0,
@@ -47,6 +53,9 @@ export function translation(x: number, y: number, z: number): Matrix4 {
 	];
 }
 
+/**
+ * Create a rotation transform matrix
+ */
 export function rotation(x: number, y: number, z: number): Matrix4 {
 	const [cx, sx] = [Math.cos(x), Math.sin(x)];
 	const [cy, sy] = [Math.cos(y), Math.sin(y)];
@@ -76,6 +85,9 @@ export function rotation(x: number, y: number, z: number): Matrix4 {
 	return multiply(rotz, roty, rotx);
 }
 
+/**
+ * Create a scale transform matrix
+ */
 export function scaling(x: number, y: number = x, z: number = x): Matrix4 {
 	return [
 		x, 0, 0, 0,
@@ -85,6 +97,10 @@ export function scaling(x: number, y: number = x, z: number = x): Matrix4 {
 	];
 }
 
+
+/**
+ * Create a perspective transform matrix
+ */
 export function perspective(aspect: number, fovDegrees: number, near: number, far: number): Matrix4 {
 	const fov = fovDegrees * (Math.PI / 180);
 	const f = 1.0 / Math.tan(fov / 2.0);

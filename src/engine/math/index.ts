@@ -1,3 +1,6 @@
+/**
+ * The Golden Ratio
+ */
 export const PHI = (1 + Math.sqrt(5)) / 2;
 export type Point4 = [number, number, number, number];
 export type Point3 = [number, number, number];
@@ -26,6 +29,3 @@ export type Matrix4 = [
 ];
 
 export type Plane = [Point3, Vector3];
-
-import * as transform from './transform';
-export { transform };

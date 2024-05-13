@@ -1,12 +1,12 @@
-import { Mesh } from "./mesh";
-import { Matrix4, Point2, Point3, Vector3, } from "./math";
-import { Material } from "./material";
-import { Color, Gfx } from "engine";
+import { Mesh } from './mesh';
+import { Matrix4, Point2, Point3, Vector3, } from './math';
+import { Material } from './material';
+import { Color, Gfx } from 'engine';
 
 export type TexVertex = { position: Point3, normal: Vector3, uv: Point2 }
 
 export class SimpleMesh extends Mesh<TexVertex> {
-	attributeOrder: Array<keyof TexVertex> = ["position", "normal", "uv"];
+	attributeOrder: Array<keyof TexVertex> = ['position', 'normal', 'uv'];
 	constructor(gfx: Gfx, vertices: Array<TexVertex>) {
 		super(gfx);
 		this.uploadVertices(vertices);

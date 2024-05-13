@@ -1,6 +1,6 @@
-import { Gfx } from "engine";
-import { Matrix4, PHI, Point3, Point4 } from "./math";
-import { normalize } from "./math/vectors";
+import { Gfx } from 'engine';
+import { PHI, Point3, Point4 } from './math';
+import { normalize } from './math/vectors';
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`

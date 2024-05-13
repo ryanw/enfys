@@ -1,4 +1,4 @@
-import { Color } from "engine";
+import { Color } from 'engine';
 
 export class Material {
 	constructor(
