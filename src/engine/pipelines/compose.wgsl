@@ -1,5 +1,5 @@
-const DITHER_ENABLED: bool = false;
-const BLEND_TO_ALPHA: bool = false;
+const DITHER_ENABLED: bool = true;
+const BLEND_TO_ALPHA: bool = true;
 
 struct VertexOut {
 	@builtin(position) position: vec4f,
@@ -124,10 +124,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if isEdge {
-		color = vec4(1.0);
-	}
-	else {
-		color = vec4(normal, 1.0);
+		color = vec4(0.0);
 	}
 
 	return color;

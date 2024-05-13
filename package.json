@@ -1,8 +1,8 @@
 {
-	"name": "coeden",
+	"name": "enfys",
 	"author": "Ryan Williams <git@ryan.nz>",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Simple WebGPU rendering engine",
 	"scripts": {
 		"start": "serve -c serve.config.json -p 3333",
 		"watch": "rollup -c rollup.config.mjs --watch",
