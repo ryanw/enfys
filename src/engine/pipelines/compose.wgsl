@@ -7,7 +7,9 @@ struct VertexOut {
 }
 
 struct Uniforms {
-	t: f32
+	dither: i32,
+	color: vec3f,
+	t: f32,
 }
 
 @group(0) @binding(0)
@@ -110,7 +112,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 	var brightness = 1.0;
 
-	if DITHER_ENABLED {
+	if u.dither > 0 {
 		brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
 	}
 	else {
@@ -124,7 +126,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if isEdge {
-		color = vec4(0.0);
+		color = vec4(0.2, 0.7, 0.9, 1.0);
 	}
 
 	return color;

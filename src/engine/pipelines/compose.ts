@@ -2,13 +2,14 @@ import { Color, Gfx } from 'engine';
 import { Pipeline } from './';
 import shaderSource from './compose.wgsl';
 import { GBuffer } from 'engine/gbuffer';
+import { UniformBuffer } from 'engine/uniform_buffer';
 
 /**
  * Composes a {@link GBuffer} onto a single {@link GPUTexture}
  */
 export class ComposePipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
-	private uniformBuffer: GPUBuffer;
+	private uniformBuffer: UniformBuffer;
 	private sampler: GPUSampler;
 
 	constructor(gfx: Gfx, format?: GPUTextureFormat) {
@@ -83,11 +84,11 @@ export class ComposePipeline extends Pipeline {
 			primitive: { topology: 'triangle-strip' },
 		});
 
-		this.uniformBuffer = device.createBuffer({
-			size: 4,
-			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-		});
-
+		this.uniformBuffer = new UniformBuffer(gfx, [
+			['dither', 'i32'],
+			['color', 'vec3f'],
+			['t', 'f32'],
+		]);
 		this.sampler = device.createSampler({
 			addressModeU: 'clamp-to-edge',
 			addressModeV: 'clamp-to-edge',
@@ -105,7 +106,10 @@ export class ComposePipeline extends Pipeline {
 		const { device } = this.gfx;
 
 		const targetView = target.createView();
-		device.queue.writeBuffer(this.uniformBuffer, 0, new Float32Array([performance.now() / 1000.0]));
+
+		this.uniformBuffer.set('dither', true);
+		this.uniformBuffer.set('color', [0.6, 0.9, 0.0]);
+		this.uniformBuffer.set('t', performance.now() / 1000.0);
 
 		const clearValue = clear.map(v => v / 255);
 		const passDescriptor: GPURenderPassDescriptor = {
@@ -123,7 +127,7 @@ export class ComposePipeline extends Pipeline {
 			label: 'ComposePipeline Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
-				{ binding: 0, resource: { buffer: this.uniformBuffer } },
+				{ binding: 0, resource: { buffer: this.uniformBuffer.buffer } },
 				{ binding: 1, resource: this.sampler },
 				{ binding: 2, resource: src.position.createView() },
 				{ binding: 3, resource: src.albedo.createView() },
