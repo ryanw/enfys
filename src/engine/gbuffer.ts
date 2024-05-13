@@ -2,6 +2,9 @@ import { Gfx, Size } from 'engine';
 
 export const DEPTH_FORMAT: GPUTextureFormat = 'depth16unorm';
 
+/**
+ * Geometry Buffer used for deferred rendering
+ */
 export class GBuffer {
 	position!: GPUTexture;
 	albedo!: GPUTexture;

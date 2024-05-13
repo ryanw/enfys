@@ -1,6 +1,7 @@
 {
-	"entryPoints": ["./src/engines/index.ts"],
-	"exclude": ["src/**/*.test.ts"],
-	"excludeExternals": true,
+	"entryPoints": ["./src/"],
+	"entryPointStrategy": "expand",
+	"exclude": ["src/**/*.test.ts", "src/global.d.ts"],
+	"excludeExternals": false,
 	"out": "public/docs"
 }

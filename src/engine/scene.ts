@@ -1,7 +1,7 @@
-import { Color, GBuffer, Gfx } from "engine";
 import { Mesh } from "./mesh";
 import { Matrix4, Point2, Point3, Vector3, } from "./math";
 import { Material } from "./material";
+import { Color, Gfx } from "engine";
 
 export type TexVertex = { position: Point3, normal: Vector3, uv: Point2 }
 
@@ -22,7 +22,7 @@ export interface Drawable<T> {
 /**
  * Contains all GPU resources that can be rendered in a scene
  */
-export default class Scene {
+export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
 	meshes: Drawable<SimpleMesh>[] = [];
 

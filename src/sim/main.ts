@@ -1,7 +1,7 @@
 import { Gfx, UnsupportedError } from 'engine';
 import { buildIcosahedron } from 'engine/mesh';
 import { Camera } from 'engine/camera';
-import Scene, { Drawable, SimpleMesh, TexVertex } from 'engine/scene';
+import { Scene, SimpleMesh, TexVertex } from 'engine/scene';
 import { cross, normalize, subtract } from 'engine/math/vectors';
 import { Point2, Point3, Vector3 } from 'engine/math';
 import { identity, rotation } from 'engine/math/transform';

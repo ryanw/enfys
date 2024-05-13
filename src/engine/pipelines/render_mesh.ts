@@ -1,34 +1,15 @@
-import { GBuffer, Gfx } from 'engine';
-import Pipeline from '../pipeline';
+import { Gfx } from 'engine';
+import { Pipeline } from './';
 import shaderSource from './render_mesh.wgsl';
 import { Drawable, SimpleMesh } from 'engine/scene';
 import { Camera } from 'engine/camera';
 import { RingBuffer } from 'engine/ring_buffer';
-
-const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
-	attributes: [{
-		// Position
-		shaderLocation: 0,
-		offset: 0,
-		format: 'float32x3'
-	}, {
-		// Normal
-		shaderLocation: 1,
-		offset: 12,
-		format: 'float32x3'
-	}, {
-		// UV
-		shaderLocation: 2,
-		offset: 24,
-		format: 'float32x2'
-	}],
-	arrayStride: 32,
-}];
+import { GBuffer } from 'engine/gbuffer';
 
 /**
- * Pipeline to render Meshes to a GBuffer
+ * Render Pipeline to draw {@link SimpleMesh} instances to a {@link GBuffer}
  */
-export default class RenderMeshPipeline extends Pipeline {
+export class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
 	private cameraBuffer: RingBuffer;
 	private entityBuffer: RingBuffer;
@@ -121,7 +102,7 @@ export default class RenderMeshPipeline extends Pipeline {
 		);
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
-			clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+			clearValue: [0, 0, 0, 0],
 			loadOp: 'load',
 			storeOp: 'store',
 		};
@@ -159,3 +140,22 @@ export default class RenderMeshPipeline extends Pipeline {
 	}
 }
 
+const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
+	attributes: [{
+		// Position
+		shaderLocation: 0,
+		offset: 0,
+		format: 'float32x3'
+	}, {
+		// Normal
+		shaderLocation: 1,
+		offset: 12,
+		format: 'float32x3'
+	}, {
+		// UV
+		shaderLocation: 2,
+		offset: 24,
+		format: 'float32x2'
+	}],
+	arrayStride: 32,
+}];

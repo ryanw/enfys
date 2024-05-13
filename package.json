@@ -3,14 +3,13 @@
 	"author": "Ryan Williams <git@ryan.nz>",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.ts",
 	"scripts": {
-		"start": "serve public -p 3333",
+		"start": "serve -c serve.config.json -p 3333",
 		"watch": "rollup -c rollup.config.mjs --watch",
 		"build": "rollup -c rollup.config.mjs",
 		"test": "jest src",
 		"lint": "eslint -c eslint.config.mjs src",
-		"docs": "typedoc src/engine/index.ts --plugin typedoc-plugin-missing-exports"
+		"docs": "typedoc --plugin typedoc-plugin-missing-exports"
 	},
 	"license": "ISC",
 	"devDependencies": {

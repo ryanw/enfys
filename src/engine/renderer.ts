@@ -1,8 +1,9 @@
-import { Color, GBuffer, Gfx } from "engine";
-import Scene from "./scene";
-import ComposePipeline from "./pipelines/compose";
-import RenderMeshPipeline from "./pipelines/render_mesh";
+import { Color, Gfx } from "engine";
+import { Scene } from "./scene";
+import { ComposePipeline } from "./pipelines/compose";
+import { RenderMeshPipeline } from "./pipelines/render_mesh";
 import { Camera } from "./camera";
+import { GBuffer } from "./gbuffer";
 
 export interface RenderPipelines {
 	compose: ComposePipeline,

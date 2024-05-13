@@ -53,7 +53,6 @@ export class Camera {
 	 * Rotate the camera
 	 * @param pitch Pitch in radians
 	 * @param yaw Yaw in radians
-	 * @param roll Roll in radians
 	 */
 	rotate(pitch: number, yaw: number) {
 		this.rotation[0] += Math.PI * pitch;

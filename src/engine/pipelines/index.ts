@@ -1,5 +1,5 @@
 import { Gfx } from 'engine';
 
-export default class Pipeline {
+export class Pipeline {
 	constructor(readonly gfx: Gfx) { }
 }

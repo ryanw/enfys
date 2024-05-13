@@ -1,11 +1,12 @@
-import { Color, GBuffer, Gfx } from 'engine';
-import Pipeline from '../pipeline';
+import { Color, Gfx } from 'engine';
+import { Pipeline } from './';
 import shaderSource from './compose.wgsl';
+import { GBuffer } from 'engine/gbuffer';
 
 /**
- * Composes a GBuffer into a single GPUTexture
+ * Composes a {@link GBuffer} onto a single {@link GPUTexture}
  */
-export default class ComposePipeline extends Pipeline {
+export class ComposePipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
 	private uniformBuffer: GPUBuffer;
 	private sampler: GPUSampler;
@@ -106,8 +107,7 @@ export default class ComposePipeline extends Pipeline {
 		const targetView = target.createView();
 		device.queue.writeBuffer(this.uniformBuffer, 0, new Float32Array([performance.now() / 1000.0]));
 
-		const clearColor = clear.map(v => v / 255);
-		const clearValue = { r: clearColor[0], g: clearColor[1], b: clearColor[2], a: clearColor[3] }
+		const clearValue = clear.map(v => v / 255);
 		const passDescriptor: GPURenderPassDescriptor = {
 			colorAttachments: [
 				{

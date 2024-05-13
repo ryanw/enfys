@@ -1,0 +1,5 @@
+{
+	"cleanUrls": ["!/docs/**"],
+	"trailingSlash": true,
+	"public": "./public/"
+}

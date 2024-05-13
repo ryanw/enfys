@@ -2,16 +2,28 @@ import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { Vector2, Vector4 } from './math';
 import Renderer from './renderer';
-import Scene from './scene';
-
-export { GBuffer, Scene, Renderer };
-export * as math from './math';
+import { Scene } from './scene';
 
 export type Color = Vector4;
 export type Size = Vector2;
 
+/**
+ * Main rendering context, all access to the GPU goes through this.
+ *
+ * @example
+ * const canvas = document.querySelector('canvas');
+ * const gfx = await Gfx.attach(canvas);
+ * const scene = new Scene();
+ * scene.addMesh({
+ *   object: new Cube(gfx),
+ *   transform: identity(),
+ *   material: new Material([200, 80, 20, 255]),
+ * });
+ * const camera = new Camera();
+ * await gfx.draw(scene, camera);
+ */
 export class Gfx {
-	pixelRatio: number = 1/4;
+	pixelRatio: number = 1 / 4;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
@@ -29,9 +41,22 @@ export class Gfx {
 		return new Gfx(canvas, adapter, device);
 	}
 
+	/**
+	 * Construct a new {@link Gfx} from a WebGPU Adapter and Device.
+	 * What you instead probably want to use is {@link Gfx.attach}
+	 */
 	constructor(
+		/**
+		 * Canvas element to attach to. It must not have had a graphics context already created.
+		 */
 		readonly canvas: HTMLCanvasElement,
+		/**
+		 * WebGPU adapter interface
+		 */
 		readonly adapter: GPUAdapter,
+		/**
+		 * WebGPU logical device
+		 */
 		readonly device: GPUDevice,
 	) {
 		this.format = navigator.gpu.getPreferredCanvasFormat();
@@ -52,11 +77,17 @@ export class Gfx {
 
 	}
 
+	/**
+	 * GPUTexture that will be drawn to the screen
+	 */
 	get currentTexture(): GPUTexture {
 		return this.context.getCurrentTexture();
 	}
 
-	get size(): Size {
+	/**
+	 * Size of the GBuffer
+	 */
+	get canvasSize(): Size {
 		const w = this.canvas.clientWidth;
 		const h = this.canvas.clientHeight;
 		return [w, h];
@@ -66,13 +97,13 @@ export class Gfx {
 	 * Updates the HTMLCanvasElement's width and height attributes to match its actual rendered pixel size
 	 */
 	updateSize() {
-		const [w, h] = this.size;
+		const [w, h] = this.canvasSize;
 		this.canvas.setAttribute('width', w.toString());
 		this.canvas.setAttribute('height', h.toString());
 	}
 
 	async draw(scene: Scene, camera: Camera) {
-		this.gbuffer.size = this.size.map(v => v * this.pixelRatio) as Vector2;
+		this.gbuffer.size = this.canvasSize.map(v => v * this.pixelRatio) as Vector2;
 		await this.encode(async (encoder) => {
 			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
 			this.renderer.compose(encoder, this.gbuffer, this.currentTexture, scene.clearColor);
@@ -89,6 +120,9 @@ export class Gfx {
 		device.queue.submit([encoder.finish()]);
 	}
 
+	/**
+	 * Create a new GPUTexture
+	 */
 	createTexture(format: GPUTextureFormat, size: GPUExtent3DStrict = [1, 1], label?: string): GPUTexture {
 		const device = this.device;
 		let usage = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
@@ -108,11 +142,17 @@ export class Gfx {
 		});
 	}
 
+	/**
+	 * Create a new GPUBuffer
+	 */
 	createBuffer(size: number, usage: GPUBufferUsageFlags): GPUBuffer {
 		return this.device.createBuffer({ size, usage });
 	}
 }
 
+/**
+ * Exception when the platform does not support WebGPU
+ */
 export class UnsupportedError extends Error {
 	constructor() {
 		super("Your browser doesn't support WebGPU");
