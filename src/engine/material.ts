@@ -31,9 +31,7 @@ export class Material {
 	}
 
 	bindingResource(): GPUBindingResource {
-		return {
-			buffer: this.uniform.buffer,
-		}
+		return this.uniform.bindingResource();
 	}
 
 	updateUniform() {

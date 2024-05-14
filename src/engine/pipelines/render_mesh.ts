@@ -12,7 +12,6 @@ import { SimpleMesh } from 'engine/mesh';
  */
 export class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
-	private cameraBuffer: RingBuffer;
 	private entityBuffer: RingBuffer;
 
 	constructor(gfx: Gfx) {
@@ -73,7 +72,6 @@ export class RenderMeshPipeline extends Pipeline {
 		});
 
 		this.entityBuffer = new RingBuffer(gfx, 1024);
-		this.cameraBuffer = new RingBuffer(gfx, 1024);
 	}
 
 	draw(encoder: GPUCommandEncoder, src: Drawable<SimpleMesh>, camera: Camera, target: GBuffer) {
@@ -86,15 +84,6 @@ export class RenderMeshPipeline extends Pipeline {
 
 		const entityId = this.entityBuffer.push(
 			new Float32Array(src.transform)
-		);
-		const cameraId = this.cameraBuffer.push(
-			new Float32Array([
-				// struct Camera
-				...camera.view,
-				...camera.projection,
-				...target.size,
-				performance.now() / 1000.0,
-			])
 		);
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
@@ -120,7 +109,7 @@ export class RenderMeshPipeline extends Pipeline {
 			label: 'RenderMeshPipeline Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
-				{ binding: 0, resource: this.cameraBuffer.bindingResource(cameraId) },
+				{ binding: 0, resource: camera.uniform.bindingResource() },
 				{ binding: 1, resource: this.entityBuffer.bindingResource(entityId) },
 				{ binding: 2, resource: src.material.bindingResource() },
 			],

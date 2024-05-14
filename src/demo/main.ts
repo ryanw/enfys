@@ -29,7 +29,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		gfx.pixelRatio = 1 / 2;
 	}
 
-	const camera = new Camera();
+	const camera = new Camera(gfx);
 	camera.translate([0, 30, 0]);
 	camera.rotate(0.11, 0);
 	const cameraController = new CameraController(el, camera);
@@ -82,24 +82,15 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 
 
-	function updateShape<T>(shape: Drawable<T>, dt: number) {
-		shape.transform = multiply(shape.transform, rotation(-0.4 * dt, 0.3 * dt, 1 * dt));
-	}
-
 	const terrainPipeline = new TerrainPipeline(gfx);
 	async function updateTerrain(terrain: QuadMesh, t: number) {
 		terrainMaterial.color = hsl(t / 32.0 % 1.0, 0.5, 0.5);
 		await terrainPipeline.compute(terrain, t);
 	}
 
-
-
 	gfx.run(async (dt) => {
 		cameraController.update(dt);
 		updateTerrain(terrain, performance.now() / 1000);
-		for (const shape of shapes) {
-			updateShape(shape, dt);
-		}
 		await gfx.draw(scene, camera);
 	});
 

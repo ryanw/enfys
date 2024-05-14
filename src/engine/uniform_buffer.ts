@@ -1,6 +1,6 @@
 import { Gfx } from "engine";
 
-export type WgslType = 'f32' | 'i32' | 'u32' | 'vec2f' | 'vec3f' | 'vec4f' | 'vec2i' | 'vec3i' | 'vec4i' | 'vec2u' | 'vec3u' | 'vec4u';
+export type WgslType = 'f32' | 'i32' | 'u32' | 'vec2f' | 'vec3f' | 'vec4f' | 'vec2i' | 'vec3i' | 'vec4i' | 'vec2u' | 'vec3u' | 'vec4u' | 'mat4x4f';
 export type UniformMappingPair = [string, WgslType];
 export type UniformMapping = Array<UniformMappingPair>;
 export type UniformOffsetPair = [string, number];
@@ -22,6 +22,21 @@ export class UniformBuffer {
 		this.offsets = calculateOffsets(mapping);
 	}
 
+	replace(fields: Record<string, boolean | number | Array<number>>) {
+		const theirKeys = new Set(Object.keys(fields));
+		const ourKeys = new Set(Object.keys(this.offsets))
+		// FIXME symmetricDifference isn't in the types
+		const diff: Set<string> = (theirKeys as any).symmetricDifference(ourKeys);
+		if (diff.size > 0) {
+			console.error("Keys don't match", diff, theirKeys, ourKeys);
+			throw new Error(`Keys don't match: ${theirKeys} != ${ourKeys}`);
+		}
+
+		for (const key of theirKeys) {
+			this.set(key, fields[key]);
+		}
+	}
+
 	set(field: string, value: boolean | number | Array<number>) {
 		const [typ, offset] = this.offsets[field];
 		if (offset == null) {
@@ -30,6 +45,10 @@ export class UniformBuffer {
 		}
 		const valueBuffer = toArrayBuffer(typ, value);
 		this.gfx.device.queue.writeBuffer(this.buffer, offset, valueBuffer);
+	}
+
+	bindingResource() {
+		return { buffer: this.buffer };
 	}
 }
 
@@ -47,6 +66,7 @@ function toArrayBuffer(typ: WgslType, value: boolean | number | Array<number>): 
 		case 'vec2f':
 		case 'vec3f':
 		case 'vec4f':
+		case 'mat4x4f':
 			return new Float32Array(data);
 
 		case 'i32':
@@ -97,4 +117,5 @@ const ALIGNMENTS: Record<WgslType, [ByteSize, Alignment]> = {
 	vec4f: [16, 16],
 	vec4i: [16, 16],
 	vec4u: [16, 16],
+	mat4x4f: [64, 16],
 };
