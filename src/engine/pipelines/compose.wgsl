@@ -1,4 +1,3 @@
-const DITHER_ENABLED: bool = true;
 const BLEND_TO_ALPHA: bool = true;
 
 struct VertexOut {
@@ -49,7 +48,7 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 	);
 
 	out.position = vec4(points[i], 0.0, 1.0);
-	out.uv = points[i] * 0.5 + 0.5;
+	out.uv = points[i] * vec2(1.0, -1.0) * 0.5 + 0.5;
 
 	return out;
 }
@@ -57,7 +56,7 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	let pixelSize = 4;
+	let pixelSize = 2;
 
 	let albedo = textureSample(albedoTex, colorSampler, in.uv);
 
@@ -126,7 +125,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if isEdge {
-		color = vec4(0.2, 0.7, 0.9, 1.0);
+		color = vec4(1.0);
 	}
 
 	return color;

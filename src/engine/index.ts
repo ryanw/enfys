@@ -25,7 +25,7 @@ export type Size = Vector2;
  * await gfx.draw(scene, camera);
  */
 export class Gfx {
-	pixelRatio: number = 1;
+	pixelRatio: number = 1/2;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;

@@ -129,17 +129,39 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 	return data;
 }
 
+function toVertex(position: Point3): TextureVertex {
+	return {
+		position: [...position],
+		normal: [0, 0, 0],
+		uv: [0, 0]
+	}
+}
+
+/**
+ * Mesh shaped like a flat subdivided plane
+ */
+export class QuadMesh extends SimpleMesh {
+	constructor(gfx: Gfx, divisions: [number, number], normal: Vector3 = [0, 1, 0]) {
+		const quad: Array<Point3> = [
+			[-1, 1, 1],
+			[1, 1, 1],
+			[1, 1, -1],
+
+			[-1, 1, 1],
+			[1, 1, -1],
+			[-1, 1, -1],
+		];
+		const vertices = quad.map(toVertex);
+		super(gfx, vertices);
+	}
+}
 
 /**
  * Mesh shaped like an Cube
  */
 export class Cube extends SimpleMesh {
 	constructor(gfx: Gfx) {
-		const vertices = CUBE_VERTS.map(position => ({
-			position: [...position],
-			normal: [0, 0, 0],
-			uv: [0, 0]
-		} as TextureVertex));
+		const vertices = CUBE_VERTS.map(toVertex);
 		calculateNormals(vertices);
 		super(gfx, vertices);
 	}
