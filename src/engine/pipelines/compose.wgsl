@@ -85,7 +85,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if u.drawEdges > 0 {
-		const et = 1.0 / 2.0;
+		const et = 1.0 / 2000.0;
 		if length(norms[0] - norms[1]) > et {
 			isEdge = true;
 		}
@@ -100,7 +100,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	let lightPos = vec3(sin(u.t) * 20.0, 19.0, -3.0);
+	let lightPos = vec3(sin(u.t) * 20.0, 59.0, -3.0);
 	let lightDir = normalize(pos - lightPos);
 	let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 

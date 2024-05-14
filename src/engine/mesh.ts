@@ -1,4 +1,4 @@
-import { Gfx, calculateNormals } from 'engine';
+import { Gfx, Size, calculateNormals } from 'engine';
 import { PHI, Point2, Point3, Vector3 } from './math';
 import { add, cross, normalize, scale, subtract } from './math/vectors';
 import { multiply } from './math/transform';
@@ -142,9 +142,9 @@ function toVertex(position: Point3): TextureVertex {
  * Mesh shaped like a flat subdivided plane
  */
 export class QuadMesh extends SimpleMesh {
-	constructor(gfx: Gfx, divisions: [number, number], normal: Vector3 = [0, 1, 0]) {
-		const s0 = 1 / (divisions[0] + 1);
-		const s1 = 1 / (divisions[1] + 1);
+	constructor(gfx: Gfx, divisions: [number, number], size: Size = [1, 1]) {
+		const s0 = (1 / (divisions[0] + 1)) * size[0];
+		const s1 = (1 / (divisions[1] + 1)) * size[1];
 		const quad: Array<Point3> = [
 			[-s0, 0, s1],
 			[s0, 0, s1],

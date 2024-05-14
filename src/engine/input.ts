@@ -63,15 +63,18 @@ export class CameraController {
 		this.camera.translate(velocity);
 	}
 
-	onMouseDown = (_e: MouseEvent) => {
-		document.addEventListener('mouseup', this.onMouseUp);
-		document.addEventListener('mousemove', this.onMouseMove);
+	onMouseDown = (e: MouseEvent) => {
+		if (e.button === 0) {
+			document.addEventListener('mouseup', this.onMouseUp);
+			document.addEventListener('mousemove', this.onMouseMove);
+		}
 	}
 
-	onMouseUp = (_e: MouseEvent) => {
-		document.removeEventListener('mouseup', this.onMouseUp);
-		document.removeEventListener('mousemove', this.onMouseMove);
-
+	onMouseUp = (e: MouseEvent) => {
+		if (e.button === 0) {
+			document.removeEventListener('mouseup', this.onMouseUp);
+			document.removeEventListener('mousemove', this.onMouseMove);
+		}
 	}
 
 	onMouseMove = (e: MouseEvent) => {

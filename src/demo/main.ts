@@ -61,13 +61,10 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		scene.addMesh(shape);
 	}
 
-	const terrain = new QuadMesh(gfx, [64, 64]);
+	const terrain = new QuadMesh(gfx, [64, 64], [256, 256]);
 
 	scene.addMesh({
-		transform: multiply(
-			translation(0, -2, 10),
-			scaling(512, 1, 512),
-		),
+		transform: translation(0, -2, 10),
 		object: terrain,
 		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
 	});

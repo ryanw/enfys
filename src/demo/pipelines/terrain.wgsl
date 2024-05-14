@@ -1,3 +1,5 @@
+@import "./noise.wgsl";
+
 struct Vertex {
 	// array instead of vec to avoid alignment issues
 	position: array<f32, 3>,
@@ -23,11 +25,12 @@ var<storage, read_write> triangles: array<Triangle>;
 fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	let id = globalId.x;
 	var tri = triangles[id];
-	let t = u.t / 10.0;
+	let t = u.t / 48.0;
 
 	for (var i = 0; i < 3; i++) {
-		let p = toVec(tri.vertices[i].position);
-		tri.vertices[i].position[1] = (sin((p.x + t) * 20.0) + sin(p.z * 20.0)) * 10.0;
+		let p = toVec(tri.vertices[i].position) / 512.0 + vec3(t, 0.0, 0.0);
+		let h = fractalNoise(vec3(p.x, 0.0, p.z), 3) * 48.0;
+		tri.vertices[i].position[1] = h;
 	}
 	let normal = calculateNormal(tri);
 	for (var i = 0; i < 3; i++) {
