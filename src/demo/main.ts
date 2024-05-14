@@ -1,8 +1,8 @@
 import { Gfx, UnsupportedError } from 'engine';
-import { Cube, QuadMesh, SimpleMesh } from 'engine/mesh';
+import { Cube, Icosahedron, QuadMesh, SimpleMesh } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Drawable, Scene } from 'engine/scene';
-import { multiply, rotation, translation } from 'engine/math/transform';
+import { multiply, rotation, scaling, translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
 import { CameraController } from 'engine/input';
@@ -24,32 +24,36 @@ export async function main(el: HTMLCanvasElement) {
 	}
 
 	const camera = new Camera();
+	camera.translate([0, 8, -8]);
+	camera.rotate(0.157, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene();
 
 	const cube = new Cube(gfx);
 	const shapes: Array<Drawable<SimpleMesh>> = [];
-	const hue = randRange(0, 1);
 
 	const shape = {
 		object: cube,
 		transform: translation(0, 0, 9),
-		material: new Material(hsl(hue, 0.5, 0.5)),
+		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
 	};
 	shapes.push(shape);
 	scene.addMesh(shape);
 
 
 	scene.addMesh({
-		transform: translation(0, 0, 0),
-		object: new QuadMesh(gfx, [4, 4]),
-		material: new Material(hsl(0.7, 0.5, 0.5)),
+		transform: multiply(
+			translation(0, -2, 10),
+			scaling(128),
+		),
+		object: new QuadMesh(gfx, [32, 32]),
+		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
 	});
 
 	scene.addMesh({
 		transform: translation(0, 3, 9),
-		object: new Cube(gfx),
-		material: new Material(hsl(0.4, 0.5, 0.5)),
+		object: new Icosahedron(gfx),
+		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
 	});
 
 

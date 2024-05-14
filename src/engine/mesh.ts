@@ -1,6 +1,7 @@
 import { Gfx, calculateNormals } from 'engine';
 import { PHI, Point2, Point3, Vector3 } from './math';
-import { normalize } from './math/vectors';
+import { add, cross, normalize, scale, subtract } from './math/vectors';
+import { multiply } from './math/transform';
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
@@ -142,16 +143,47 @@ function toVertex(position: Point3): TextureVertex {
  */
 export class QuadMesh extends SimpleMesh {
 	constructor(gfx: Gfx, divisions: [number, number], normal: Vector3 = [0, 1, 0]) {
+		const s0 = 1 / (divisions[0] + 1);
+		const s1 = 1 / (divisions[1] + 1);
 		const quad: Array<Point3> = [
-			[-1, 1, 1],
-			[1, 1, 1],
-			[1, 1, -1],
+			[-s0, 0, s1],
+			[s0, 0, s1],
+			[s0, 0, -s1],
 
-			[-1, 1, 1],
-			[1, 1, -1],
-			[-1, 1, -1],
+			[-s0, 0, s1],
+			[s0, 0, -s1],
+			[-s0, 0, -s1],
 		];
-		const vertices = quad.map(toVertex);
+
+		let subquad: Array<Point3> = [];
+
+		const gap = 0.0;
+		const stepX = s0 * 2 + gap;
+		const stepY = s1 * 2 + gap;
+		const offset = [
+			-s0 * divisions[0],
+			-s1 * divisions[1],
+		];
+		for (let y = 0; y <= divisions[1]; y++) {
+			for (let x = 0; x <= divisions[0]; x++) {
+				const nextQuad: Array<Point3> =
+					quad.map(p => {
+						const np: Point3 = add(p, [
+							stepX * x + offset[0],
+							0,
+							stepY * y + offset[1],
+						]);
+						np[1] = (Math.sin(np[0] * 12.0) + Math.sin(np[2] * 12.0)) / 30.0;
+
+						return np;
+					});
+				subquad = subquad.concat(nextQuad);
+			}
+		}
+
+		const vertices = subquad.map(toVertex);
+
+		calculateNormals(vertices);
 		super(gfx, vertices);
 	}
 }

@@ -47,7 +47,7 @@ export class ComposePipeline extends Pipeline {
 				{
 					binding: 4,
 					visibility: GPUShaderStage.FRAGMENT,
-					texture: {}
+					texture: { sampleType: 'unfilterable-float' }
 				},
 				// Depth
 				{

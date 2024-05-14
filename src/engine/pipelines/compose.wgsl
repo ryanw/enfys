@@ -1,4 +1,4 @@
-const BLEND_TO_ALPHA: bool = true;
+const BLEND_TO_ALPHA: bool = false;
 
 struct VertexOut {
 	@builtin(position) position: vec4f,
@@ -73,7 +73,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let depth = 1.0 - textureLoad(depthTex, depthCoord, 0).r;
 
 	var isEdge = false;
-	var norms: array<vec3f, 4> = array<vec3f, 4>(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
+	var norms = array(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
 	for (var y = 0u; y < 2u; y++) {
 		for (var x = 0u; x < 2u; x++) {
 			let i = x + y * 2u;
@@ -84,16 +84,17 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	if length(norms[0] - norms[1]) > 0.01 {
+	const et = 1.0 / 10.0;
+	if length(norms[0] - norms[1]) > et {
 		isEdge = true;
 	}
-	if length(norms[2] - norms[3]) > 0.01 {
+	if length(norms[2] - norms[3]) > et {
 		isEdge = true;
 	}
-	if length(norms[1] - norms[3]) > 0.01 {
+	if length(norms[0] - norms[2]) > et {
 		isEdge = true;
 	}
-	if length(norms[0] - norms[2]) > 0.01 {
+	if length(norms[1] - norms[3]) > et {
 		isEdge = true;
 	}
 
@@ -127,6 +128,9 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	if isEdge {
 		color = vec4(1.0);
 	}
+
+
+	//let fog = smoothstep(1.0 / 500.0, 1.0 / 300.0, depth);
 
 	return color;
 }
