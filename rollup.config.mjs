@@ -9,7 +9,7 @@ const enginePath = path.resolve(projectRootDir, './src/engine/');
 const production = !process.env.ROLLUP_WATCH;
 
 export default {
-	input: 'src/sim/main.ts',
+	input: 'src/demo/main.ts',
 	output: {
 		file: 'public/bundle.js',
 		format: 'module',

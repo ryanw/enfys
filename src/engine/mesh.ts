@@ -1,5 +1,5 @@
-import { Gfx } from 'engine';
-import { PHI, Point3, Point4 } from './math';
+import { Gfx, calculateNormals } from 'engine';
+import { PHI, Point2, Point3, Vector3 } from './math';
 import { normalize } from './math/vectors';
 
 /**
@@ -8,6 +8,29 @@ import { normalize } from './math/vectors';
 export type Vertex<T> = {
 	[K in keyof T]: T[K] extends (Array<number> | number) ? T[K] : never;
 }
+
+/**
+ * Vertex with a position in 3D space
+ */
+export interface PointVertex {
+	position: Point3,
+};
+
+/**
+ * Vertex with a surface normal
+ */
+export interface NormalVertex extends PointVertex {
+	normal: Vector3
+}
+
+/**
+ * Vertex that can be used to draw textured polygons
+ */
+export interface TextureVertex extends NormalVertex {
+	uv: Point2,
+}
+
+
 
 /**
  * Collection of Vertices representing some kind of 3D geometry.
@@ -50,7 +73,16 @@ export class Mesh<V extends Vertex<V>> {
 	}
 }
 
-
+/**
+ * Mesh made of {@link TextureVertex} vertices
+ */
+export class SimpleMesh extends Mesh<TextureVertex> {
+	attributeOrder: Array<keyof TextureVertex> = ['position', 'normal', 'uv'];
+	constructor(gfx: Gfx, vertices: Array<TextureVertex>) {
+		super(gfx);
+		this.uploadVertices(vertices);
+	}
+}
 
 
 /**
@@ -97,18 +129,45 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 	return data;
 }
 
-export type PointVertex = { position: Point4 };
 
-export class Cube extends Mesh<PointVertex> {
+/**
+ * Mesh shaped like an Cube
+ */
+export class Cube extends SimpleMesh {
 	constructor(gfx: Gfx) {
-		super(gfx, CUBE_VERTS.map(position => ({ position: [...position, 1.0] })));
+		const vertices = CUBE_VERTS.map(position => ({
+			position: [...position],
+			normal: [0, 0, 0],
+			uv: [0, 0]
+		} as TextureVertex));
+		calculateNormals(vertices);
+		super(gfx, vertices);
 	}
 }
 
-export class Icosahedron extends Mesh<PointVertex> {
+/**
+ * Mesh shaped like an Icosahedron
+ */
+export class Icosahedron extends SimpleMesh {
 	constructor(gfx: Gfx) {
-		super(gfx, buildIcosahedron(position => ({ position: [...position, 1.0] })));
+		const vertices = buildIcosahedron(position => ({
+			position: [...position],
+			normal: [0, 0, 0],
+			uv: [0, 0]
+		} as TextureVertex));
+		calculateNormals(vertices);
+		super(gfx, vertices);
 	}
+}
+
+
+export function buildIcosahedron<T>(callback: (position: Point3, index: number) => T): Array<T> {
+	return ICOSAHEDRON_TRIS.map(
+		(tri) => tri.map(
+			(v, i) =>
+				callback(normalize(ICOSAHEDRON_VERTICES[v]), i)
+		)
+	).flat();
 }
 
 const CUBE_VERTS: Array<Point3> = [
@@ -161,7 +220,7 @@ const CUBE_VERTS: Array<Point3> = [
 	[-1, -1, -1]
 ];
 
-export const ICOSAHEDRON_VERTICES: Array<Point3> = [
+const ICOSAHEDRON_VERTICES: Array<Point3> = [
 	[-1, PHI, 0],
 	[1, PHI, 0],
 	[-1, -PHI, 0],
@@ -176,7 +235,7 @@ export const ICOSAHEDRON_VERTICES: Array<Point3> = [
 	[-PHI, 0, 1]
 ];
 
-export const ICOSAHEDRON_TRIS: Array<[number, number, number]> = [
+const ICOSAHEDRON_TRIS: Array<[number, number, number]> = [
 	[0, 11, 5],
 	[0, 5, 1],
 	[0, 1, 7],
@@ -199,7 +258,7 @@ export const ICOSAHEDRON_TRIS: Array<[number, number, number]> = [
 	[9, 8, 1],
 ];
 
-export const ICOSAHEDRON_LINES: Array<[number, number]> = [
+const ICOSAHEDRON_LINES: Array<[number, number]> = [
 	// Top
 	[0, 11],
 	[0, 5],
@@ -236,12 +295,3 @@ export const ICOSAHEDRON_LINES: Array<[number, number]> = [
 	[7, 8],
 	[1, 8],
 ];
-
-export function buildIcosahedron<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	return ICOSAHEDRON_TRIS.map(
-		(tri) => tri.map(
-			(v, i) =>
-				callback(normalize(ICOSAHEDRON_VERTICES[v]), i)
-		)
-	).flat();
-}

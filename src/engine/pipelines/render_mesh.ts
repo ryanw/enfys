@@ -1,10 +1,11 @@
 import { Gfx } from 'engine';
 import { Pipeline } from './';
 import shaderSource from './render_mesh.wgsl';
-import { Drawable, SimpleMesh } from 'engine/scene';
+import { Drawable } from 'engine/scene';
 import { Camera } from 'engine/camera';
 import { RingBuffer } from 'engine/ring_buffer';
 import { GBuffer } from 'engine/gbuffer';
+import { SimpleMesh } from 'engine/mesh';
 
 /**
  * Render Pipeline to draw {@link SimpleMesh} instances to a {@link GBuffer}

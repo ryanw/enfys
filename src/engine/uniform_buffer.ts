@@ -5,6 +5,9 @@ export type UniformMappingPair = [string, WgslType];
 export type UniformMapping = Array<UniformMappingPair>;
 export type UniformOffsetPair = [string, number];
 export type UniformOffsets = Record<string, [WgslType, number]>;
+export type ByteSize = number;
+export type Alignment = number;
+
 
 export class UniformBuffer {
 	readonly buffer: GPUBuffer;
@@ -77,11 +80,11 @@ function calculateOffsets(mapping: UniformMapping): UniformOffsets {
 	return offsets;
 }
 
-function alignBytes(size: number, alignment: number): number {
+function alignBytes(size: ByteSize, alignment: Alignment): number {
 	return ((size + alignment - 1) / alignment | 0) * alignment;
 }
 
-const ALIGNMENTS: Record<WgslType, [number, number]> = {
+const ALIGNMENTS: Record<WgslType, [ByteSize, Alignment]> = {
 	f32: [4, 4],
 	i32: [4, 4],
 	u32: [4, 4],

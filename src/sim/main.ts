@@ -1,7 +1,7 @@
 import { Gfx, UnsupportedError } from 'engine';
-import { buildIcosahedron } from 'engine/mesh';
+import { SimpleMesh, TextureVertex, buildIcosahedron } from 'engine/mesh';
 import { Camera } from 'engine/camera';
-import { Scene, SimpleMesh, TexVertex } from 'engine/scene';
+import { Scene } from 'engine/scene';
 import { cross, normalize, subtract } from 'engine/math/vectors';
 import { Point2, Point3, Vector3 } from 'engine/math';
 import { identity, rotation } from 'engine/math/transform';
@@ -21,7 +21,7 @@ export async function main(el: HTMLCanvasElement) {
 	}
 
 	const camera = new Camera();
-	camera.translate([-0.0, 0.0, -3.5]);
+	camera.translate([0, 0, -3.5]);
 	const scene = new Scene();
 	//scene.clearColor = [155, 188, 15, 255];
 
@@ -46,7 +46,7 @@ export async function main(el: HTMLCanvasElement) {
 	await draw();
 }
 
-function calculateNormals(vertices: Array<TexVertex>) {
+function calculateNormals(vertices: Array<TextureVertex>) {
 	for (let i = 0; i < vertices.length; i += 3) {
 		const p0 = vertices[i + 0].position;
 		const p1 = vertices[i + 1].position;

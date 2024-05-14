@@ -10,7 +10,7 @@ export interface RenderPipelines {
 	mesh: RenderMeshPipeline,
 }
 
-export default class Renderer {
+export class Renderer {
 	pipelines: RenderPipelines;
 
 	constructor(readonly gfx: Gfx) {

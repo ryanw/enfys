@@ -1,23 +1,15 @@
-import { Mesh } from './mesh';
-import { Matrix4, Point2, Point3, Vector3, } from './math';
+import { Matrix4 } from './math';
 import { Material } from './material';
-import { Color, Gfx } from 'engine';
-
-export type TexVertex = { position: Point3, normal: Vector3, uv: Point2 }
-
-export class SimpleMesh extends Mesh<TexVertex> {
-	attributeOrder: Array<keyof TexVertex> = ['position', 'normal', 'uv'];
-	constructor(gfx: Gfx, vertices: Array<TexVertex>) {
-		super(gfx);
-		this.uploadVertices(vertices);
-	}
-}
+import { Color } from 'engine';
+import { SimpleMesh } from './mesh';
 
 export interface Drawable<T> {
 	object: T;
 	transform: Matrix4;
 	material: Material;
 }
+
+
 
 /**
  * Contains all GPU resources that can be rendered in a scene

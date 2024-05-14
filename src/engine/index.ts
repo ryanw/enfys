@@ -1,10 +1,12 @@
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
-import { Vector2, Vector4 } from './math';
-import Renderer from './renderer';
+import { Point3, Vector2, Vector3, Vector4 } from './math';
+import { cross, normalize, subtract } from './math/vectors';
+import { NormalVertex } from './mesh';
+import { Renderer } from './renderer';
 import { Scene } from './scene';
 
-export type Color = Vector4;
+export { Color } from './color';
 export type Size = Vector2;
 
 /**
@@ -23,7 +25,7 @@ export type Size = Vector2;
  * await gfx.draw(scene, camera);
  */
 export class Gfx {
-	pixelRatio: number = 1 / 4;
+	pixelRatio: number = 1;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
@@ -156,5 +158,23 @@ export class Gfx {
 export class UnsupportedError extends Error {
 	constructor() {
 		super("Your browser doesn't support WebGPU");
+	}
+}
+
+/**
+ * Update the normals in a collection of {@link NormalVertex} so they're perpendicular to the triangle's surface
+ */
+export function calculateNormals(vertices: Array<NormalVertex>) {
+	for (let i = 0; i < vertices.length; i += 3) {
+		const p0 = vertices[i + 0].position;
+		const p1 = vertices[i + 1].position;
+		const p2 = vertices[i + 2].position;
+
+		const v0 = subtract(p2, p0);
+		const v1 = subtract(p1, p0);
+		const normal = normalize(cross(v0, v1));
+		vertices[i + 0].normal = normal;
+		vertices[i + 1].normal = normal;
+		vertices[i + 2].normal = normal;
 	}
 }
