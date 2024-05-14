@@ -2,7 +2,7 @@ import path from 'node:path';
 import typescript from '@rollup/plugin-typescript';
 import alias from '@rollup/plugin-alias';
 import terser from '@rollup/plugin-terser';
-import wgsl from './src/wgsl_loader.js';
+import wgsl from './src/wgsl_loader.mjs';
 
 const projectRootDir = path.dirname(import.meta.url.replace("file://", ""));
 const enginePath = path.resolve(projectRootDir, './src/engine/');
