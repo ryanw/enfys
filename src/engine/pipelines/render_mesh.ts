@@ -14,7 +14,6 @@ export class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
 	private cameraBuffer: RingBuffer;
 	private entityBuffer: RingBuffer;
-	private materialBuffer: RingBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -73,7 +72,6 @@ export class RenderMeshPipeline extends Pipeline {
 			}
 		});
 
-		this.materialBuffer = new RingBuffer(gfx, 1024);
 		this.entityBuffer = new RingBuffer(gfx, 1024);
 		this.cameraBuffer = new RingBuffer(gfx, 1024);
 	}
@@ -86,9 +84,6 @@ export class RenderMeshPipeline extends Pipeline {
 		const normalView = target.normal.createView();
 		const depthView = target.depth.createView();
 
-		const materialId = this.materialBuffer.push(
-			new Float32Array(src.material.toArrayBuffer())
-		);
 		const entityId = this.entityBuffer.push(
 			new Float32Array(src.transform)
 		);
@@ -127,7 +122,7 @@ export class RenderMeshPipeline extends Pipeline {
 			entries: [
 				{ binding: 0, resource: this.cameraBuffer.bindingResource(cameraId) },
 				{ binding: 1, resource: this.entityBuffer.bindingResource(entityId) },
-				{ binding: 2, resource: this.materialBuffer.bindingResource(materialId) },
+				{ binding: 2, resource: src.material.bindingResource() },
 			],
 		});
 

@@ -1,22 +1,42 @@
-import { Color } from 'engine';
+import { Color, Gfx } from 'engine';
+import { UniformBuffer } from './uniform_buffer';
 
+/**
+ * Material stored in a {@link GPUBuffer}
+ */
 export class Material {
+	readonly uniform: UniformBuffer;
+	private _color: Color;
+
 	constructor(
-		public color: Color = [255, 255, 255, 255],
+		readonly gfx: Gfx,
+		color: Color = [255, 255, 255, 255],
 		public dither: boolean = false,
-	) {}
+	) {
+		this._color = color;
+		this.uniform = new UniformBuffer(gfx, [
+			['color', 'vec4f'],
+			['dither', 'u32'],
+		]);
+		this.updateUniform();
+	}
 
-	/**
-	 * Returns an ArrayBuffer of bytes for a struct Material{color: vec4f, dither: u32}
-	 */
-	toArrayBuffer(): ArrayBuffer {
-		const buffer = new ArrayBuffer(4 * 5);
-		const view = new DataView(buffer);
-		for (let i = 0; i < 4; i++) {
-			view.setFloat32(i * 4, this.color[i] / 255, true);
+	get color() {
+		return [...this._color];
+	}
+
+	set color(color: Color) {
+		this._color = color;
+		this.updateUniform();
+	}
+
+	bindingResource(): GPUBindingResource {
+		return {
+			buffer: this.uniform.buffer,
 		}
-		view.setUint32(4 * 4, this.dither ? 1 : 0, true);
+	}
 
-		return buffer;
+	updateUniform() {
+		this.uniform.set('color', this._color.map(v => v/255));
 	}
 }

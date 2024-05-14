@@ -24,9 +24,9 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	}
 
 	if (window.devicePixelRatio >= 2) {
-		gfx.pixelRatio = 1/3;
+		gfx.pixelRatio = 1 / 3;
 	} else {
-		gfx.pixelRatio = 1/2;
+		gfx.pixelRatio = 1 / 2;
 	}
 
 	const camera = new Camera();
@@ -42,7 +42,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const shape = {
 		object: cube,
 		transform: translation(0, 0, 9),
-		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
+		material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
 	};
 	shapes.push(shape);
 	scene.addMesh(shape);
@@ -55,24 +55,25 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		const shape = {
 			object: icosahedron,
 			transform: translation(x, y, z),
-			material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
+			material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
 		};
 		shapes.push(shape);
 		scene.addMesh(shape);
 	}
 
 	const terrain = new QuadMesh(gfx, [64, 64], [256, 256]);
+	const terrainMaterial = new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5));
 
 	scene.addMesh({
 		transform: translation(0, -2, 10),
 		object: terrain,
-		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
+		material: terrainMaterial,
 	});
 
 	scene.addMesh({
 		transform: translation(0, 3, 9),
 		object: icosahedron,
-		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
+		material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
 	});
 
 
@@ -87,6 +88,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 	const terrainPipeline = new TerrainPipeline(gfx);
 	async function updateTerrain(terrain: QuadMesh, t: number) {
+		terrainMaterial.color = hsl(t / 32.0 % 1.0, 0.5, 0.5);
 		await terrainPipeline.compute(terrain, t);
 	}
 
