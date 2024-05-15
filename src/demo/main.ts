@@ -6,6 +6,7 @@ import { multiply, rotation, scaling, translation } from 'engine/math/transform'
 import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
 import { CameraController } from 'engine/input';
+import { TerrainPipeline } from './pipelines/terrain';
 
 /**
  * Start the demo
@@ -29,8 +30,8 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	}
 
 	const camera = new Camera();
-	camera.translate([0, 8, -8]);
-	camera.rotate(0.1, 0);
+	camera.translate([0, 30, 0]);
+	camera.rotate(0.11, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene();
 
@@ -49,7 +50,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	for (let i = 0; i < 100; i++) {
 		const r = 128;
 		const x = randRange(-r, r);
-		const y = randRange(0, 16);
+		const y = randRange(10, 32);
 		const z = randRange(-r, r);
 		const shape = {
 			object: icosahedron,
@@ -60,13 +61,14 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		scene.addMesh(shape);
 	}
 
+	const terrain = new QuadMesh(gfx, [64, 64]);
 
 	scene.addMesh({
 		transform: multiply(
 			translation(0, -2, 10),
-			scaling(512),
+			scaling(512, 1, 512),
 		),
-		object: new QuadMesh(gfx, [64, 64]),
+		object: terrain,
 		material: new Material(hsl(randRange(0, 1), 0.5, 0.5)),
 	});
 
@@ -77,8 +79,25 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	});
 
 
+
+
+
+
+
+	function updateShape<T>(shape: Drawable<T>, dt: number) {
+		shape.transform = multiply(shape.transform, rotation(-0.4 * dt, 0.3 * dt, 1 * dt));
+	}
+
+	const terrainPipeline = new TerrainPipeline(gfx);
+	async function updateTerrain(terrain: QuadMesh, t: number) {
+		await terrainPipeline.compute(terrain, t);
+	}
+
+
+
 	gfx.run(async (dt) => {
 		cameraController.update(dt);
+		updateTerrain(terrain, performance.now() / 1000);
 		for (const shape of shapes) {
 			updateShape(shape, dt);
 		}
@@ -86,10 +105,6 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	});
 
 	return gfx;
-}
-
-function updateShape<T>(shape: Drawable<T>, dt: number) {
-	shape.transform = multiply(shape.transform, rotation(-0.4 * dt, 0.3 * dt, 1 * dt));
 }
 
 function randRange(min: number, max: number): number {

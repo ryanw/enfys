@@ -65,7 +65,7 @@ export class Mesh<V extends Vertex<V>> {
 		const buffer = device.createBuffer({
 			label: 'Mesh Attribute Buffer',
 			size: data.byteLength,
-			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 		device.queue.writeBuffer(buffer, 0, data);
 
