@@ -31,11 +31,13 @@ export interface Config {
  * await gfx.draw(scene, camera);
  */
 export class Gfx {
-	pixelRatio: number = 1/2;
+	pixelRatio: number = 1 / 2;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
 	private renderer: Renderer;
+	private frameSample: number = 128;
+	private frameTimes: Array<number> = [];
 
 	/**
 	 * Initialise the WebGPU Context and return a new Gfx instance
@@ -101,6 +103,11 @@ export class Gfx {
 		return [w, h];
 	}
 
+	get fps(): number {
+		const total = this.frameTimes.reduce((a, dt) => a + 1/dt, 0);
+		return total / this.frameTimes.length;
+	}
+
 	configure(options: Partial<Config>) {
 		const composeOpts = this.renderer.pipelines.compose.settings;
 		if (options.dither != null) {
@@ -139,6 +146,30 @@ export class Gfx {
 		const encoder = device.createCommandEncoder();
 		await callback(encoder);
 		device.queue.submit([encoder.finish()]);
+	}
+
+	/**
+	 * Start an infinite draw loop, running the callback before drawing each frame
+	 */
+	run(callback: (dt: number, gfx: Gfx) => Promise<void>) {
+		let now = performance.now();
+		let dt = 0;
+		const draw = async () => {
+			dt = (performance.now() - now) / 1000;
+			now = performance.now();
+			this.sampleFrame(dt);
+			await callback(dt, this);
+			requestAnimationFrame(draw);
+		}
+		draw();
+	}
+
+	private sampleFrame(dt: number) {
+		if (dt <= 0) return;
+		this.frameTimes.push(dt);
+		while (this.frameTimes.length > this.frameSample) {
+			this.frameTimes.shift();
+		}
 	}
 
 	/**

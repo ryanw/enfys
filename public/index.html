@@ -33,17 +33,23 @@
 				right: 2em;
 				color: #fff;
 				font-family: sans-serif;
-				background: rgba(0, 0, 0, 0.5);
+				background: rgba(0, 0, 0, 0.8);
 				border-radius: 4px;
 				padding: 1em;
 				display: flex;
 				flex-direction: column;
+			}
+			#settings label {
+				user-select: none;
 			}
 			#settings label + label {
 				margin-top: 0.3em;
 			}
 			#settings p {
 				margin: 0 0 0.3em 0;
+			}
+			#settings #fps {
+				margin-top: 0.5em;
 			}
 		</style>
 	</head>
@@ -66,11 +72,13 @@
 					</select>
 					Render Mode
 				</label>
+				<div id="fps">FPS: <span></span></div>
 			</div>
 		</div>
 		<script type="module">
 			const { main } = await import('./bundle.js');
 			const gfx = await main(document.querySelector('#app canvas'))
+			const fps = document.querySelector('#fps span');
 			const ditherChk = document.querySelector('#enable-dither');
 			const edgesChk = document.querySelector('#enable-edges');
 			const modeSel = document.querySelector('#render-mode');
@@ -85,6 +93,7 @@
 			ditherChk.addEventListener('click', updateSettings);
 			edgesChk.addEventListener('click', updateSettings);
 			modeSel.addEventListener('change', updateSettings);
+			setInterval(() => fps.innerHTML = gfx.fps.toFixed(0), 200);
 		</script>
 	</body>
 </html>

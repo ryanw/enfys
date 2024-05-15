@@ -71,26 +71,18 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	});
 
 
-	let now = performance.now();
-	let dt = 0;
-	async function draw() {
-		dt = (performance.now() - now) / 1000;
-		now = performance.now();
+	gfx.run(async (dt) => {
 		cameraController.update(dt);
-
 		for (const shape of shapes) {
-			update(shape, dt);
+			updateShape(shape, dt);
 		}
-
 		await gfx.draw(scene, camera);
-		requestAnimationFrame(draw);
-	}
-	await draw();
+	});
 
 	return gfx;
 }
 
-function update<T>(shape: Drawable<T>, dt: number) {
+function updateShape<T>(shape: Drawable<T>, dt: number) {
 	shape.transform = multiply(shape.transform, rotation(-0.4 * dt, 0.3 * dt, 1 * dt));
 }
 
