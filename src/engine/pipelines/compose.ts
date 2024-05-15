@@ -1,4 +1,4 @@
-import { Color, Gfx } from 'engine';
+import { Color, Config, Gfx } from 'engine';
 import { Pipeline } from './';
 import shaderSource from './compose.wgsl';
 import { GBuffer } from 'engine/gbuffer';
@@ -8,9 +8,9 @@ import { UniformBuffer } from 'engine/uniform_buffer';
  * Composes a {@link GBuffer} onto a single {@link GPUTexture}
  */
 export class ComposePipeline extends Pipeline {
-	// FIXME DRY this mess
-	settings = {
-		dither: false,
+	config: Config = {
+		ditherSize: 2,
+		ditherDepth: 2,
 		drawEdges: false,
 		renderMode: 0,
 	};
@@ -91,7 +91,8 @@ export class ComposePipeline extends Pipeline {
 		});
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
-			['dither', 'i32'],
+			['ditherSize', 'i32'],
+			['ditherDepth', 'i32'],
 			['drawEdges', 'i32'],
 			['renderMode', 'i32'],
 			['t', 'f32'],
@@ -114,9 +115,10 @@ export class ComposePipeline extends Pipeline {
 
 		const targetView = target.createView();
 
-		this.uniformBuffer.set('dither', this.settings.dither);
-		this.uniformBuffer.set('drawEdges', this.settings.drawEdges);
-		this.uniformBuffer.set('renderMode', this.settings.renderMode);
+		this.uniformBuffer.set('ditherSize', this.config.ditherSize);
+		this.uniformBuffer.set('ditherDepth', this.config.ditherDepth);
+		this.uniformBuffer.set('drawEdges', this.config.drawEdges);
+		this.uniformBuffer.set('renderMode', this.config.renderMode);
 		this.uniformBuffer.set('t', performance.now() / 1000.0);
 
 		const clearValue = clear.map(v => v / 255);

@@ -10,7 +10,8 @@ export { Color } from './color';
 export type Size = Vector2;
 
 export interface Config {
-	dither: boolean;
+	ditherSize: number;
+	ditherDepth: number;
 	drawEdges: boolean;
 	renderMode: number;
 }
@@ -31,7 +32,8 @@ export interface Config {
  * await gfx.draw(scene, camera);
  */
 export class Gfx {
-	pixelRatio: number = 1 / 2;
+	pixelRatio: number = 1;
+	canvasPixelRatio: number = window.devicePixelRatio || 1;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
@@ -98,27 +100,21 @@ export class Gfx {
 	 * Size of the GBuffer
 	 */
 	get canvasSize(): Size {
-		const w = this.canvas.clientWidth;
-		const h = this.canvas.clientHeight;
+		const w = this.canvas.clientWidth * this.canvasPixelRatio;
+		const h = this.canvas.clientHeight * this.canvasPixelRatio;
 		return [w, h];
 	}
 
 	get fps(): number {
-		const total = this.frameTimes.reduce((a, dt) => a + 1/dt, 0);
+		const total = this.frameTimes.reduce((a, dt) => a + 1 / dt, 0);
 		return total / this.frameTimes.length;
 	}
 
-	configure(options: Partial<Config>) {
-		const composeOpts = this.renderer.pipelines.compose.settings;
-		if (options.dither != null) {
-			composeOpts.dither = options.dither;
-		}
-		if (options.drawEdges != null) {
-			composeOpts.drawEdges = options.drawEdges;
-		}
-		if (options.renderMode != null) {
-			composeOpts.renderMode = options.renderMode;
-		}
+	configure(config: Partial<Config>) {
+		Object.assign(
+			this.renderer.pipelines.compose.config,
+			config,
+		);
 	}
 
 	/**

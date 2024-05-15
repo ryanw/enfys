@@ -6,7 +6,8 @@ struct VertexOut {
 }
 
 struct Uniforms {
-	dither: i32,
+	ditherSize: i32,
+	ditherDepth: i32,
 	drawEdges: i32,
 	renderMode: i32,
 	t: f32,
@@ -57,8 +58,6 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	let pixelSize = 2;
-
 	let albedo = textureSample(albedoTex, colorSampler, in.uv);
 
 	let posSize = vec2f(textureDimensions(positionTex));
@@ -106,16 +105,14 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 
 
-	let shadeLevels = 3.0;
-	let div = f32(pixelSize);
-	let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
-	let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
 
 	var color = vec4(0.0);
-
 	var brightness = 1.0;
-
-	if u.dither > 0 {
+	if u.ditherSize > 0 {
+		let shadeLevels = f32(u.ditherDepth);
+		let div = f32(u.ditherSize);
+		let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
+		let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
 		brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
 	}
 	else {

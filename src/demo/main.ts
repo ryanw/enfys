@@ -22,6 +22,12 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		throw e;
 	}
 
+	if (window.devicePixelRatio >= 2) {
+		gfx.pixelRatio = 1/3;
+	} else {
+		gfx.pixelRatio = 1/2;
+	}
+
 	const camera = new Camera();
 	camera.translate([0, 8, -8]);
 	camera.rotate(0.1, 0);
