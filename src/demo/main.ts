@@ -10,7 +10,7 @@ import { CameraController } from 'engine/input';
 /**
  * Start the demo
  */
-export async function main(el: HTMLCanvasElement) {
+export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
 	let gfx: Gfx;
 	try {
@@ -86,6 +86,8 @@ export async function main(el: HTMLCanvasElement) {
 		requestAnimationFrame(draw);
 	}
 	await draw();
+
+	return gfx;
 }
 
 function update<T>(shape: Drawable<T>, dt: number) {

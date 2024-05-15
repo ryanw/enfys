@@ -13,7 +13,7 @@ export default {
 	output: {
 		file: 'public/bundle.js',
 		format: 'module',
-		sourcemap: !production,
+		sourcemap: true,
 	},
 	watch: {
 		clearScreen: false,

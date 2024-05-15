@@ -26,13 +26,65 @@
 				height: 100%;
 				image-rendering: pixelated;
 			}
+			#settings {
+				position: fixed;
+				z-index: 1000;
+				top: 2em;
+				right: 2em;
+				color: #fff;
+				font-family: sans-serif;
+				background: rgba(0, 0, 0, 0.5);
+				border-radius: 4px;
+				padding: 1em;
+				display: flex;
+				flex-direction: column;
+			}
+			#settings label + label {
+				margin-top: 0.3em;
+			}
+			#settings p {
+				margin: 0 0 0.3em 0;
+			}
 		</style>
 	</head>
 	<body>
-		<div id="app"><canvas></canvas></div>
+		<div id="app">
+			<canvas></canvas>
+			<div id="settings">
+				<p><strong>WASD</strong> to move.<br>Click and drag to rotate.</p>
+				<p>Reload for different colours</p>
+				<label><input checked type="checkbox" id="enable-dither" /> Dither</label>
+				<label><input checked type="checkbox" id="enable-edges" /> Edges</label>
+				<label>
+					<select id="render-mode">
+						<option>Full</option>
+						<option>Shading</option>
+						<option>Albedo</option>
+						<option>Normals</option>
+						<option>Position</option>
+						<option>Depth</option>
+					</select>
+					Render Mode
+				</label>
+			</div>
+		</div>
 		<script type="module">
 			const { main } = await import('./bundle.js');
-			await main(document.querySelector('#app canvas'))
+			const gfx = await main(document.querySelector('#app canvas'))
+			const ditherChk = document.querySelector('#enable-dither');
+			const edgesChk = document.querySelector('#enable-edges');
+			const modeSel = document.querySelector('#render-mode');
+			function updateSettings() {
+				gfx.configure({
+					dither: ditherChk.checked,
+					drawEdges: edgesChk.checked,
+					renderMode: modeSel.selectedIndex,
+				});
+			}
+			updateSettings();
+			ditherChk.addEventListener('click', updateSettings);
+			edgesChk.addEventListener('click', updateSettings);
+			modeSel.addEventListener('change', updateSettings);
 		</script>
 	</body>
 </html>

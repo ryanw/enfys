@@ -2,6 +2,6 @@
 	"entryPoints": ["./src/"],
 	"entryPointStrategy": "expand",
 	"exclude": ["src/**/*.test.ts", "src/global.d.ts"],
-	"excludeExternals": true,
+	"excludeExternals": false,
 	"out": "public/docs"
 }

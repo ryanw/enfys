@@ -22,15 +22,26 @@ export class UniformBuffer {
 		this.offsets = calculateOffsets(mapping);
 	}
 
-	set(field: string, value: boolean | number | Array<number>) {
-		const [typ, offset] = this.offsets[field];
-		if (offset == null) {
-			console.error("Uniform field not found", field);
-			return;
+	replace(fields: Record<string, boolean | number | Array<number>>) {
+		const theirKeys = new Set(Object.keys(fields));
+		const ourKeys = new Set(Object.keys(this.offsets))
+		// FIXME symmetricDifference isn't in the types
+		const diff: Set<string> = (theirKeys as any).symmetricDifference(ourKeys);
+		if (diff.size > 0) {
+			console.error("Keys don't match", diff, theirKeys, ourKeys);
+			throw new Error(`Keys don't match: ${theirKeys} != ${ourKeys}`);
 		}
-		const valueBuffer = toArrayBuffer(typ, value);
-		this.gfx.device.queue.writeBuffer(this.buffer, offset, valueBuffer);
 	}
+
+	set(field: string, value: boolean | number | Array<number>) {
+	const [typ, offset] = this.offsets[field];
+	if (offset == null) {
+		console.error("Uniform field not found", field);
+		return;
+	}
+	const valueBuffer = toArrayBuffer(typ, value);
+	this.gfx.device.queue.writeBuffer(this.buffer, offset, valueBuffer);
+}
 }
 
 function toArray(value: boolean | number | Array<number>): Array<number> {

@@ -8,6 +8,12 @@ import { UniformBuffer } from 'engine/uniform_buffer';
  * Composes a {@link GBuffer} onto a single {@link GPUTexture}
  */
 export class ComposePipeline extends Pipeline {
+	// FIXME DRY this mess
+	settings = {
+		dither: false,
+		drawEdges: false,
+		renderMode: 0,
+	};
 	private pipeline: GPURenderPipeline;
 	private uniformBuffer: UniformBuffer;
 	private sampler: GPUSampler;
@@ -86,7 +92,8 @@ export class ComposePipeline extends Pipeline {
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['dither', 'i32'],
-			['color', 'vec3f'],
+			['drawEdges', 'i32'],
+			['renderMode', 'i32'],
 			['t', 'f32'],
 		]);
 		this.sampler = device.createSampler({
@@ -107,8 +114,9 @@ export class ComposePipeline extends Pipeline {
 
 		const targetView = target.createView();
 
-		this.uniformBuffer.set('dither', true);
-		this.uniformBuffer.set('color', [0.6, 0.9, 0.0]);
+		this.uniformBuffer.set('dither', this.settings.dither);
+		this.uniformBuffer.set('drawEdges', this.settings.drawEdges);
+		this.uniformBuffer.set('renderMode', this.settings.renderMode);
 		this.uniformBuffer.set('t', performance.now() / 1000.0);
 
 		const clearValue = clear.map(v => v / 255);

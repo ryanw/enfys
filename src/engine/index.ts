@@ -9,6 +9,12 @@ import { Scene } from './scene';
 export { Color } from './color';
 export type Size = Vector2;
 
+export interface Config {
+	dither: boolean;
+	drawEdges: boolean;
+	renderMode: number;
+}
+
 /**
  * Main rendering context, all access to the GPU goes through this.
  *
@@ -93,6 +99,19 @@ export class Gfx {
 		const w = this.canvas.clientWidth;
 		const h = this.canvas.clientHeight;
 		return [w, h];
+	}
+
+	configure(options: Partial<Config>) {
+		const composeOpts = this.renderer.pipelines.compose.settings;
+		if (options.dither != null) {
+			composeOpts.dither = options.dither;
+		}
+		if (options.drawEdges != null) {
+			composeOpts.drawEdges = options.drawEdges;
+		}
+		if (options.renderMode != null) {
+			composeOpts.renderMode = options.renderMode;
+		}
 	}
 
 	/**

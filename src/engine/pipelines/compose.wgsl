@@ -7,7 +7,8 @@ struct VertexOut {
 
 struct Uniforms {
 	dither: i32,
-	color: vec3f,
+	drawEdges: i32,
+	renderMode: i32,
 	t: f32,
 }
 
@@ -84,18 +85,20 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	const et = 1.0 / 10.0;
-	if length(norms[0] - norms[1]) > et {
-		isEdge = true;
-	}
-	if length(norms[2] - norms[3]) > et {
-		isEdge = true;
-	}
-	if length(norms[0] - norms[2]) > et {
-		isEdge = true;
-	}
-	if length(norms[1] - norms[3]) > et {
-		isEdge = true;
+	if u.drawEdges > 0 {
+		const et = 1.0 / 2.0;
+		if length(norms[0] - norms[1]) > et {
+			isEdge = true;
+		}
+		if length(norms[2] - norms[3]) > et {
+			isEdge = true;
+		}
+		if length(norms[0] - norms[2]) > et {
+			isEdge = true;
+		}
+		if length(norms[1] - norms[3]) > et {
+			isEdge = true;
+		}
 	}
 
 	let lightPos = vec3(sin(u.t) * 20.0, 19.0, -3.0);
@@ -128,9 +131,32 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	if isEdge {
 		color = vec4(1.0);
 	}
-
+	else {
+		switch (u.renderMode) {
+			// Shading
+			case 1: {
+				color = vec4(vec3(brightness), 1.0);
+			}
+			// Albedo
+			case 2: {
+				color = albedo;
+			}
+			// Normal
+			case 3: {
+				color = vec4(normal.xyz * 0.5 + 0.5, 1.0);
+			}
+			// Position
+			case 4: {
+				color = vec4(pos.xyz / 100.0, 1.0);
+			}
+			// Depth
+			case 5: {
+				color = vec4(vec3(depth * 100.0), 1.0);
+			}
+			default: {}
+		}
+	}
 
 	//let fog = smoothstep(1.0 / 500.0, 1.0 / 300.0, depth);
-
 	return color;
 }
