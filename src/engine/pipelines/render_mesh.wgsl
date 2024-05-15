@@ -53,7 +53,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.position = mvp * vec4(in.position, 1.0);
 	out.uv = in.position.xy * 0.5 + 0.5;
 	out.normal = (entity.model * vec4(in.normal, 0.0)).xyz;
-	let modelPosition = mv * vec4(in.position, 1.0);
+	let modelPosition = entity.model * vec4(in.position, 1.0);
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
 
@@ -71,8 +71,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	out.albedo =  color;
 	out.position = vec4(in.modelPosition, 1.0);
-	out.normal = vec4(in.modelNormal, 0.0);
-	//out.color = vec4(in.normal, color.a);
+	out.normal = vec4(in.normal, 0.0);
 
 	return out;
 }

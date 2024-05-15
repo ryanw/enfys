@@ -167,16 +167,11 @@ export class QuadMesh extends SimpleMesh {
 		for (let y = 0; y <= divisions[1]; y++) {
 			for (let x = 0; x <= divisions[0]; x++) {
 				const nextQuad: Array<Point3> =
-					quad.map(p => {
-						const np: Point3 = add(p, [
-							stepX * x + offset[0],
-							0,
-							stepY * y + offset[1],
-						]);
-						np[1] = (Math.sin(np[0] * 12.0) + Math.sin(np[2] * 12.0)) / 30.0;
-
-						return np;
-					});
+					quad.map(p => add(p, [
+						stepX * x + offset[0],
+						0,
+						stepY * y + offset[1],
+					]));
 				subquad = subquad.concat(nextQuad);
 			}
 		}

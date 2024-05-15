@@ -170,8 +170,8 @@ export function calculateNormals(vertices: Array<NormalVertex>) {
 		const p1 = vertices[i + 1].position;
 		const p2 = vertices[i + 2].position;
 
-		const v0 = subtract(p2, p0);
-		const v1 = subtract(p1, p0);
+		const v0 = subtract(p1, p0);
+		const v1 = subtract(p2, p0);
 		const normal = normalize(cross(v0, v1));
 		vertices[i + 0].normal = normal;
 		vertices[i + 1].normal = normal;

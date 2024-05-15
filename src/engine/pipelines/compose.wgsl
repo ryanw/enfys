@@ -98,9 +98,9 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		isEdge = true;
 	}
 
-	let lightPos = vec3(sin(u.t) * 8.0, 2.0, -3.0);
+	let lightPos = vec3(sin(u.t) * 20.0, 19.0, -3.0);
 	let lightDir = normalize(pos - lightPos);
-	let shade = dot(normal, lightDir) * 0.5 + 0.5;
+	let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 
 
 	let shadeLevels = 3.0;
