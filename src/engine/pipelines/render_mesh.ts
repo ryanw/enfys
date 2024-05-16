@@ -1,9 +1,8 @@
 import { Gfx } from 'engine';
 import { Pipeline } from './';
 import shaderSource from './render_mesh.wgsl';
-import { Drawable } from 'engine/scene';
+import { SceneItem } from 'engine/scene';
 import { Camera } from 'engine/camera';
-import { RingBuffer } from 'engine/ring_buffer';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
 
@@ -12,7 +11,6 @@ import { SimpleMesh } from 'engine/mesh';
  */
 export class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
-	private entityBuffer: RingBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -70,21 +68,15 @@ export class RenderMeshPipeline extends Pipeline {
 				depthCompare: 'less',
 			}
 		});
-
-		this.entityBuffer = new RingBuffer(gfx, 1024);
 	}
 
-	draw(encoder: GPUCommandEncoder, src: Drawable<SimpleMesh>, camera: Camera, target: GBuffer) {
+	draw(encoder: GPUCommandEncoder, src: SceneItem<SimpleMesh>, camera: Camera, target: GBuffer) {
 		const { device } = this.gfx;
 
 		const positionView = target.position.createView();
 		const albedoView = target.albedo.createView();
 		const normalView = target.normal.createView();
 		const depthView = target.depth.createView();
-
-		const entityId = this.entityBuffer.push(
-			new Float32Array(src.transform)
-		);
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
 			clearValue: [0, 0, 0, 0],
@@ -110,7 +102,7 @@ export class RenderMeshPipeline extends Pipeline {
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: camera.uniform.bindingResource() },
-				{ binding: 1, resource: this.entityBuffer.bindingResource(entityId) },
+				{ binding: 1, resource: src.transform.bindingResource() },
 				{ binding: 2, resource: src.material.bindingResource() },
 			],
 		});

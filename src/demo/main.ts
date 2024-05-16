@@ -33,8 +33,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	camera.translate([0, 30, 0]);
 	camera.rotate(0.11, 0);
 	const cameraController = new CameraController(el, camera);
-	const scene = new Scene();
-
+	const scene = new Scene(gfx);
 	const cube = new Cube(gfx);
 	const icosahedron = new Icosahedron(gfx);
 	const shapes: Array<Drawable<SimpleMesh>> = [];
@@ -45,7 +44,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
 	};
 	shapes.push(shape);
-	scene.addMesh(shape);
+	scene.add(shape);
 
 	for (let i = 0; i < 100; i++) {
 		const r = 128;
@@ -58,19 +57,19 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 			material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
 		};
 		shapes.push(shape);
-		scene.addMesh(shape);
+		scene.add(shape);
 	}
 
 	const terrain = new QuadMesh(gfx, [64, 64], [256, 256]);
 	const terrainMaterial = new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5));
 
-	scene.addMesh({
+	scene.add({
 		transform: translation(0, -2, 10),
 		object: terrain,
 		material: terrainMaterial,
 	});
 
-	scene.addMesh({
+	scene.add({
 		transform: translation(0, 3, 9),
 		object: icosahedron,
 		material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
