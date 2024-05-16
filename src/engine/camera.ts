@@ -86,8 +86,8 @@ export class Camera {
 	translate(direction: Vector3) {
 		const trans = translation(...direction);
 		const rot = multiply(
-			rotation(0, 0, this._rotation[2]),
 			rotation(0, this._rotation[1], 0),
+			rotation(this._rotation[0], 0, 0),
 		);
 		const invRot = inverse(rot)!;
 		const pos = transformPoint(multiply(trans, invRot), this._position);
