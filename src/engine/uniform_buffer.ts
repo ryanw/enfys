@@ -32,17 +32,18 @@ export class UniformBuffer {
 			throw new Error(`Keys don't match: ${theirKeys} != ${ourKeys}`);
 		}
 
+		// FIXME update everything in 1 write
 		for (const key of theirKeys) {
 			this.set(key, fields[key]);
 		}
 	}
 
 	set(field: string, value: boolean | number | Array<number>) {
-		const [typ, offset] = this.offsets[field];
-		if (offset == null) {
+		if (!(field in this.offsets)) {
 			console.error("Uniform field not found", field);
 			return;
 		}
+		const [typ, offset] = this.offsets[field];
 		const valueBuffer = toArrayBuffer(typ, value);
 		this.gfx.device.queue.writeBuffer(this.buffer, offset, valueBuffer);
 	}
