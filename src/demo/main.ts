@@ -1,8 +1,8 @@
 import { Gfx, UnsupportedError } from 'engine';
 import { Cube, Icosahedron, QuadMesh, SimpleMesh } from 'engine/mesh';
 import { Camera } from 'engine/camera';
-import { Drawable, Scene } from 'engine/scene';
-import { multiply, rotation, scaling, translation } from 'engine/math/transform';
+import { Entity, Scene } from 'engine/scene';
+import { multiply, rotation, translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
 import { CameraController } from 'engine/input';
@@ -36,49 +36,49 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const scene = new Scene(gfx);
 	const cube = new Cube(gfx);
 	const icosahedron = new Icosahedron(gfx);
-	const shapes: Array<Drawable<SimpleMesh>> = [];
+	const shapes: Array<Entity<SimpleMesh>> = [];
 
-	const shape = {
-		object: cube,
-		transform: translation(0, 0, 9),
-		material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
-	};
-	shapes.push(shape);
-	scene.add(shape);
+	const entity = new Entity(
+		gfx,
+		cube,
+		new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
+		translation(0, 0, 9),
+	);
+	scene.add(entity);
+	shapes.push(entity);
 
 	for (let i = 0; i < 100; i++) {
 		const r = 128;
 		const x = randRange(-r, r);
 		const y = randRange(10, 32);
 		const z = randRange(-r, r);
-		const shape = {
-			object: icosahedron,
-			transform: translation(x, y, z),
-			material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
-		};
-		shapes.push(shape);
-		scene.add(shape);
+
+		const entity = new Entity(
+			gfx,
+			icosahedron,
+			new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
+			translation(x, y, z),
+		);
+		scene.add(entity);
+		shapes.push(entity);
 	}
 
 	const terrain = new QuadMesh(gfx, [64, 64], [256, 256]);
 	const terrainMaterial = new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5));
 
-	scene.add({
-		transform: translation(0, -2, 10),
-		object: terrain,
-		material: terrainMaterial,
-	});
+	scene.add(new Entity(
+		gfx,
+		terrain,
+		terrainMaterial,
+		translation(0, -2, 10),
+	));
 
-	scene.add({
-		transform: translation(0, 3, 9),
-		object: icosahedron,
-		material: new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
-	});
-
-
-
-
-
+	scene.add(new Entity(
+		gfx,
+		icosahedron,
+		new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
+		translation(0, 3, 9),
+	));
 
 
 	const terrainPipeline = new TerrainPipeline(gfx);
@@ -87,9 +87,16 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		await terrainPipeline.compute(terrain, t);
 	}
 
+	function update(dt: number) {
+		updateTerrain(terrain, performance.now() / 1000);
+		for (const shape of shapes) {
+			shape.transform = multiply(shape.transform, rotation(0.4 * dt, 0.2 * dt, 0.8 * dt));
+		}
+	}
+
 	gfx.run(async (dt) => {
 		cameraController.update(dt);
-		updateTerrain(terrain, performance.now() / 1000);
+		update(dt);
 		await gfx.draw(scene, camera);
 	});
 

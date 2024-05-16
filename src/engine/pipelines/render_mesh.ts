@@ -1,7 +1,7 @@
 import { Gfx } from 'engine';
 import { Pipeline } from './';
 import shaderSource from './render_mesh.wgsl';
-import { SceneItem } from 'engine/scene';
+import { Entity } from 'engine/scene';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
@@ -70,7 +70,7 @@ export class RenderMeshPipeline extends Pipeline {
 		});
 	}
 
-	draw(encoder: GPUCommandEncoder, src: SceneItem<SimpleMesh>, camera: Camera, target: GBuffer) {
+	draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, target: GBuffer) {
 		const { device } = this.gfx;
 
 		const positionView = target.position.createView();
@@ -102,7 +102,7 @@ export class RenderMeshPipeline extends Pipeline {
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: camera.uniform.bindingResource() },
-				{ binding: 1, resource: src.transform.bindingResource() },
+				{ binding: 1, resource: src.bindingResource() },
 				{ binding: 2, resource: src.material.bindingResource() },
 			],
 		});

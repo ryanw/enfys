@@ -65,7 +65,7 @@ export class UniformBuffer {
 		this.gfx.device.queue.writeBuffer(this.buffer, offset, valueBuffer);
 	}
 
-	bindingResource() {
+	bindingResource(): GPUBindingResource {
 		return { buffer: this.buffer };
 	}
 }

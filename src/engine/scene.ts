@@ -3,18 +3,34 @@ import { Material } from './material';
 import { Color, Gfx } from 'engine';
 import { SimpleMesh } from './mesh';
 import { UniformBuffer } from './uniform_buffer';
+import { identity } from './math/transform';
 
-export interface Drawable<T> {
-	object: T;
-	material: Material;
-	transform: Matrix4;
-}
+export class Entity<T = any> {
+	private buffer: UniformBuffer;
+	private _transform: Matrix4 = identity();
 
+	constructor(
+		gfx: Gfx,
+		readonly object: T,
+		public material: Material,
+		transform: Matrix4 = identity(),
+	) {
+		this.buffer = new UniformBuffer(gfx, [['transform', 'mat4x4f']]);
+		this.transform = transform;
+	}
 
-export interface SceneItem<T> {
-	object: T;
-	material: Material;
-	transform: UniformBuffer;
+	get transform(): Matrix4 {
+		return [...this._transform];
+	}
+
+	set transform(transform: Matrix4) {
+		this._transform = [...transform];
+		this.buffer.set('transform', transform);
+	}
+
+	bindingResource(): GPUBindingResource {
+		return this.buffer.bindingResource();
+	}
 }
 
 /**
@@ -22,19 +38,11 @@ export interface SceneItem<T> {
  */
 export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
-	meshes: SceneItem<SimpleMesh>[] = [];
+	meshes: Entity<SimpleMesh>[] = [];
 
 	constructor(readonly gfx: Gfx) { }
 
-	add(drawable: Drawable<SimpleMesh>) {
-		const buffer = new UniformBuffer(this.gfx, [
-			['transform', 'mat4x4f'],
-		]);
-		buffer.set('transform', drawable.transform);
-		this.meshes.push({
-			object: drawable.object,
-			material: drawable.material,
-			transform: buffer,
-		});
+	add(item: Entity<SimpleMesh>) {
+		this.meshes.push(item);
 	}
 }

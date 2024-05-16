@@ -23,11 +23,11 @@ export interface Config {
  * const canvas = document.querySelector('canvas');
  * const gfx = await Gfx.attach(canvas);
  * const scene = new Scene();
- * scene.addMesh({
- *   object: new Cube(gfx),
- *   transform: identity(),
- *   material: new Material([200, 80, 20, 255]),
- * });
+ * scene.add(new Entity(
+ *   gfx,
+ *   new Cube(gfx),
+ *   new Material([200, 80, 20, 255]),
+ * ));
  * const camera = new Camera();
  * await gfx.draw(scene, camera);
  */
