@@ -25,18 +25,30 @@ var<storage, read_write> triangles: array<Triangle>;
 fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	let id = globalId.x;
 	var tri = triangles[id];
-	let t = u.t / 48.0;
 
+	// Speed of undulations
+	let t = u.t * 10.0;
+
+	// For each vertex in the triangle
 	for (var i = 0; i < 3; i++) {
-		let p = toVec(tri.vertices[i].position) / 512.0 + vec3(t, 0.0, 0.0);
-		let h = fractalNoise(vec3(p.x, 0.0, p.z), 3) * 48.0;
-		tri.vertices[i].position[1] = h;
+		let p = toVec(tri.vertices[i].position);
+		tri.vertices[i].position[1] = surfaceHeight(p, t);
 	}
 	let normal = calculateNormal(tri);
 	for (var i = 0; i < 3; i++) {
 		tri.vertices[i].normal = array(normal.x, normal.y, normal.z);
 	}
 	triangles[id] = tri;
+}
+
+fn surfaceHeight(op: vec3f, t: f32) -> f32 {
+	var p = op / 512.0;
+
+	var d = fractalNoise(vec3(p.x + t / 512.0, 0.0, p.z), 3) * 48.0;
+
+	let roadWidth = 0.1;
+	d *= smoothstep(0.0, roadWidth, abs(p.x));
+	return d;
 }
 
 fn calculateNormal(tri: Triangle) -> vec3f {
