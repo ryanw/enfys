@@ -9,12 +9,25 @@ export type ByteSize = number;
 export type Alignment = number;
 
 
+/**
+ * Storage for a struct inside a {@link GPUBuffer} which can be bound as a uniform in shaders.
+ * Automatically handles byte alignment of mixed field types.
+ */
 export class UniformBuffer {
+	/**
+	 * Raw uniform buffer
+	 */
 	readonly buffer: GPUBuffer;
+	/**
+	 * Aligned byte offsets of each field in the struct
+	 */
 	readonly offsets: UniformOffsets;
 
 	constructor(
 		readonly gfx: Gfx,
+		/**
+		 * Array of {@link UniformMappingPair} defining the shape of the struct as it appears in WGSL
+		 */
 		readonly mapping: UniformMapping,
 	) {
 		const size = calculateBufferSize(mapping);
@@ -38,6 +51,10 @@ export class UniformBuffer {
 		}
 	}
 
+	/**
+	 * Update a field on the struct on the GPU.
+	 * Only fields defined in the original {@link UniformMapping} can be set.
+	 */
 	set(field: string, value: boolean | number | Array<number>) {
 		if (!(field in this.offsets)) {
 			console.error("Uniform field not found", field);

@@ -5,7 +5,7 @@ import shaderSource from "./terrain.wgsl";
 import { UniformBuffer } from "engine/uniform_buffer";
 
 /**
- * Updates a subdivided {@link QuadMesh} using a computed heightmap
+ * Compute Shader that takes a subdivided {@link QuadMesh}, updates the Y of every vertex, and recalculates every triangle's normal
  */
 export class TerrainPipeline extends Pipeline {
 	private pipeline: GPUComputePipeline
