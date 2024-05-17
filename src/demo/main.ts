@@ -38,8 +38,8 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const seed = Math.random();
 
 	const camera = new Camera(gfx);
-	camera.translate([0, 48, 0]);
-	camera.rotate(0.09, 0);
+	camera.translate([0, 64, 0]);
+	camera.rotate(0.11, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
 	const cube = new Cube(gfx);
