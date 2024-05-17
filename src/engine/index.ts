@@ -71,6 +71,8 @@ export class Gfx {
 		 */
 		readonly device: GPUDevice,
 	) {
+		canvas.setAttribute('tabIndex', '0');
+		canvas.focus();
 		this.format = navigator.gpu.getPreferredCanvasFormat();
 		this.context = canvas.getContext('webgpu') as GPUCanvasContext;
 		this.context.configure({
