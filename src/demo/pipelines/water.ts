@@ -7,7 +7,7 @@ import { UniformBuffer } from "engine/uniform_buffer";
 /**
  * Compute Shader that takes a subdivided {@link QuadMesh}, updates the Y of every vertex, and recalculates every triangle's normal
  */
-export class TerrainPipeline extends Pipeline {
+export class WaterPipeline extends Pipeline {
 	private pipeline: GPUComputePipeline
 	private uniformBuffer: UniformBuffer;
 
@@ -20,7 +20,7 @@ export class TerrainPipeline extends Pipeline {
 			['t', 'f32'],
 		]);
 
-		const shader = device.createShaderModule({ label: 'TerrainPipeline Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'WaterPipeline Shader', code: shaderSource });
 		const bindGroupLayout = device.createBindGroupLayout({
 			entries: [
 				{
@@ -43,27 +43,27 @@ export class TerrainPipeline extends Pipeline {
 		});
 
 		this.pipeline = gfx.device.createComputePipeline({
-			label: 'TerrainPipeline',
+			label: 'WaterPipeline',
 			layout: pipelineLayout,
-			compute: { module: shader, entryPoint: "mainLand" },
+			compute: { module: shader, entryPoint: "mainWater" },
 		});
 	}
 
-	async compute(terrain: QuadMesh, t: number = 0, encoder?: GPUCommandEncoder) {
+	async compute(water: QuadMesh, t: number = 0, encoder?: GPUCommandEncoder) {
 		const { device } = this.gfx;
 		const workgroupSize = 256;
-		const triangleCount = terrain.vertexCount / 3;
+		const triangleCount = water.vertexCount / 3;
 
-		const enc = encoder || device.createCommandEncoder({ label: "TerrainPipeline Command Encoder" });
-		const pass = enc.beginComputePass({ label: "TerrainPipeline Compute Pass" });
+		const enc = encoder || device.createCommandEncoder({ label: "WaterPipeline Command Encoder" });
+		const pass = enc.beginComputePass({ label: "WaterPipeline Compute Pass" });
 		this.uniformBuffer.set('t', t || performance.now() / 1000);
 
 		const bindGroup = device.createBindGroup({
-			label: 'TerrainPipeline Bind Group',
+			label: 'WaterPipeline Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: { buffer: this.uniformBuffer.buffer } },
-				{ binding: 1, resource: { buffer: terrain.buffer } },
+				{ binding: 1, resource: { buffer: water.buffer } },
 			],
 		});
 

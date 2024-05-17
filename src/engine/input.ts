@@ -9,6 +9,7 @@ export enum Key {
 	Right,
 	Up,
 	Down,
+	Boost,
 }
 
 export class CameraController {
@@ -19,6 +20,7 @@ export class CameraController {
 		'd': Key.Right,
 		'q': Key.Down,
 		'e': Key.Up,
+		'shift': Key.Boost,
 	};
 
 	heldKeys = new Set<Key>;
@@ -30,7 +32,7 @@ export class CameraController {
 	}
 
 	update(dt: number) {
-		const speed = 30;
+		const speed = this.heldKeys.has(Key.Boost) ? 100 : 30;
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {
@@ -84,13 +86,13 @@ export class CameraController {
 	}
 
 	onKeyDown = (e: KeyboardEvent) => {
-		const key: Key | undefined = this.bindings[e.key];
+		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.add(key);
 	}
 
 	onKeyUp = (e: KeyboardEvent) => {
-		const key: Key | undefined = this.bindings[e.key];
+		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.delete(key);
 	}

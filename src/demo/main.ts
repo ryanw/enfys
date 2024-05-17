@@ -7,6 +7,7 @@ import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
 import { CameraController } from 'engine/input';
 import { TerrainPipeline } from './pipelines/terrain';
+import { WaterPipeline } from './pipelines/water';
 
 /**
  * Start the demo
@@ -23,10 +24,15 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		throw e;
 	}
 
+	//if (window.devicePixelRatio >= 2) {
+	//	gfx.pixelRatio = 1 / 3;
+	//} else {
+	//	gfx.pixelRatio = 1 / 2;
+	//}
 	if (window.devicePixelRatio >= 2) {
-		gfx.pixelRatio = 1 / 3;
+		gfx.canvasPixelRatio = 1 / 3;
 	} else {
-		gfx.pixelRatio = 1 / 2;
+		gfx.canvasPixelRatio = 1 / 2;
 	}
 
 	const camera = new Camera(gfx);
@@ -64,14 +70,25 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	}
 
 	const terrain = new QuadMesh(gfx, [64, 64], [256, 256]);
-	const terrainMaterial = new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5));
-
+	const terrainMaterial = new Material(gfx, hsl(0.3, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,
 		terrain,
 		terrainMaterial,
-		translation(0, -2, 10),
+		translation(0, -2, 0),
 	));
+	const terrainPipeline = new TerrainPipeline(gfx);
+	await terrainPipeline.compute(terrain);
+
+	const water = new QuadMesh(gfx, [64, 64], [256, 256]);
+	const waterMaterial = new Material(gfx, hsl(0.6, 0.5, 0.5));
+	scene.add(new Entity(
+		gfx,
+		water,
+		waterMaterial,
+		translation(0, 2, 0),
+	));
+	const waterPipeline = new WaterPipeline(gfx);
 
 	scene.add(new Entity(
 		gfx,
@@ -81,14 +98,12 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	));
 
 
-	const terrainPipeline = new TerrainPipeline(gfx);
-	async function updateTerrain(terrain: QuadMesh, t: number) {
-		terrainMaterial.color = hsl(t / 32.0 % 1.0, 0.5, 0.5);
-		await terrainPipeline.compute(terrain, t);
+	async function updateTerrain() {
+		await waterPipeline.compute(water, performance.now() / 1000);
 	}
 
 	function update(dt: number) {
-		updateTerrain(terrain, performance.now() / 1000);
+		updateTerrain();
 		for (const shape of shapes) {
 			shape.transform = multiply(shape.transform, rotation(0.4 * dt, 0.2 * dt, 0.8 * dt));
 		}

@@ -81,6 +81,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	out.albedo =  color;
 	out.position = vec4(in.modelPosition, 1.0);
+
 	out.normal = vec4(in.normal, 0.0);
 
 	return out;
