@@ -106,6 +106,9 @@ export class Gfx {
 	}
 
 	get fps(): number {
+		if (this.frameTimes.length < this.frameSample) {
+			return 0;
+		}
 		const total = this.frameTimes.reduce((a, dt) => a + 1 / dt, 0);
 		return total / this.frameTimes.length;
 	}

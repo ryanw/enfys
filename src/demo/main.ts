@@ -30,14 +30,16 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	//	gfx.pixelRatio = 1 / 2;
 	//}
 	if (window.devicePixelRatio >= 2) {
-		gfx.canvasPixelRatio = 1 / 3;
-	} else {
 		gfx.canvasPixelRatio = 1 / 2;
+	} else {
+		//gfx.canvasPixelRatio = 1 / 2;
 	}
 
+	const seed = Math.random() * 100000 | 0;
+
 	const camera = new Camera(gfx);
-	camera.translate([0, 30, 0]);
-	camera.rotate(0.11, 0);
+	camera.translate([0, 48, 0]);
+	camera.rotate(0.12, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
 	const cube = new Cube(gfx);
@@ -69,24 +71,25 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		shapes.push(entity);
 	}
 
-	const terrain = new QuadMesh(gfx, [64, 64], [256, 256]);
-	const terrainMaterial = new Material(gfx, hsl(0.3, 0.5, 0.5));
+	const hue = randRange();
+	const terrain = new QuadMesh(gfx, [64, 64], [512, 512]);
+	const terrainMaterial = new Material(gfx, hsl(hue, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,
 		terrain,
 		terrainMaterial,
-		translation(0, -2, 0),
+		translation(0, -2, 512),
 	));
 	const terrainPipeline = new TerrainPipeline(gfx);
-	await terrainPipeline.compute(terrain);
+	await terrainPipeline.compute(terrain, seed);
 
-	const water = new QuadMesh(gfx, [64, 64], [256, 256]);
-	const waterMaterial = new Material(gfx, hsl(0.6, 0.5, 0.5));
+	const water = new QuadMesh(gfx, [64, 64], [512, 512]);
+	const waterMaterial = new Material(gfx, hsl((hue + 0.3) % 1.0, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,
 		water,
 		waterMaterial,
-		translation(0, 2, 0),
+		translation(0, 2, 512),
 	));
 	const waterPipeline = new WaterPipeline(gfx);
 
@@ -118,7 +121,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	return gfx;
 }
 
-function randRange(min: number, max: number): number {
+function randRange(min: number = 0, max: number = 1): number {
 	const l = Math.min(min, max);
 	const r = Math.max(min, max);
 	const d = r - l;

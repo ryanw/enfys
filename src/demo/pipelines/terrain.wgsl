@@ -75,7 +75,7 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 	var d = fractalNoise(vec3(p.x + t / 512.0, 0.0, p.z), 3) * 48.0;
 
 	let riverWidth = 1.0 / 10.0;
-	let riverOffset = fractalNoise(vec3(100.0, 100.0, p.z/3.0), 3) / 2.0;
+	let riverOffset = fractalNoise(vec3(100.0, u.t, p.z/3.0), 3) / 2.0;
 	d *= smoothstep(0.0, riverWidth, abs(p.x + riverOffset - 0.3));
 	return d;
 }
