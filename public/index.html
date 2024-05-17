@@ -28,6 +28,8 @@
 				image-rendering: pixelated;
 			}
 			#settings {
+				transition: opacity 100ms;
+				opacity: 0.2;
 				position: fixed;
 				z-index: 1000;
 				top: 2em;
@@ -39,6 +41,9 @@
 				padding: 1em;
 				display: flex;
 				flex-direction: column;
+			}
+			#settings:hover {
+				opacity: 1.0;
 			}
 			#settings label {
 				user-select: none;

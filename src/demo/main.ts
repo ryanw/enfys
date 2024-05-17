@@ -35,11 +35,11 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		//gfx.canvasPixelRatio = 1 / 2;
 	}
 
-	const seed = Math.random() * 100000 | 0;
+	const seed = Math.random();
 
 	const camera = new Camera(gfx);
 	camera.translate([0, 48, 0]);
-	camera.rotate(0.12, 0);
+	camera.rotate(0.09, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
 	const cube = new Cube(gfx);
@@ -56,10 +56,9 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	shapes.push(entity);
 
 	for (let i = 0; i < 100; i++) {
-		const r = 128;
-		const x = randRange(-r, r);
+		const x = randRange(-128, 128);
 		const y = randRange(10, 32);
-		const z = randRange(-r, r);
+		const z = randRange(0, 512);
 
 		const entity = new Entity(
 			gfx,
@@ -71,25 +70,26 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		shapes.push(entity);
 	}
 
-	const hue = randRange();
-	const terrain = new QuadMesh(gfx, [64, 64], [512, 512]);
+	const hue = randRange(0, 1);
+	const waterHue = (hue + randRange(0.2, 0.8)) % 1.0;
+	const terrain = new QuadMesh(gfx, [64, 128], [512, 1024]);
 	const terrainMaterial = new Material(gfx, hsl(hue, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,
 		terrain,
 		terrainMaterial,
-		translation(0, -2, 512),
+		translation(0, 0, 1024),
 	));
 	const terrainPipeline = new TerrainPipeline(gfx);
 	await terrainPipeline.compute(terrain, seed);
 
-	const water = new QuadMesh(gfx, [64, 64], [512, 512]);
-	const waterMaterial = new Material(gfx, hsl((hue + 0.3) % 1.0, 0.5, 0.5));
+	const water = new QuadMesh(gfx, [32, 128], [256, 1024]);
+	const waterMaterial = new Material(gfx, hsl(waterHue, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,
 		water,
 		waterMaterial,
-		translation(0, 2, 512),
+		translation(0, 6, 1024),
 	));
 	const waterPipeline = new WaterPipeline(gfx);
 
@@ -102,14 +102,20 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 
 	async function updateTerrain() {
-		await waterPipeline.compute(water, performance.now() / 1000);
+		await waterPipeline.compute(water, seed + performance.now() / 1000);
 	}
 
+	const batchSize = 16;
+	let batchFrame = 0;
 	function update(dt: number) {
 		updateTerrain();
-		for (const shape of shapes) {
-			shape.transform = multiply(shape.transform, rotation(0.4 * dt, 0.2 * dt, 0.8 * dt));
+		for (let i = 0; i < batchSize; i++) {
+			const idx = (i + batchFrame * batchSize) % shapes.length;
+			const shape = shapes[idx];
+			const t = dt / 2.0;
+			shape.transform = multiply(shape.transform, rotation(1.0 * t, 1.3 * t, 1.8 * t));
 		}
+		batchFrame += 1;
 	}
 
 	gfx.run(async (dt) => {

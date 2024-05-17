@@ -154,6 +154,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	//let fog = smoothstep(1.0 / 500.0, 1.0 / 300.0, depth);
-	return color;
+	let fog = smoothstep(1.0 / 10000.0, 1.0 / 9000.0, depth);
+	return color * fog;
 }
