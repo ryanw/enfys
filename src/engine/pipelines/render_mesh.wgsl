@@ -1,4 +1,7 @@
+@import "engine/shaders/noise.wgsl";
+
 struct VertexIn {
+	@builtin(vertex_index) id: u32,
 	@location(0) position: vec3f,
 	@location(1) normal: vec3f,
 	@location(2) uv: vec2f,
@@ -52,7 +55,14 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let mvp = camera.projection * mv;
 	out.position = mvp * vec4(in.position, 1.0);
 	out.uv = in.position.xy * 0.5 + 0.5;
-	out.normal = (entity.model * vec4(in.normal, 0.0)).xyz;
+
+
+	// Normal is used for edge detection, add noise to connected triangles (probably) differ a little
+	let triangleId = vec3(in.id / 3);
+	let n = 40.0;
+	let n0 = rnd3u(triangleId) / n;
+	out.normal = (entity.model * vec4(normalize(in.normal + vec3(n0, 0, n0*2.0)), 0.0)).xyz;
+
 	let modelPosition = entity.model * vec4(in.position, 1.0);
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;

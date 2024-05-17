@@ -1,4 +1,4 @@
-@import "./noise.wgsl";
+@import "engine/shaders/noise.wgsl";
 
 struct Vertex {
 	// array instead of vec to avoid alignment issues

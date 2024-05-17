@@ -36,7 +36,14 @@ function transpileWgsl(fullpath, source, imports = new Set()) {
 	const dirname = path.dirname(fullpath);
 	imports.add(fullpath);
 	return source.replace(/@import\s+(?:"([^"]*)"|'([^']*)')\s*;?/gm, (_match, filename) => {
-		const importpath = path.resolve(dirname, filename);
+		let importpath = filename;
+		// Starts with ./ or ../
+		if (filename.indexOf(/^\.\.?\//).indexOf === 0) {
+			importpath = path.resolve(dirname, filename);
+		}
+		else {
+			importpath = path.resolve("./src/", filename);
+		}
 		const data = fs.readFileSync(importpath, 'utf8');
 		return transpileWgsl(importpath, data, imports) + "\n";
 	});

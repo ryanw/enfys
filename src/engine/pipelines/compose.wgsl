@@ -126,7 +126,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if isEdge {
-		color = vec4(1.0);
+		color = mix(color, vec4(1.0), 0.333);
 	}
 	else {
 		switch (u.renderMode) {
