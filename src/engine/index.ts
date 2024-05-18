@@ -116,8 +116,9 @@ export class Gfx {
 	}
 
 	configure(config: Partial<Config & { canvasPixelRatio: number }>) {
-		if (config.canvasPixelRatio) {
+		if (config.canvasPixelRatio && config.canvasPixelRatio !== this.canvasPixelRatio) {
 			this.canvasPixelRatio = config.canvasPixelRatio;
+			this.updateSize();
 		}
 		Object.assign(
 			this.renderer.pipelines.compose.config,
