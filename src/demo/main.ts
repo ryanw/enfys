@@ -38,8 +38,8 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const seed = Math.random();
 
 	const camera = new Camera(gfx);
-	camera.translate([0, 64, 0]);
-	camera.rotate(0.11, 0);
+	camera.translate([0, 96, 0]);
+	camera.rotate(0.07, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
 	const cube = new Cube(gfx);
@@ -83,7 +83,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const terrainPipeline = new TerrainPipeline(gfx);
 	await terrainPipeline.compute(terrain, seed);
 
-	const water = new QuadMesh(gfx, [32, 128], [256, 1024]);
+	const water = new QuadMesh(gfx, [64, 128], [512, 1024]);
 	const waterMaterial = new Material(gfx, hsl(waterHue, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,

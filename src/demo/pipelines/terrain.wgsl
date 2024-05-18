@@ -70,19 +70,22 @@ fn waterHeight(op: vec3f, t: f32) -> f32 {
 }
 
 fn landHeight(op: vec3f, t: f32) -> f32 {
-	var p = op / 512.0;
+	var p = op / 1024.0;
 
 	var d = fractalNoise(vec3(p.x, u.t, p.z), 3) * 96.0;
 
-	let riverWidth = 1.0 / 4.0;
-	var riverOffset = fractalNoise(vec3(100.0, u.t, p.z/5.0), 3) - 0.5;
+	let riverWidth = 1.0 / 12.0;
+	var riverOffset = fractalNoise(vec3(100.0, u.t, p.z/5.0), 2) - 0.5;
 	riverOffset *= 2.0;
 	// Start at origin so its always under camera
-	riverOffset *= smoothstep(-2.0, -1.2, p.z);
+	riverOffset *= smoothstep(-1.0, -0.4, p.z);
 
 
 	let river = abs(p.x + riverOffset);
+	// Flatten near river
 	d *= smoothstep(0.0, riverWidth, river);
+	// Boost far from river
+	d *= 1.0 + smoothstep(riverWidth, riverWidth * 8.0, river) * 2.0;
 	return d;
 }
 
