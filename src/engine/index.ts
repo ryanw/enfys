@@ -126,20 +126,20 @@ export class Gfx {
 	 * Updates the HTMLCanvasElement's width and height attributes to match its actual rendered pixel size
 	 */
 	updateSize() {
-		const w = Math.floor(this.canvas.parentElement!.clientWidth * this.canvasPixelRatio) / this.canvasPixelRatio;
-		const h = Math.floor(this.canvas.parentElement!.clientHeight * this.canvasPixelRatio) / this.canvasPixelRatio;
+		const w = Math.floor(this.canvas.parentElement!.clientWidth * this.canvasPixelRatio);
+		const h = Math.floor(this.canvas.parentElement!.clientHeight * this.canvasPixelRatio);
 		this.canvas.setAttribute('width', w.toFixed(0));
 		this.canvas.setAttribute('height', h.toFixed(0));
 		// Hack for odd numbers causing weird scaling
-		this.canvas.style.width = w + 'px';
-		this.canvas.style.height = h + 'px';
+		this.canvas.style.width = (w / this.canvasPixelRatio) + 'px';
+		this.canvas.style.height = (h / this.canvasPixelRatio) + 'px';
 	}
 
 	async draw(scene: Scene, camera: Camera) {
 		this.gbuffer.size = this.canvasSize.map(v => v * this.pixelRatio) as Vector2;
 		await this.encode(async (encoder) => {
 			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
-			this.renderer.compose(encoder, this.gbuffer, this.currentTexture, scene.clearColor);
+			this.renderer.compose(encoder, this.gbuffer, camera, this.currentTexture, scene.clearColor);
 		});
 	}
 

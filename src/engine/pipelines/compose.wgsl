@@ -7,6 +7,7 @@ struct VertexOut {
 }
 
 struct Uniforms {
+	invMvp: mat4x4f,
 	ditherSize: i32,
 	ditherDepth: i32,
 	drawEdges: i32,
@@ -21,18 +22,15 @@ var<uniform> u: Uniforms;
 var colorSampler: sampler;
 
 @group(0) @binding(2)
-var positionTex: texture_2d<f32>;
-
-@group(0) @binding(3)
 var albedoTex: texture_2d<f32>;
 
-@group(0) @binding(4)
+@group(0) @binding(3)
 var normalTex: texture_2d<f32>;
 
-@group(0) @binding(5)
+@group(0) @binding(4)
 var depthTex: texture_2d<f32>;
 
-@group(0) @binding(6)
+@group(0) @binding(5)
 var metaTex: texture_2d<u32>;
 
 const ditherMatrix = mat4x4(
@@ -60,13 +58,18 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 }
 
 
+fn world_from_screen_coord(coord : vec2f, depth_sample: f32) -> vec3f {
+  // reconstruct world-space position from the screen coordinate.
+  let posClip = vec4(coord.x * 2.0 - 1.0, (1.0 - coord.y) * 2.0 - 1.0, depth_sample, 1.0);
+  let posWorldW = u.invMvp * posClip;
+  let posWorld = posWorldW.xyz / posWorldW.www;
+  return posWorld;
+}
+
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let albedo = textureSample(albedoTex, colorSampler, in.uv);
 
-	let posSize = vec2f(textureDimensions(positionTex));
-	let posCoord = vec2u(posSize * in.uv);
-	let pos = textureLoad(positionTex, posCoord, 0).xyz;
 
 	let normalSize = vec2f(textureDimensions(normalTex));
 	let normalCoord = vec2u(normalSize * in.uv);
@@ -75,6 +78,8 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let depthSize = vec2f(textureDimensions(depthTex));
 	let depthCoord = vec2u(depthSize * in.uv);
 	let depth = textureLoad(depthTex, depthCoord, 0).r;
+
+	let pos = world_from_screen_coord(in.uv, depth);
 
 	let metaSize = vec2f(textureDimensions(metaTex));
 	let metaCoord = vec2u(metaSize * in.uv);
@@ -150,7 +155,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 
 
-	var color = vec4(0.0);
 	var brightness = 1.0;
 	if u.ditherSize > 0 {
 		let shadeLevels = f32(u.ditherDepth);
@@ -162,6 +166,8 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	else {
 		brightness = shade;
 	}
+
+	var color = vec4(0.0);
 	if BLEND_TO_ALPHA {
 		color = albedo * pow(brightness, 2.2);
 	}
@@ -170,7 +176,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if isEdge {
-		color = mix(color, vec4(1.0), 0.5);
+		color = mix(color, vec4(1.0), 0.666);
 	}
 	else {
 		switch (u.renderMode) {

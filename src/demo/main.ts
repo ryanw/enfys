@@ -112,7 +112,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		for (let i = 0; i < batchSize; i++) {
 			const idx = (i + batchFrame * batchSize) % shapes.length;
 			const shape = shapes[idx];
-			const t = dt / 2.0;
+			const t = dt * 2.0;
 			shape.transform = multiply(shape.transform, rotation(1.0 * t, 1.3 * t, 1.8 * t));
 		}
 		batchFrame += 1;

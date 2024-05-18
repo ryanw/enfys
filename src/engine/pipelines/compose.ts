@@ -3,6 +3,8 @@ import { Pipeline } from './';
 import shaderSource from './compose.wgsl';
 import { GBuffer } from 'engine/gbuffer';
 import { UniformBuffer } from 'engine/uniform_buffer';
+import { identity, inverse, multiply } from 'engine/math/transform';
+import { Camera } from 'engine/camera';
 
 /**
  * Composes a {@link GBuffer} onto a single {@link GPUTexture}
@@ -37,33 +39,27 @@ export class ComposePipeline extends Pipeline {
 					visibility: GPUShaderStage.FRAGMENT,
 					sampler: {}
 				},
-				// Position
-				{
-					binding: 2,
-					visibility: GPUShaderStage.FRAGMENT,
-					texture: { sampleType: 'unfilterable-float' }
-				},
 				// Albedo
 				{
-					binding: 3,
+					binding: 2,
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: {}
 				},
 				// Normal
 				{
-					binding: 4,
+					binding: 3,
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: { sampleType: 'unfilterable-float' }
 				},
 				// Depth
 				{
-					binding: 5,
+					binding: 4,
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: { sampleType: 'unfilterable-float' }
 				},
 				// Meta
 				{
-					binding: 6,
+					binding: 5,
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: { sampleType: 'uint' }
 				},
@@ -97,6 +93,7 @@ export class ComposePipeline extends Pipeline {
 		});
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
+			['invMvp', 'mat4x4f'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
 			['drawEdges', 'i32'],
@@ -116,11 +113,13 @@ export class ComposePipeline extends Pipeline {
 		});
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, target: GPUTexture, clear: Color = [0, 0, 0, 0]) {
+	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, target: GPUTexture, clear: Color = [0, 0, 0, 0]) {
 		const { device } = this.gfx;
 
 		const targetView = target.createView();
 
+		const cameraInvMvp = inverse(multiply(camera.projection, camera.view));
+		this.uniformBuffer.set('invMvp', cameraInvMvp || identity());
 		this.uniformBuffer.set('ditherSize', this.config.ditherSize);
 		this.uniformBuffer.set('ditherDepth', this.config.ditherDepth);
 		this.uniformBuffer.set('drawEdges', this.config.drawEdges);
@@ -145,11 +144,10 @@ export class ComposePipeline extends Pipeline {
 			entries: [
 				{ binding: 0, resource: { buffer: this.uniformBuffer.buffer } },
 				{ binding: 1, resource: this.sampler },
-				{ binding: 2, resource: src.position.createView() },
-				{ binding: 3, resource: src.albedo.createView() },
-				{ binding: 4, resource: src.normal.createView() },
-				{ binding: 5, resource: src.depth.createView() },
-				{ binding: 6, resource: src.meta.createView() },
+				{ binding: 2, resource: src.albedo.createView() },
+				{ binding: 3, resource: src.normal.createView() },
+				{ binding: 4, resource: src.depth.createView() },
+				{ binding: 5, resource: src.meta.createView() },
 			],
 		});
 

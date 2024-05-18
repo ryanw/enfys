@@ -17,9 +17,9 @@ struct VertexOut {
 }
 
 struct Fragment1Out {
-	@location(0) position: vec4f,
-	@location(1) albedo: vec4f,
-	@location(2) normal: vec4f,
+	@location(0) albedo: vec4f,
+	@location(1) normal: vec4f,
+	@location(2) metaOutput: u32,
 }
 
 struct Fragment2Out {
@@ -75,7 +75,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 
 @fragment
-fn fs_main_pass1(in: VertexOut) -> Fragment1Out {
+fn fs_main(in: VertexOut) -> Fragment1Out {
 	var out: Fragment1Out;
 	var color = material.color;
 
@@ -83,16 +83,8 @@ fn fs_main_pass1(in: VertexOut) -> Fragment1Out {
 	var shade = dot(lightDir, in.normal);
 
 	out.albedo =  color;
-	out.position = vec4(in.modelPosition, 1.0);
 
 	out.normal = vec4(in.normal, 0.0);
-
-	return out;
-}
-
-@fragment
-fn fs_main_pass2(in: VertexOut) -> Fragment2Out {
-	var out: Fragment2Out;
 	out.metaOutput = in.triangleId;
 	return out;
 }

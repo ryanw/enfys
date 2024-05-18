@@ -26,25 +26,19 @@ export class Renderer {
 		}
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, target: GPUTexture, clear?: Color) {
-		this.pipelines.compose.compose(encoder, src, target, clear);
+	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, target: GPUTexture, clear?: Color) {
+		this.pipelines.compose.compose(encoder, src, camera, target, clear);
 	}
 
 	clear(encoder: GPUCommandEncoder, target: GBuffer) {
 		const clearValue = { r: 0, g: 0, b: 0, a: 0 };
-		const positionView = target.position.createView();
 		const albedoView = target.albedo.createView();
 		const normalView = target.normal.createView();
+		const metaView = target.meta.createView();
 		const depthView = target.depth.createView();
 
 		encoder.beginRenderPass({
 			colorAttachments: [
-				{
-					view: positionView,
-					clearValue,
-					loadOp: 'clear',
-					storeOp: 'store',
-				},
 				{
 					view: albedoView,
 					clearValue,
@@ -53,6 +47,12 @@ export class Renderer {
 				},
 				{
 					view: normalView,
+					clearValue,
+					loadOp: 'clear',
+					storeOp: 'store',
+				},
+				{
+					view: metaView,
 					clearValue,
 					loadOp: 'clear',
 					storeOp: 'store',

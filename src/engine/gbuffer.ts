@@ -11,10 +11,6 @@ export class GBuffer {
 	 */
 	albedo!: GPUTexture;
 	/**
-	 * Texture to store the position of each pixel
-	 */
-	position!: GPUTexture;
-	/**
 	 * Texture to store the normal of each pixel
 	 */
 	normal!: GPUTexture;
@@ -46,7 +42,6 @@ export class GBuffer {
 			return;
 		}
 		this.albedo = this.gfx.createTexture('rgba8unorm', this.size, 'GBuffer Albedo Texture');
-		this.position = this.gfx.createTexture('rgba32float', this.size, 'GBuffer Position Texture');
 		this.normal = this.gfx.createTexture('rgba16float', this.size, 'GBuffer Normal Texture');
 		this.meta = this.gfx.createTexture('r8uint', this.size, 'GBuffer Meta Texture');
 		this.depth = this.gfx.createTexture('depth24plus', this.size, 'GBuffer Depth Texture');
