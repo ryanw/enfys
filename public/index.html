@@ -74,8 +74,9 @@
 				<p><strong>WASD+QE</strong> to move.<br>Click and drag to rotate.</p>
 				<p>Reload for different landscapes</p>
 				<label><input checked type="checkbox" id="enable-edges" /> Edges</label>
-				<label><input type="number" id="dither-size" value="1" min="0" max="8" /> Dither Size</label>
-				<label><input type="number" id="dither-depth" value="3" min="1" max="128" /> Dither Depth</label>
+				<label><input type="range" id="canvas-pixel" value="1" min="1" max="6" /> Canvas Scale</label>
+				<label><input type="range" id="dither-size" value="1" min="0" max="4" /> Dither Size</label>
+				<label><input type="range" id="dither-depth" value="3" min="1" max="16" /> Dither Depth</label>
 				<label>
 					<select id="render-mode">
 						<option>Full</option>
@@ -95,12 +96,14 @@
 			const { main } = await import('./bundle.js');
 			const gfx = await main(document.querySelector('#app canvas'))
 			const fps = document.querySelector('#fps span');
+			const canvasPixelInp = document.querySelector('#canvas-pixel');
 			const ditherSizeInp = document.querySelector('#dither-size');
 			const ditherDepthInp = document.querySelector('#dither-depth');
 			const edgesChk = document.querySelector('#enable-edges');
 			const modeSel = document.querySelector('#render-mode');
 			function updateSettings() {
 				gfx.configure({
+					canvasPixelRatio: 1.0/parseFloat(canvasPixelInp.value),
 					ditherSize: parseInt(ditherSizeInp.value),
 					ditherDepth: parseInt(ditherDepthInp.value),
 					drawEdges: edgesChk.checked,
@@ -108,8 +111,9 @@
 				});
 			}
 			updateSettings();
-			ditherSizeInp.addEventListener('click', updateSettings);
-			ditherDepthInp.addEventListener('click', updateSettings);
+			canvasPixelInp.addEventListener('input', updateSettings);
+			ditherSizeInp.addEventListener('input', updateSettings);
+			ditherDepthInp.addEventListener('input', updateSettings);
 			edgesChk.addEventListener('click', updateSettings);
 			modeSel.addEventListener('change', updateSettings);
 			setInterval(() => fps.innerHTML = gfx.fps.toFixed(0), 200);

@@ -115,7 +115,10 @@ export class Gfx {
 		return total / this.frameTimes.length;
 	}
 
-	configure(config: Partial<Config>) {
+	configure(config: Partial<Config & { canvasPixelRatio: number }>) {
+		if (config.canvasPixelRatio) {
+			this.canvasPixelRatio = config.canvasPixelRatio;
+		}
 		Object.assign(
 			this.renderer.pipelines.compose.config,
 			config,
