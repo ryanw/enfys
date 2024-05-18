@@ -155,7 +155,9 @@ export class QuadMesh extends SimpleMesh {
 			[-s0, 0, -s1],
 		];
 
-		let subquad: Array<Point3> = [];
+		const vertexCount = (divisions[0] + 1) * (divisions[1] + 1) * quad.length;
+
+		let subquad: Array<Point3> = new Array(vertexCount);
 
 		const gap = 0.0;
 		const stepX = s0 * 2 + gap;
@@ -166,19 +168,22 @@ export class QuadMesh extends SimpleMesh {
 		];
 		for (let y = 0; y <= divisions[1]; y++) {
 			for (let x = 0; x <= divisions[0]; x++) {
-				const nextQuad: Array<Point3> =
-					quad.map(p => add(p, [
+				const o = x + y * (divisions[0] + 1);
+				for (let i = 0; i < quad.length; i++) {
+					const p = quad[i];
+					const idx = o * quad.length + i;
+					const vertexPosition: Point3 = [
 						stepX * x + offset[0],
 						0,
 						stepY * y + offset[1],
-					]));
-				subquad = subquad.concat(nextQuad);
+					];
+					subquad[idx] = add(p, vertexPosition)
+				}
 			}
 		}
 
 		const vertices = subquad.map(toVertex);
 
-		calculateNormals(vertices);
 		super(gfx, vertices);
 	}
 }
