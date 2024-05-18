@@ -14,6 +14,7 @@ export interface Config {
 	ditherDepth: number;
 	drawEdges: boolean;
 	renderMode: number;
+	fog: number;
 }
 
 /**

@@ -12,6 +12,7 @@ struct Uniforms {
 	ditherDepth: i32,
 	drawEdges: i32,
 	renderMode: i32,
+	fog: f32,
 	t: f32,
 }
 
@@ -149,7 +150,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	let lightPos = vec3(sin(u.t) * 128.0, 256.0, 480.0 + cos(u.t) * 128.0);
+	let lightPos = vec3(sin(u.t/2.0) * 64.0, 64.0, 64.0 + cos(u.t/2.0) * 64.0);
 	let lightDir = normalize(pos - lightPos);
 	let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 
@@ -175,6 +176,17 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		color = vec4(albedo.rgb * pow(brightness, 2.2), 1.0) * albedo.a;
 	}
 
+	// Calculate fog for later
+	var fogFactor = 0.0;
+	if u.fog > 0.02 {
+		let density = 1.0;
+		let dd = smoothstep(1.0 / 5000.0 / u.fog, 1.0 / 10000.0 / u.fog, 1.0-depth);
+		fogFactor = dd;// exp(density * dd);
+	}
+	let fogColor = vec4(0.0);
+
+
+	// Draw edges
 	if isEdge {
 		color = mix(color, vec4(1.0), 0.2);
 	}
@@ -198,18 +210,22 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			}
 			// Depth
 			case 5: {
-				color = vec4(vec3(pow(1.0-depth, 0.3)), 1.0);
+				color = vec4(vec3((1.0-depth) * 100.0), 1.0);
 			}
 			// Meta
 			case 6: {
 				color = intToColor(metaVal);
 			}
+			// Fog
+			case 7: {
+				color = vec4(vec3(fogFactor), 1.0);
+				return color;
+			}
 			default: {}
 		}
 	}
 
-	let fog = smoothstep(1.0 / 10000.0, 1.0 / 9000.0, 1.0 - depth);
-	return color * fog;
+	return mix(color, fogColor, fogFactor);
 }
 
 fn intToColor(u: u32) -> vec4<f32> {

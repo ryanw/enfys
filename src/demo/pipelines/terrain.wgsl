@@ -65,20 +65,21 @@ fn mainWater(@builtin(global_invocation_id) globalId: vec3<u32>) {
 }
 
 fn waterHeight(op: vec3f, t: f32) -> f32 {
-	var p = op / 512.0;
+	var p = op / 32.0;
 
-	var d = fractalNoise(vec3(p.x + t / 512.0, 1000.0, p.z), 2) * 16.0;
+	var d = fractalNoise(vec3(p.x + t / 128.0, 1000.0 + t / 512.0, p.z), 2) * 8.0;
 
 	return d;
 }
 
 fn landIslandHeight(op: vec3f, t: f32) -> f32 {
-	var p = op / 512.0;
+	var p = op / 128.0;
 
-	let n = fractalNoise(vec3(p.x, 2000.0, p.z), 3);
-	var d = 90.0;
+	let n0 = fractalNoise(vec3(p.x, 1000.0 * u.t, p.z), 3);
+	let n1 = fractalNoise(vec3(p.x, -1717.0 * u.t, p.z), 3) * 2.0 - 1.0;
+	var d = 48.0;
 
-	d *= 1.0 - smoothstep(0.0, 1.0, length(p)) - n / 3.0;
+	d *= 1.0 - smoothstep(0.0, 1.2, pow(length(p*2.2), 2.4) * (1.0 - n1/2.0)) - n0 / 1.0;
 
 
 	return d;

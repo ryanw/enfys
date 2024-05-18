@@ -77,6 +77,7 @@
 				<label><input type="range" id="canvas-pixel" value="2" min="1" max="6" /> Canvas Scale</label>
 				<label><input type="range" id="dither-size" value="1" min="0" max="4" /> Dither Size</label>
 				<label><input type="range" id="dither-depth" value="3" min="1" max="16" /> Dither Depth</label>
+				<label><input type="range" id="fog-level" value="1.0" min="0.0" max="1.0" step="0.01" /> Fog</label>
 				<label>
 					<select id="render-mode">
 						<option>Full</option>
@@ -86,6 +87,7 @@
 						<option>Position</option>
 						<option>Depth</option>
 						<option>Meta</option>
+						<option>Fog</option>
 					</select>
 					Render Mode
 				</label>
@@ -99,6 +101,7 @@
 			const canvasPixelInp = document.querySelector('#canvas-pixel');
 			const ditherSizeInp = document.querySelector('#dither-size');
 			const ditherDepthInp = document.querySelector('#dither-depth');
+			const fogInp = document.querySelector('#fog-level');
 			const edgesChk = document.querySelector('#enable-edges');
 			const modeSel = document.querySelector('#render-mode');
 			function updateSettings() {
@@ -106,11 +109,13 @@
 					canvasPixelRatio: 1.0/parseFloat(canvasPixelInp.value),
 					ditherSize: parseInt(ditherSizeInp.value),
 					ditherDepth: parseInt(ditherDepthInp.value),
+					fog: parseFloat(fogInp.value),
 					drawEdges: edgesChk.checked,
 					renderMode: modeSel.selectedIndex,
 				});
 			}
 			updateSettings();
+			fogInp.addEventListener('input', updateSettings);
 			canvasPixelInp.addEventListener('input', updateSettings);
 			ditherSizeInp.addEventListener('input', updateSettings);
 			ditherDepthInp.addEventListener('input', updateSettings);

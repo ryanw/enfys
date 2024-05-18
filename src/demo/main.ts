@@ -29,11 +29,11 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 	const seed = Math.random();
 	const chunkSize: Size = [64, 64];
-	const chunkScale: Vector2 = [512, 512];
+	const chunkScale: Vector2 = [64, 64];
 
 	const camera = new Camera(gfx);
-	camera.translate([0, 96, 0]);
-	camera.rotate(0.07, 0);
+	camera.translate([0, 64, -64]);
+	camera.rotate(0.15, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
 
@@ -56,7 +56,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		gfx,
 		water,
 		waterMaterial,
-		translation(0, 6, chunkScale[1]),
+		translation(0, 0, chunkScale[1]),
 	));
 	const waterPipeline = new WaterPipeline(gfx);
 	async function updateTerrain() {

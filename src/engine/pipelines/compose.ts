@@ -15,6 +15,7 @@ export class ComposePipeline extends Pipeline {
 		ditherDepth: 2,
 		drawEdges: false,
 		renderMode: 0,
+		fog: 1.0,
 	};
 	private pipeline: GPURenderPipeline;
 	private uniformBuffer: UniformBuffer;
@@ -98,6 +99,7 @@ export class ComposePipeline extends Pipeline {
 			['ditherDepth', 'i32'],
 			['drawEdges', 'i32'],
 			['renderMode', 'i32'],
+			['fog', 'f32'],
 			['t', 'f32'],
 		]);
 		this.sampler = device.createSampler({
@@ -124,6 +126,7 @@ export class ComposePipeline extends Pipeline {
 		this.uniformBuffer.set('ditherDepth', this.config.ditherDepth);
 		this.uniformBuffer.set('drawEdges', this.config.drawEdges);
 		this.uniformBuffer.set('renderMode', this.config.renderMode);
+		this.uniformBuffer.set('fog', this.config.fog);
 		this.uniformBuffer.set('t', performance.now() / 1000.0);
 
 		const clearValue = clear.map(v => v / 255);
