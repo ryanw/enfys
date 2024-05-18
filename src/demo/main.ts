@@ -32,7 +32,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	if (window.devicePixelRatio >= 2) {
 		gfx.canvasPixelRatio = 1 / 2;
 	} else {
-		//gfx.canvasPixelRatio = 1 / 2;
+		gfx.canvasPixelRatio = 1 / 1;
 	}
 
 	const seed = Math.random();

@@ -1,4 +1,5 @@
 const BLEND_TO_ALPHA: bool = false;
+const EDGE_MODE: i32 = 2;
 
 struct VertexOut {
 	@builtin(position) position: vec4f,
@@ -30,6 +31,9 @@ var normalTex: texture_2d<f32>;
 
 @group(0) @binding(5)
 var depthTex: texture_2d<f32>;
+
+@group(0) @binding(6)
+var metaTex: texture_2d<u32>;
 
 const ditherMatrix = mat4x4(
 	0.0000, 0.5000, 0.1250, 0.6250,
@@ -70,33 +74,73 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 	let depthSize = vec2f(textureDimensions(depthTex));
 	let depthCoord = vec2u(depthSize * in.uv);
-	let depth = 1.0 - textureLoad(depthTex, depthCoord, 0).r;
+	let depth = textureLoad(depthTex, depthCoord, 0).r;
+
+	let metaSize = vec2f(textureDimensions(metaTex));
+	let metaCoord = vec2u(metaSize * in.uv);
+	let metaVal = textureLoad(metaTex, metaCoord, 0).r;
 
 	var isEdge = false;
-	var norms = array(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
-	for (var y = 0u; y < 2u; y++) {
-		for (var x = 0u; x < 2u; x++) {
-			let i = x + y * 2u;
-			let offset = vec2(i32(x), i32(y)) - 1;
-			let coord = vec2i(normalSize * in.uv) + offset;
-			let n = textureLoad(normalTex, coord, 0).xyz;
-			norms[i] = n;
-		}
-	}
 
 	if u.drawEdges > 0 {
-		const et = 1.0 / 2000.0;
-		if length(norms[0] - norms[1]) > et {
-			isEdge = true;
+		const et = 1.0 / 1500.0;
+
+
+		if EDGE_MODE == 0 {
+			var norms = array(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
+			for (var y = 0u; y < 2u; y++) {
+				for (var x = 0u; x < 2u; x++) {
+					let i = x + y * 2u;
+					let offset = vec2(i32(x), i32(y)) - 1;
+					let coord = vec2i(normalSize * in.uv) + offset;
+					let n = textureLoad(normalTex, coord, 0).xyz;
+					norms[i] = n;
+				}
+			}
+
+			if length(norms[0] - norms[1]) > et {
+				//isEdge = true;
+			}
+			if length(norms[2] - norms[3]) > et {
+				isEdge = true;
+			}
+			if length(norms[0] - norms[2]) > et {
+				//isEdge = true;
+			}
+			if length(norms[1] - norms[3]) > et {
+				isEdge = true;
+			}
+
+		} else if EDGE_MODE == 1 {
+			let n0 = textureLoad(normalTex, normalCoord + vec2(0, 1), 0).xyz;
+			let n1 = textureLoad(normalTex, normalCoord + vec2(1, 0), 0).xyz;
+			let n2 = textureLoad(normalTex, normalCoord - vec2(0, 1), 0).xyz;
+			let n3 = textureLoad(normalTex, normalCoord - vec2(1, 0), 0).xyz;
+			let d0 = textureLoad(depthTex, depthCoord + vec2(0, 1), 0).r;
+			let d1 = textureLoad(depthTex, depthCoord + vec2(1, 0), 0).r;
+			let d2 = textureLoad(depthTex, depthCoord - vec2(0, 1), 0).r;
+			let d3 = textureLoad(depthTex, depthCoord - vec2(1, 0), 0).r;
+			if d0 <= depth && length(n0 - normal) > et {
+				isEdge = true;
+			}
+			if d1 <= depth && length(n1 - normal) > et {
+				isEdge = true;
+			}
+			if d2 <= depth && length(n2 - normal) > et {
+				isEdge = true;
+			}
+			if d3 <= depth && length(n3 - normal) > et {
+				isEdge = true;
+			}
 		}
-		if length(norms[2] - norms[3]) > et {
-			isEdge = true;
-		}
-		if length(norms[0] - norms[2]) > et {
-			isEdge = true;
-		}
-		if length(norms[1] - norms[3]) > et {
-			isEdge = true;
+		else if EDGE_MODE == 2 {
+			let n0 = textureLoad(metaTex, metaCoord + vec2(1, 0), 0).r;
+			let n1 = textureLoad(metaTex, metaCoord - vec2(1, 0), 0).r;
+			let n2 = textureLoad(metaTex, metaCoord + vec2(0, 1), 0).r;
+			let n3 = textureLoad(metaTex, metaCoord - vec2(0, 1), 0).r;
+			if n0 < metaVal || n1 < metaVal || n2 < metaVal || n3 < metaVal {
+				isEdge = true;
+			}
 		}
 	}
 
@@ -126,7 +170,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if isEdge {
-		color = mix(color, vec4(1.0), 0.333);
+		color = mix(color, vec4(1.0), 0.5);
 	}
 	else {
 		switch (u.renderMode) {
@@ -150,10 +194,28 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			case 5: {
 				color = vec4(vec3(depth * 100.0), 1.0);
 			}
+			// Meta
+			case 6: {
+				color = intToColor(metaVal);
+			}
 			default: {}
 		}
 	}
 
-	let fog = smoothstep(1.0 / 10000.0, 1.0 / 9000.0, depth);
+	let fog = smoothstep(1.0 / 10000.0, 1.0 / 9000.0, 1.0 - depth);
 	return color * fog;
+}
+
+fn intToColor(u: u32) -> vec4<f32> {
+	let r = (u & 0x000000ffu) >> 0u;
+	let g = (u & 0x0000ff00u) >> 8u;
+	let b = (u & 0x00ff0000u) >> 16u;
+	let a = (u & 0xff000000u) >> 24u;
+
+	return vec4(
+		f32(r) / 255.0,
+		f32(g) / 255.0,
+		f32(b) / 255.0,
+		f32(a) / 255.0,
+	);
 }

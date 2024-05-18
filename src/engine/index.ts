@@ -184,10 +184,10 @@ export class Gfx {
 		const device = this.device;
 		let usage = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
 
-		if (['rgba8unorm', 'rgba8uint', 'r32float'].includes(format)) {
+		if (['r32uint', 'rgba8unorm', 'rgba8uint', 'r32float'].includes(format)) {
 			usage |= GPUTextureUsage.STORAGE_BINDING;
 		}
-		if (['rgba8unorm', 'rgba8snorm', 'rgba16float', 'rgba32float', 'depth32float', 'depth24plus'].includes(format)) {
+		if (['r32uint', 'r8uint', 'rgba8unorm', 'rgba8snorm', 'rgba16float', 'rgba32float', 'depth32float', 'depth24plus'].includes(format)) {
 			usage |= GPUTextureUsage.RENDER_ATTACHMENT;
 		}
 

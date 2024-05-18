@@ -61,6 +61,12 @@ export class ComposePipeline extends Pipeline {
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: { sampleType: 'unfilterable-float' }
 				},
+				// Meta
+				{
+					binding: 6,
+					visibility: GPUShaderStage.FRAGMENT,
+					texture: { sampleType: 'uint' }
+				},
 			]
 		});
 		const pipelineLayout = device.createPipelineLayout({
@@ -143,6 +149,7 @@ export class ComposePipeline extends Pipeline {
 				{ binding: 3, resource: src.albedo.createView() },
 				{ binding: 4, resource: src.normal.createView() },
 				{ binding: 5, resource: src.depth.createView() },
+				{ binding: 6, resource: src.meta.createView() },
 			],
 		});
 

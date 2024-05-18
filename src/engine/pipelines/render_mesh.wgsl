@@ -13,12 +13,17 @@ struct VertexOut {
 	@location(1) normal: vec3f,
 	@location(2) modelPosition: vec3f,
 	@location(3) modelNormal: vec3f,
+	@location(4) @interpolate(flat) triangleId: u32,
 }
 
-struct FragmentOut {
+struct Fragment1Out {
 	@location(0) position: vec4f,
 	@location(1) albedo: vec4f,
 	@location(2) normal: vec4f,
+}
+
+struct Fragment2Out {
+	@location(0) metaOutput: u32,
 }
 
 struct Camera {
@@ -57,23 +62,21 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.uv = in.position.xy * 0.5 + 0.5;
 
 
-	// Normal is used for edge detection, add noise to connected triangles (probably) differ a little
-	let triangleId = vec3(in.id / 3);
-	let n = 40.0;
-	let n0 = rnd3u(triangleId) / n;
-	out.normal = (entity.model * vec4(normalize(in.normal + vec3(n0, 0, n0*2.0)), 0.0)).xyz;
+	let triangleId = in.id / 3;
+	out.normal = (entity.model * vec4(normalize(in.normal), 0.0)).xyz;
 
 	let modelPosition = entity.model * vec4(in.position, 1.0);
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
+	out.triangleId = rnd3uu(vec3(triangleId)) % 0xff;
 
 	return out;
 }
 
 
 @fragment
-fn fs_main(in: VertexOut) -> FragmentOut {
-	var out: FragmentOut;
+fn fs_main_pass1(in: VertexOut) -> Fragment1Out {
+	var out: Fragment1Out;
 	var color = material.color;
 
 	var lightDir = normalize(vec3(-0.3, -0.1, 0.6));
@@ -84,5 +87,12 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	out.normal = vec4(in.normal, 0.0);
 
+	return out;
+}
+
+@fragment
+fn fs_main_pass2(in: VertexOut) -> Fragment2Out {
+	var out: Fragment2Out;
+	out.metaOutput = in.triangleId;
 	return out;
 }

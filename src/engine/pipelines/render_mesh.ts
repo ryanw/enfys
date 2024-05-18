@@ -10,7 +10,8 @@ import { SimpleMesh } from 'engine/mesh';
  * Render Pipeline to draw {@link SimpleMesh} instances to a {@link GBuffer}
  */
 export class RenderMeshPipeline extends Pipeline {
-	private pipeline: GPURenderPipeline;
+	private pipelinePass1: GPURenderPipeline;
+	private pipelinePass2: GPURenderPipeline;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -45,13 +46,13 @@ export class RenderMeshPipeline extends Pipeline {
 			bindGroupLayouts: [cameraBindGroupLayout],
 		});
 
-		this.pipeline = device.createRenderPipeline({
-			label: 'RenderMeshPipeline',
+		this.pipelinePass1 = device.createRenderPipeline({
+			label: 'RenderMeshPipeline Pass1',
 			layout: pipelineLayout,
 			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
 			fragment: {
 				module: shader,
-				entryPoint: 'fs_main',
+				entryPoint: 'fs_main_pass1',
 				targets: [
 					// Position output
 					{ format: 'rgba32float' },
@@ -68,9 +69,34 @@ export class RenderMeshPipeline extends Pipeline {
 				depthCompare: 'less',
 			}
 		});
+
+		this.pipelinePass2 = device.createRenderPipeline({
+			label: 'RenderMeshPipeline Pass2',
+			layout: pipelineLayout,
+			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
+			fragment: {
+				module: shader,
+				entryPoint: 'fs_main_pass2',
+				targets: [
+					// Meta output
+					{ format: 'r8uint' },
+				]
+			},
+			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
+			depthStencil: {
+				format: 'depth24plus',
+				depthWriteEnabled: false,
+				depthCompare: 'equal',
+			}
+		});
 	}
 
 	draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, target: GBuffer) {
+		this.drawPass1(encoder, src, camera, target);
+		this.drawPass2(encoder, src, camera, target);
+	}
+
+	private drawPass1(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, target: GBuffer) {
 		const { device } = this.gfx;
 
 		const positionView = target.position.createView();
@@ -98,8 +124,8 @@ export class RenderMeshPipeline extends Pipeline {
 		};
 
 		const bindGroup = device.createBindGroup({
-			label: 'RenderMeshPipeline Bind Group',
-			layout: this.pipeline.getBindGroupLayout(0),
+			label: 'RenderMeshPipeline Pass 1 Bind Group',
+			layout: this.pipelinePass1.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: camera.uniform.bindingResource() },
 				{ binding: 1, resource: src.bindingResource() },
@@ -109,7 +135,49 @@ export class RenderMeshPipeline extends Pipeline {
 
 
 		const pass = encoder.beginRenderPass(passDescriptor);
-		pass.setPipeline(this.pipeline);
+		pass.setPipeline(this.pipelinePass1);
+		pass.setVertexBuffer(0, src.object.buffer);
+		pass.setBindGroup(0, bindGroup);
+		pass.draw(src.object.vertexCount);
+		pass.end();
+	}
+
+	private drawPass2(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, target: GBuffer) {
+		const { device } = this.gfx;
+
+		const metaView = target.meta.createView();
+		const depthView = target.depth.createView();
+
+		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
+			clearValue: [0, 0, 0, 0],
+			loadOp: 'load',
+			storeOp: 'store',
+		};
+		const passDescriptor: GPURenderPassDescriptor = {
+			colorAttachments: [
+				{ view: metaView, ...baseAttachment },
+			],
+			depthStencilAttachment: {
+				view: depthView,
+				depthClearValue: 1.0,
+				depthLoadOp: 'load',
+				depthStoreOp: 'store',
+			}
+		};
+
+		const bindGroup = device.createBindGroup({
+			label: 'RenderMeshPipeline Pass 2 Bind Group',
+			layout: this.pipelinePass2.getBindGroupLayout(0),
+			entries: [
+				{ binding: 0, resource: camera.uniform.bindingResource() },
+				{ binding: 1, resource: src.bindingResource() },
+				{ binding: 2, resource: src.material.bindingResource() },
+			],
+		});
+
+
+		const pass = encoder.beginRenderPass(passDescriptor);
+		pass.setPipeline(this.pipelinePass2);
 		pass.setVertexBuffer(0, src.object.buffer);
 		pass.setBindGroup(0, bindGroup);
 		pass.draw(src.object.vertexCount);

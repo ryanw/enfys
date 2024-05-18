@@ -26,12 +26,15 @@ fn rotr(x: u32, r: u32) -> u32 {
 }
 
 fn rnd3u(useed: vec3<u32>) -> f32 {
+	return f32(rnd3uu(useed)) / f32(0xffffffffu);
+}
+
+fn rnd3uu(useed: vec3<u32>) -> u32 {
 	var seed = useed;
 	seed.x = seed.x ^ rotr(SALT, 19u);
 	seed.y = seed.y ^ rotr(SALT, 11u);
 	seed.z = seed.z ^ rotr(SALT, 7u);
-	let uval = pcg3d(seed).x;
-	return f32(uval) / f32(0xffffffffu);
+	return pcg3d(seed).x;
 }
 
 fn rnd3(seed: vec3<f32>) -> f32 {

@@ -7,21 +7,21 @@ export const DEPTH_FORMAT: GPUTextureFormat = 'depth16unorm';
  */
 export class GBuffer {
 	/**
-	 * Texture to store the position of each pixel
-	 */
-	position!: GPUTexture;
-	/**
 	 * Texture to store the colour of each pixel
 	 */
 	albedo!: GPUTexture;
+	/**
+	 * Texture to store the position of each pixel
+	 */
+	position!: GPUTexture;
 	/**
 	 * Texture to store the normal of each pixel
 	 */
 	normal!: GPUTexture;
 	/**
-	 * Texture to store the specular of each pixel
+	 * Texture to store the meta data of each pixel
 	 */
-	specular!: GPUTexture;
+	meta!: GPUTexture;
 	/**
 	 * Texture to store the depth of each pixel
 	 */
@@ -45,10 +45,10 @@ export class GBuffer {
 		if (this._size[0] < 1 || this._size[1] < 1) {
 			return;
 		}
-		this.position = this.gfx.createTexture('rgba32float', this.size, 'GBuffer Position Texture');
 		this.albedo = this.gfx.createTexture('rgba8unorm', this.size, 'GBuffer Albedo Texture');
+		this.position = this.gfx.createTexture('rgba32float', this.size, 'GBuffer Position Texture');
 		this.normal = this.gfx.createTexture('rgba16float', this.size, 'GBuffer Normal Texture');
-		this.specular = this.gfx.createTexture('r8unorm', this.size, 'GBuffer Specular Texture');
+		this.meta = this.gfx.createTexture('r8uint', this.size, 'GBuffer Meta Texture');
 		this.depth = this.gfx.createTexture('depth24plus', this.size, 'GBuffer Depth Texture');
 	}
 }
