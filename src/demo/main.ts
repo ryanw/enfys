@@ -24,16 +24,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		throw e;
 	}
 
-	//if (window.devicePixelRatio >= 2) {
-	//	gfx.pixelRatio = 1 / 3;
-	//} else {
-	//	gfx.pixelRatio = 1 / 2;
-	//}
-	if (window.devicePixelRatio >= 2) {
-		gfx.canvasPixelRatio = 1 / 2;
-	} else {
-		gfx.canvasPixelRatio = 1 / 1;
-	}
+	gfx.canvasPixelRatio = 1;
 
 	const seed = Math.random();
 
@@ -42,33 +33,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	camera.rotate(0.07, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
-	const cube = new Cube(gfx);
 	const icosahedron = new Icosahedron(gfx);
-	const shapes: Array<Entity<SimpleMesh>> = [];
-
-	const entity = new Entity(
-		gfx,
-		cube,
-		new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
-		translation(0, 0, 9),
-	);
-	scene.add(entity);
-	shapes.push(entity);
-
-	for (let i = 0; i < 100; i++) {
-		const x = randRange(-128, 128);
-		const y = randRange(10, 32);
-		const z = randRange(0, 512);
-
-		const entity = new Entity(
-			gfx,
-			icosahedron,
-			new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
-			translation(x, y, z),
-		);
-		scene.add(entity);
-		shapes.push(entity);
-	}
 
 	const hue = randRange(0, 1);
 	const waterHue = (hue + randRange(0.2, 0.8)) % 1.0;
@@ -92,30 +57,12 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		translation(0, 6, 1024),
 	));
 	const waterPipeline = new WaterPipeline(gfx);
-
-	scene.add(new Entity(
-		gfx,
-		icosahedron,
-		new Material(gfx, hsl(randRange(0, 1), 0.5, 0.5)),
-		translation(0, 3, 9),
-	));
-
-
 	async function updateTerrain() {
 		await waterPipeline.compute(water, seed + performance.now() / 1000);
 	}
 
-	const batchSize = 16;
-	let batchFrame = 0;
 	function update(dt: number) {
 		updateTerrain();
-		for (let i = 0; i < batchSize; i++) {
-			const idx = (i + batchFrame * batchSize) % shapes.length;
-			const shape = shapes[idx];
-			const t = dt * 2.0;
-			shape.transform = multiply(shape.transform, rotation(1.0 * t, 1.3 * t, 1.8 * t));
-		}
-		batchFrame += 1;
 	}
 
 	gfx.run(async (dt) => {

@@ -21,6 +21,7 @@ var<uniform> u: Uniforms;
 @group(0) @binding(1)
 var<storage, read_write> triangles: array<Triangle>;
 
+// Shape the land mesh
 @compute @workgroup_size(256)
 fn mainLand(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	let id = globalId.x;
@@ -41,6 +42,7 @@ fn mainLand(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	triangles[id] = tri;
 }
 
+// Shape the water mesh
 @compute @workgroup_size(256)
 fn mainWater(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	let id = globalId.x;
