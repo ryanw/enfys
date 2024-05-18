@@ -71,6 +71,9 @@ export class RenderMeshPipeline extends Pipeline {
 	}
 
 	draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, target: GBuffer) {
+		if (src.object.vertexCount === 0) {
+			return;
+		}
 		const { device } = this.gfx;
 
 		const albedoView = target.albedo.createView();

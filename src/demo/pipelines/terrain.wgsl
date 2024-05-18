@@ -64,7 +64,7 @@ fn mainWater(@builtin(global_invocation_id) globalId: vec3<u32>) {
 fn waterHeight(op: vec3f, t: f32) -> f32 {
 	var p = op / 512.0;
 
-	var d = fractalNoise(vec3(p.x + t / 512.0, 1000.0, p.z), 3) * 16.0;
+	var d = fractalNoise(vec3(p.x + t / 512.0, 1000.0, p.z), 2) * 16.0;
 
 	return d;
 }

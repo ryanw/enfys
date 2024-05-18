@@ -53,7 +53,7 @@ export class Mesh<V extends Vertex<V>> {
 	}
 
 	uploadVertices(vertices: Array<V>) {
-		if (vertices.length < 1) {
+		if (this.attributeOrder.length === 0 && vertices.length < 1) {
 			throw new Error('Mesh must have at least 1 vertex');
 		}
 		const { device } = this.gfx;
@@ -79,7 +79,7 @@ export class Mesh<V extends Vertex<V>> {
  */
 export class SimpleMesh extends Mesh<TextureVertex> {
 	attributeOrder: Array<keyof TextureVertex> = ['position', 'normal', 'uv'];
-	constructor(gfx: Gfx, vertices: Array<TextureVertex>) {
+	constructor(gfx: Gfx, vertices: Array<TextureVertex> = []) {
 		super(gfx);
 		this.uploadVertices(vertices);
 	}
@@ -112,6 +112,9 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 	let offset = 0;
 	for (let i = 0; i < vertices.length; i++) {
 		const vertex = vertices[i];
+		if (!vertex) {
+			console.error("Missing vertex!", i);
+		}
 		for (const key of attributes) {
 			const prop = vertex[key];
 			if (!prop) continue;

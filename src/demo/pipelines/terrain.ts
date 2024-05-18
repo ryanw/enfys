@@ -50,6 +50,10 @@ export class TerrainPipeline extends Pipeline {
 	}
 
 	async compute(terrain: QuadMesh, t: number = 0, encoder?: GPUCommandEncoder) {
+		if (terrain.vertexCount === 0) {
+			console.warn("Terrain has no vertices");
+			return;
+		}
 		const { device } = this.gfx;
 		const workgroupSize = 256;
 		const triangleCount = terrain.vertexCount / 3;

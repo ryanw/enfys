@@ -19,7 +19,7 @@ export class Entity<T = any> {
 			['transform', 'mat4x4f'],
 			['id', 'u32'],
 		]);
-		this.buffer.set('id', Math.random() * 0xfffffffff);
+		this.buffer.set('id', Math.random() * 0xffffffff | 0);
 		this.transform = transform;
 	}
 

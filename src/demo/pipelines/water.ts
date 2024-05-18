@@ -50,6 +50,10 @@ export class WaterPipeline extends Pipeline {
 	}
 
 	async compute(water: QuadMesh, t: number = 0, encoder?: GPUCommandEncoder) {
+		if (water.vertexCount === 0) {
+			console.warn("Water has no vertices");
+			return;
+		}
 		const { device } = this.gfx;
 		const workgroupSize = 256;
 		const triangleCount = water.vertexCount / 3;

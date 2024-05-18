@@ -198,7 +198,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			}
 			// Depth
 			case 5: {
-				color = vec4(vec3(depth * 100.0), 1.0);
+				color = vec4(vec3(pow(1.0-depth, 0.3)), 1.0);
 			}
 			// Meta
 			case 6: {
