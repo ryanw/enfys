@@ -35,6 +35,7 @@ struct Camera {
 
 struct Entity {
 	model: mat4x4f,
+	id: u32,
 }
 
 struct Material {
@@ -68,7 +69,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let modelPosition = entity.model * vec4(in.position, 1.0);
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
-	out.triangleId = rnd3uu(vec3(triangleId)) % 0xff;
+	out.triangleId = (rnd3uu(vec3(triangleId)) + rnd3uu(vec3(entity.id))) % 0xff;
 
 	return out;
 }

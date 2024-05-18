@@ -15,7 +15,11 @@ export class Entity<T = any> {
 		public material: Material,
 		transform: Matrix4 = identity(),
 	) {
-		this.buffer = new UniformBuffer(gfx, [['transform', 'mat4x4f']]);
+		this.buffer = new UniformBuffer(gfx, [
+			['transform', 'mat4x4f'],
+			['id', 'u32'],
+		]);
+		this.buffer.set('id', Math.random() * 0xfffffffff);
 		this.transform = transform;
 	}
 
