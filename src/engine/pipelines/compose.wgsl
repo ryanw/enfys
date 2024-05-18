@@ -149,7 +149,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	let lightPos = vec3(sin(u.t) * 20.0, 59.0, -3.0);
+	let lightPos = vec3(sin(u.t) * 128.0, 256.0, 480.0 + cos(u.t) * 128.0);
 	let lightDir = normalize(pos - lightPos);
 	let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 
@@ -176,7 +176,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if isEdge {
-		color = mix(color, vec4(1.0), 0.666);
+		color = mix(color, vec4(1.0), 0.2);
 	}
 	else {
 		switch (u.renderMode) {

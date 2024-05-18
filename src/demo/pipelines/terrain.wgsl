@@ -33,7 +33,8 @@ fn mainLand(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	// For each vertex in the triangle
 	for (var i = 0; i < 3; i++) {
 		let p = toVec(tri.vertices[i].position);
-		tri.vertices[i].position[1] = landHeight(p, t);
+		//tri.vertices[i].position[1] = landWithRiverHeight(p, t);
+		tri.vertices[i].position[1] = landIslandHeight(p, t);
 	}
 	let normal = calculateNormal(tri);
 	for (var i = 0; i < 3; i++) {
@@ -71,7 +72,19 @@ fn waterHeight(op: vec3f, t: f32) -> f32 {
 	return d;
 }
 
-fn landHeight(op: vec3f, t: f32) -> f32 {
+fn landIslandHeight(op: vec3f, t: f32) -> f32 {
+	var p = op / 512.0;
+
+	let n = fractalNoise(vec3(p.x, 2000.0, p.z), 3);
+	var d = 90.0;
+
+	d *= 1.0 - smoothstep(0.0, 1.0, length(p)) - n / 3.0;
+
+
+	return d;
+}
+
+fn landWithRiverHeight(op: vec3f, t: f32) -> f32 {
 	var p = op / 1024.0;
 
 	var d = fractalNoise(vec3(p.x, u.t, p.z), 3) * 96.0;

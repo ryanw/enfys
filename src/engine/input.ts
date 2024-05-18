@@ -32,7 +32,7 @@ export class CameraController {
 	}
 
 	update(dt: number) {
-		const speed = this.heldKeys.has(Key.Boost) ? 100 : 30;
+		const speed = this.heldKeys.has(Key.Boost) ? 400 : 100;
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {

@@ -1,4 +1,4 @@
-import { Gfx, UnsupportedError } from 'engine';
+import { Gfx, Size, UnsupportedError } from 'engine';
 import { Cube, Icosahedron, QuadMesh, SimpleMesh } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Entity, Scene } from 'engine/scene';
@@ -8,6 +8,7 @@ import { hsl } from 'engine/color';
 import { CameraController } from 'engine/input';
 import { TerrainPipeline } from './pipelines/terrain';
 import { WaterPipeline } from './pipelines/water';
+import { Vector2 } from 'engine/math';
 
 /**
  * Start the demo
@@ -27,34 +28,35 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	gfx.canvasPixelRatio = 1;
 
 	const seed = Math.random();
+	const chunkSize: Size = [64, 64];
+	const chunkScale: Vector2 = [512, 512];
 
 	const camera = new Camera(gfx);
 	camera.translate([0, 96, 0]);
 	camera.rotate(0.07, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
-	const icosahedron = new Icosahedron(gfx);
 
 	const hue = randRange(0, 1);
 	const waterHue = (hue + randRange(0.2, 0.8)) % 1.0;
-	const terrain = new QuadMesh(gfx, [64, 128], [512, 1024]);
+	const terrain = new QuadMesh(gfx, chunkSize, chunkScale);
 	const terrainMaterial = new Material(gfx, hsl(hue, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,
 		terrain,
 		terrainMaterial,
-		translation(0, 0, 1024),
+		translation(0, 0, chunkScale[1]),
 	));
 	const terrainPipeline = new TerrainPipeline(gfx);
 	await terrainPipeline.compute(terrain, seed);
 
-	const water = new QuadMesh(gfx, [64, 128], [512, 1024]);
+	const water = new QuadMesh(gfx, chunkSize, chunkScale);
 	const waterMaterial = new Material(gfx, hsl(waterHue, 0.5, 0.5));
 	scene.add(new Entity(
 		gfx,
 		water,
 		waterMaterial,
-		translation(0, 6, 1024),
+		translation(0, 6, chunkScale[1]),
 	));
 	const waterPipeline = new WaterPipeline(gfx);
 	async function updateTerrain() {
