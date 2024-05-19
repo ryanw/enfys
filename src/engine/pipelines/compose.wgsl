@@ -150,7 +150,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	let lightPos = vec3(sin(u.t/2.0) * 64.0, 64.0, 64.0 + cos(u.t/2.0) * 64.0);
+	let lightPos = vec3(cos(u.t/2.0) * 64.0, 64.0, 64.0 + sin(u.t/-2.0) * 64.0);
 	let lightDir = normalize(pos - lightPos);
 	let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 

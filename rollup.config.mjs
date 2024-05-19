@@ -4,16 +4,18 @@ import alias from '@rollup/plugin-alias';
 import terser from '@rollup/plugin-terser';
 import wgsl from './src/wgsl_loader.mjs';
 
+const entries = ['hello', 'demo', 'landscape'];
+
 const projectRootDir = path.dirname(import.meta.url.replace("file://", ""));
 const enginePath = path.resolve(projectRootDir, './src/engine/');
 const production = !process.env.ROLLUP_WATCH;
 
-export default {
-	input: 'src/demo/main.ts',
+export default entries.map(entry => ({
+	input: `src/${entry}/main.ts`,
 	output: {
-		file: 'public/bundle.js',
+		file: `public/${entry}.bundle.js`,
 		format: 'module',
-		sourcemap: true,
+		sourcemap: !production,
 	},
 	watch: {
 		clearScreen: false,
@@ -34,5 +36,11 @@ export default {
 			]
 		}),
 		production && terser(),
-	]
-}
+	],
+	onLog(level, log, handler) {
+		if (log.code === 'CIRCULAR_DEPENDENCY') {
+			return;
+		}
+		handler(level, log);
+	}
+}));

@@ -1,6 +1,6 @@
-import { Camera } from "engine/camera";
-import { Vector3 } from "engine/math";
-import { magnitude, normalize, scale } from "engine/math/vectors";
+import { Camera } from 'engine/camera';
+import { Vector3 } from 'engine/math';
+import { normalize, scale } from 'engine/math/vectors';
 
 export enum Key {
 	Forward,
@@ -36,24 +36,24 @@ export class CameraController {
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {
-				case Key.Forward:
-					adjustment[2] = 1
-					break;
-				case Key.Backward:
-					adjustment[2] = -1
-					break;
-				case Key.Left:
-					adjustment[0] = -1
-					break;
-				case Key.Right:
-					adjustment[0] = 1
-					break;
-				case Key.Up:
-					adjustment[1] = 1
-					break;
-				case Key.Down:
-					adjustment[1] = -1
-					break;
+			case Key.Forward:
+				adjustment[2] = 1;
+				break;
+			case Key.Backward:
+				adjustment[2] = -1;
+				break;
+			case Key.Left:
+				adjustment[0] = -1;
+				break;
+			case Key.Right:
+				adjustment[0] = 1;
+				break;
+			case Key.Up:
+				adjustment[1] = 1;
+				break;
+			case Key.Down:
+				adjustment[1] = -1;
+				break;
 			}
 		}
 
@@ -70,31 +70,31 @@ export class CameraController {
 			document.addEventListener('mouseup', this.onMouseUp);
 			document.addEventListener('mousemove', this.onMouseMove);
 		}
-	}
+	};
 
 	onMouseUp = (e: MouseEvent) => {
 		if (e.button === 0) {
 			document.removeEventListener('mouseup', this.onMouseUp);
 			document.removeEventListener('mousemove', this.onMouseMove);
 		}
-	}
+	};
 
 	onMouseMove = (e: MouseEvent) => {
 		const x = e.movementX / 1000;
 		const y = e.movementY / 1000;
 		this.camera.rotate(y, x);
-	}
+	};
 
 	onKeyDown = (e: KeyboardEvent) => {
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.add(key);
-	}
+	};
 
 	onKeyUp = (e: KeyboardEvent) => {
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.delete(key);
-	}
+	};
 }
 

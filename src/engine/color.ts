@@ -1,4 +1,4 @@
-import { Vector4 } from "./math";
+import { Vector4 } from './math';
 
 export type Color = Vector4;
 
@@ -24,7 +24,7 @@ export function hsl(h: number, s: number, l: number): Color {
 }
 
 function hueToRGB(p: number, q: number, ot: number): number {
-	var t = ot;
+	let t = ot;
 	if (t < 0) {
 		t += 1;
 	}

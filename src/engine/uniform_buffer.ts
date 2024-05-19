@@ -1,4 +1,4 @@
-import { Gfx } from "engine";
+import { Gfx } from 'engine';
 
 export type WgslType = 'f32' | 'i32' | 'u32' | 'vec2f' | 'vec3f' | 'vec4f' | 'vec2i' | 'vec3i' | 'vec4i' | 'vec2u' | 'vec3u' | 'vec4u' | 'mat4x4f';
 export type UniformMappingPair = [string, WgslType];
@@ -37,9 +37,9 @@ export class UniformBuffer {
 
 	replace(fields: Record<string, boolean | number | Array<number>>) {
 		const theirKeys = new Set(Object.keys(fields));
-		const ourKeys = new Set(Object.keys(this.offsets))
-		// FIXME symmetricDifference isn't in the types
-		const diff: Set<string> = (theirKeys as any).symmetricDifference(ourKeys);
+		const ourKeys = new Set(Object.keys(this.offsets));
+		// @ts-expect-error FIXME symmetricDifference isn't in the types
+		const diff: Set<string> = theirKeys.symmetricDifference(ourKeys);
 		if (diff.size > 0) {
 			console.error("Keys don't match", diff, theirKeys, ourKeys);
 			throw new Error(`Keys don't match: ${theirKeys} != ${ourKeys}`);
@@ -57,7 +57,7 @@ export class UniformBuffer {
 	 */
 	set(field: string, value: boolean | number | Array<number>) {
 		if (!(field in this.offsets)) {
-			console.error("Uniform field not found", field);
+			console.error('Uniform field not found', field);
 			return;
 		}
 		const [typ, offset] = this.offsets[field];
@@ -80,24 +80,24 @@ function toArray(value: boolean | number | Array<number>): Array<number> {
 function toArrayBuffer(typ: WgslType, value: boolean | number | Array<number>): ArrayBuffer {
 	const data = toArray(value);
 	switch (typ) {
-		case 'f32':
-		case 'vec2f':
-		case 'vec3f':
-		case 'vec4f':
-		case 'mat4x4f':
-			return new Float32Array(data);
+	case 'f32':
+	case 'vec2f':
+	case 'vec3f':
+	case 'vec4f':
+	case 'mat4x4f':
+		return new Float32Array(data);
 
-		case 'i32':
-		case 'vec2i':
-		case 'vec4i':
-		case 'vec3i':
-			return new Int32Array(data);
+	case 'i32':
+	case 'vec2i':
+	case 'vec4i':
+	case 'vec3i':
+		return new Int32Array(data);
 
-		case 'u32':
-		case 'vec2u':
-		case 'vec3u':
-		case 'vec4u':
-			return new Uint32Array(data);
+	case 'u32':
+	case 'vec2u':
+	case 'vec3u':
+	case 'vec4u':
+		return new Uint32Array(data);
 	}
 }
 

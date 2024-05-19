@@ -1,7 +1,7 @@
 import { Gfx } from 'engine';
 import { UniformBuffer } from './uniform_buffer';
 
-const GPU_GLOBALS: Record<string, any> = {
+const GPU_GLOBALS: Record<string, unknown> = {
 	GPUBufferUsage: {
 		MAP_READ: 1,
 		MAP_WRITE: 2,
@@ -21,7 +21,7 @@ Object.assign(window, GPU_GLOBALS);
 function getMockGfx(): Gfx {
 	return {
 		createBuffer: jest.fn().mockReturnValue(null),
-	} as any as Gfx;
+	} as unknown as Gfx;
 }
 
 

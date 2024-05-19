@@ -1,0 +1,62 @@
+* {
+	box-sizing: border-box;
+}
+html, body {
+	display: flex;
+	flex-direction: column;
+	justify-content: stretch;
+	height: 100%;
+	margin: 0;
+}
+#app {
+	position: relative;
+	display: flex;
+	flex: 1;
+	justify-content: center;
+	background: #316;
+}
+#app > canvas {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	image-rendering: pixelated;
+}
+#settings {
+	transition: opacity 100ms;
+	opacity: 0.4;
+	position: fixed;
+	z-index: 1000;
+	top: 2em;
+	right: 2em;
+	color: #fff;
+	font-family: sans-serif;
+	background: rgba(0, 0, 0, 0.8);
+	border-radius: 4px;
+	padding: 1em;
+	display: flex;
+	flex-direction: column;
+}
+#settings:hover {
+	opacity: 1.0;
+}
+#settings label {
+	user-select: none;
+}
+#settings label input,
+#settings label select {
+	width: 5em;
+	margin: 0;
+}
+#settings label input[type="number"] {
+	text-align: right;
+}
+#settings label + label {
+	margin-top: 0.3em;
+}
+#settings p {
+	margin: 0 0 0.3em 0;
+}
+#settings #fps {
+	margin-top: 0.5em;
+}
+

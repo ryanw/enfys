@@ -42,9 +42,9 @@ function transpileWgsl(fullpath, source, imports = new Set()) {
 			importpath = path.resolve(dirname, filename);
 		}
 		else {
-			importpath = path.resolve("./src/", filename);
+			importpath = path.resolve('./src/', filename);
 		}
 		const data = fs.readFileSync(importpath, 'utf8');
-		return transpileWgsl(importpath, data, imports) + "\n";
+		return transpileWgsl(importpath, data, imports) + '\n';
 	});
 }

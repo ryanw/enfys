@@ -1,6 +1,6 @@
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
-import { Point3, Vector2, Vector3, Vector4 } from './math';
+import { Vector2 } from './math';
 import { cross, normalize, subtract } from './math/vectors';
 import { NormalVertex } from './mesh';
 import { Renderer } from './renderer';
@@ -55,6 +55,20 @@ export class Gfx {
 	}
 
 	/**
+	 * Initialise the WebGPU Context and return a new Gfx instance.
+	 * Will `alert()` if there is an exception initialising the GPU.
+	 */
+	static async attachNotified(canvas: HTMLCanvasElement): Promise<Gfx> {
+		try {
+			return await Gfx.attach(canvas);
+		}
+		catch (e: unknown) {
+			alert(e?.toString?.() || 'An unknown error occured');
+			throw e;
+		}
+	}
+
+	/**
 	 * Construct a new {@link Gfx} from a WebGPU Adapter and Device.
 	 * What you instead probably want to use is {@link Gfx.attach}
 	 */
@@ -100,14 +114,24 @@ export class Gfx {
 	}
 
 	/**
-	 * Size of the GBuffer
+	 * Pixel size of the canvas after scaling
 	 */
 	get canvasSize(): Size {
-		const w = this.canvas.clientWidth * this.canvasPixelRatio | 0
+		const w = this.canvas.clientWidth * this.canvasPixelRatio | 0;
 		const h = this.canvas.clientHeight * this.canvasPixelRatio | 0;
 		return [w, h];
 	}
 
+	/**
+	 * Pixel size of the image drawn to screen
+	 */
+	get framebufferSize(): Size {
+		return this.canvasSize.map(v => v * this.pixelRatio) as Size;
+	}
+
+	/**
+	 * Current frames per second
+	 */
 	get fps(): number {
 		if (this.frameTimes.length < this.frameSample) {
 			return 0;
@@ -140,8 +164,11 @@ export class Gfx {
 		this.canvas.style.height = (h / this.canvasPixelRatio) + 'px';
 	}
 
+	/**
+	 * Draw a {@link Scene} to the internal {@link GBuffer}
+	 */
 	async draw(scene: Scene, camera: Camera) {
-		this.gbuffer.size = this.canvasSize.map(v => v * this.pixelRatio) as Vector2;
+		this.gbuffer.size = this.framebufferSize;
 		await this.encode(async (encoder) => {
 			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
 			this.renderer.compose(encoder, this.gbuffer, camera, this.currentTexture, scene.clearColor);
@@ -155,6 +182,10 @@ export class Gfx {
 		const { device } = this;
 		const encoder = device.createCommandEncoder();
 		await callback(encoder);
+		if (this.gbuffer.size.join(',') !== this.framebufferSize.join(',')) {
+			// Canvas resized during render, ignore this draw
+			return;
+		}
 		device.queue.submit([encoder.finish()]);
 	}
 
@@ -170,7 +201,7 @@ export class Gfx {
 			this.sampleFrame(dt);
 			await callback(dt, this);
 			requestAnimationFrame(draw);
-		}
+		};
 		draw();
 	}
 

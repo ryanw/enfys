@@ -1,14 +1,14 @@
-import { Gfx } from "engine";
-import { QuadMesh } from "engine/mesh";
-import { Pipeline } from "engine/pipelines";
-import shaderSource from "./terrain.wgsl";
-import { UniformBuffer } from "engine/uniform_buffer";
+import { Gfx } from 'engine';
+import { QuadMesh } from 'engine/mesh';
+import { Pipeline } from 'engine/pipelines';
+import shaderSource from './terrain.wgsl';
+import { UniformBuffer } from 'engine/uniform_buffer';
 
 /**
  * Compute Shader that takes a subdivided {@link QuadMesh}, updates the Y of every vertex, and recalculates every triangle's normal
  */
 export class WaterPipeline extends Pipeline {
-	private pipeline: GPUComputePipeline
+	private pipeline: GPUComputePipeline;
 	private uniformBuffer: UniformBuffer;
 
 	constructor(gfx: Gfx) {
@@ -45,21 +45,21 @@ export class WaterPipeline extends Pipeline {
 		this.pipeline = gfx.device.createComputePipeline({
 			label: 'WaterPipeline',
 			layout: pipelineLayout,
-			compute: { module: shader, entryPoint: "mainWater" },
+			compute: { module: shader, entryPoint: 'mainWater' },
 		});
 	}
 
 	async compute(water: QuadMesh, t: number = 0, encoder?: GPUCommandEncoder) {
 		if (water.vertexCount === 0) {
-			console.warn("Water has no vertices");
+			console.warn('Water has no vertices');
 			return;
 		}
 		const { device } = this.gfx;
 		const workgroupSize = 256;
 		const triangleCount = water.vertexCount / 3;
 
-		const enc = encoder || device.createCommandEncoder({ label: "WaterPipeline Command Encoder" });
-		const pass = enc.beginComputePass({ label: "WaterPipeline Compute Pass" });
+		const enc = encoder || device.createCommandEncoder({ label: 'WaterPipeline Command Encoder' });
+		const pass = enc.beginComputePass({ label: 'WaterPipeline Compute Pass' });
 		this.uniformBuffer.set('t', t || performance.now() / 1000);
 
 		const bindGroup = device.createBindGroup({

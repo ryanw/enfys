@@ -3,69 +3,8 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<style>
-			* {
-				box-sizing: border-box;
-			}
-			html, body {
-				display: flex;
-				flex-direction: column;
-				justify-content: stretch;
-				height: 100%;
-				margin: 0;
-			}
-			#app {
-				position: relative;
-				display: flex;
-				flex: 1;
-				justify-content: center;
-				background: #316;
-			}
-			#app > canvas {
-				position: absolute;
-				width: 100%;
-				height: 100%;
-				image-rendering: pixelated;
-			}
-			#settings {
-				transition: opacity 100ms;
-				opacity: 0.4;
-				position: fixed;
-				z-index: 1000;
-				top: 2em;
-				right: 2em;
-				color: #fff;
-				font-family: sans-serif;
-				background: rgba(0, 0, 0, 0.8);
-				border-radius: 4px;
-				padding: 1em;
-				display: flex;
-				flex-direction: column;
-			}
-			#settings:hover {
-				opacity: 1.0;
-			}
-			#settings label {
-				user-select: none;
-			}
-			#settings label input,
-			#settings label select {
-				width: 5em;
-				margin: 0;
-			}
-			#settings label input[type="number"] {
-				text-align: right;
-			}
-			#settings label + label {
-				margin-top: 0.3em;
-			}
-			#settings p {
-				margin: 0 0 0.3em 0;
-			}
-			#settings #fps {
-				margin-top: 0.5em;
-			}
-		</style>
+		<link rel="stylesheet" href="styles.css">
+		<script type="module" src="init.mjs"></script>
 	</head>
 	<body>
 		<div id="app">
@@ -76,7 +15,7 @@
 				<label><input checked type="checkbox" id="enable-edges" /> Edges</label>
 				<label><input type="range" id="canvas-pixel" value="2" min="1" max="6" /> Canvas Scale</label>
 				<label><input type="range" id="dither-size" value="1" min="0" max="4" /> Dither Size</label>
-				<label><input type="range" id="dither-depth" value="3" min="1" max="16" /> Dither Depth</label>
+				<label><input type="range" id="dither-depth" value="4" min="1" max="8" /> Dither Depth</label>
 				<label><input type="range" id="fog-level" value="1.0" min="0.0" max="1.0" step="0.01" /> Fog</label>
 				<label>
 					<select id="render-mode">
@@ -94,35 +33,6 @@
 				<div id="fps">Framerate: <span></span></div>
 			</div>
 		</div>
-		<script type="module">
-			const { main } = await import('./bundle.js');
-			const gfx = await main(document.querySelector('#app canvas'))
-			const fps = document.querySelector('#fps span');
-			const canvasPixelInp = document.querySelector('#canvas-pixel');
-			const ditherSizeInp = document.querySelector('#dither-size');
-			const ditherDepthInp = document.querySelector('#dither-depth');
-			const fogInp = document.querySelector('#fog-level');
-			const edgesChk = document.querySelector('#enable-edges');
-			const modeSel = document.querySelector('#render-mode');
-			function updateSettings() {
-				gfx.configure({
-					canvasPixelRatio: 1.0/parseFloat(canvasPixelInp.value),
-					ditherSize: parseInt(ditherSizeInp.value),
-					ditherDepth: parseInt(ditherDepthInp.value),
-					fog: parseFloat(fogInp.value),
-					drawEdges: edgesChk.checked,
-					renderMode: modeSel.selectedIndex,
-				});
-			}
-			updateSettings();
-			fogInp.addEventListener('input', updateSettings);
-			canvasPixelInp.addEventListener('input', updateSettings);
-			ditherSizeInp.addEventListener('input', updateSettings);
-			ditherDepthInp.addEventListener('input', updateSettings);
-			edgesChk.addEventListener('click', updateSettings);
-			modeSel.addEventListener('change', updateSettings);
-			setInterval(() => fps.innerHTML = gfx.fps.toFixed(0), 200);
-		</script>
 	</body>
 </html>
 

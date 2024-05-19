@@ -1,9 +1,10 @@
 import { Color, Gfx } from 'engine';
-import { Scene } from './scene';
+import { Scene, isEntityOf } from './scene';
 import { ComposePipeline } from './pipelines/compose';
 import { RenderMeshPipeline } from './pipelines/render_mesh';
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
+import { SimpleMesh } from './mesh';
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -21,8 +22,10 @@ export class Renderer {
 		const [w, h] = target.size;
 		camera.aspect = w / h;
 		this.clear(encoder, target);
-		for (const mesh of scene.meshes) {
-			this.pipelines.mesh.draw(encoder, mesh, camera, target);
+		for (const entity of scene.entities) {
+			if (isEntityOf(entity, SimpleMesh)) {
+				this.pipelines.mesh.draw(encoder, entity, camera, target);
+			}
 		}
 	}
 

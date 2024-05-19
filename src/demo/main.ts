@@ -1,8 +1,8 @@
-import { Gfx, Size, UnsupportedError } from 'engine';
-import { Cube, Icosahedron, QuadMesh, SimpleMesh } from 'engine/mesh';
+import { Gfx, Size } from 'engine';
+import { QuadMesh } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Entity, Scene } from 'engine/scene';
-import { multiply, rotation, translation } from 'engine/math/transform';
+import { translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
 import { CameraController } from 'engine/input';
@@ -15,19 +15,9 @@ import { Vector2 } from 'engine/math';
  */
 export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
-	let gfx: Gfx;
-	try {
-		gfx = await Gfx.attach(el);
-	} catch (e) {
-		if (e instanceof UnsupportedError) {
-			alert(e.toString());
-		}
-		throw e;
-	}
-
-	gfx.canvasPixelRatio = 1;
-
+	const gfx: Gfx = await Gfx.attachNotified(el);
 	const seed = Math.random();
+
 	const chunkSize: Size = [64, 64];
 	const chunkScale: Vector2 = [64, 64];
 
@@ -41,7 +31,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const waterHue = (hue + randRange(0.2, 0.8)) % 1.0;
 	const terrain = new QuadMesh(gfx, chunkSize, chunkScale);
 	const terrainMaterial = new Material(gfx, hsl(hue, 0.5, 0.5));
-	scene.add(new Entity(
+	scene.addEntity(new Entity(
 		gfx,
 		terrain,
 		terrainMaterial,
@@ -52,24 +42,17 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 	const water = new QuadMesh(gfx, chunkSize, chunkScale);
 	const waterMaterial = new Material(gfx, hsl(waterHue, 0.5, 0.5));
-	scene.add(new Entity(
+	scene.addEntity(new Entity(
 		gfx,
 		water,
 		waterMaterial,
 		translation(0, 0, chunkScale[1]),
 	));
 	const waterPipeline = new WaterPipeline(gfx);
-	async function updateTerrain() {
-		await waterPipeline.compute(water, seed + performance.now() / 1000);
-	}
-
-	function update(dt: number) {
-		updateTerrain();
-	}
 
 	gfx.run(async (dt) => {
 		cameraController.update(dt);
-		update(dt);
+		await waterPipeline.compute(water, seed + performance.now() / 1000);
 		await gfx.draw(scene, camera);
 	});
 

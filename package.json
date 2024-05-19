@@ -8,7 +8,7 @@
 		"watch": "rollup -c rollup.config.mjs --watch",
 		"build": "rollup -c rollup.config.mjs",
 		"test": "jest src",
-		"lint": "eslint -c eslint.config.mjs src",
+		"lint": "eslint -c eslint.config.mjs --ignore-pattern src/wgsl_loader.mjs src",
 		"docs": "typedoc --plugin typedoc-plugin-missing-exports"
 	},
 	"license": "ISC",

@@ -1,7 +1,6 @@
 import { Gfx, Size, calculateNormals } from 'engine';
 import { PHI, Point2, Point3, Vector3 } from './math';
-import { add, cross, normalize, scale, subtract } from './math/vectors';
-import { multiply } from './math/transform';
+import { add, normalize } from './math/vectors';
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
@@ -113,7 +112,7 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 	for (let i = 0; i < vertices.length; i++) {
 		const vertex = vertices[i];
 		if (!vertex) {
-			console.error("Missing vertex!", i);
+			console.error('Missing vertex!', i);
 		}
 		for (const key of attributes) {
 			const prop = vertex[key];
@@ -138,7 +137,7 @@ function toVertex(position: Point3): TextureVertex {
 		position: [...position],
 		normal: [0, 0, 0],
 		uv: [0, 0]
-	}
+	};
 }
 
 /**
@@ -160,7 +159,7 @@ export class QuadMesh extends SimpleMesh {
 
 		const vertexCount = (divisions[0] + 1) * (divisions[1] + 1) * quad.length;
 
-		let subquad: Array<Point3> = new Array(vertexCount);
+		const subquad: Array<Point3> = new Array(vertexCount);
 
 		const gap = 0.0;
 		const stepX = s0 * 2 + gap;
@@ -180,7 +179,7 @@ export class QuadMesh extends SimpleMesh {
 						0,
 						stepY * y + offset[1],
 					];
-					subquad[idx] = add(p, vertexPosition)
+					subquad[idx] = add(p, vertexPosition);
 				}
 			}
 		}
@@ -313,42 +312,4 @@ const ICOSAHEDRON_TRIS: Array<[number, number, number]> = [
 	[6, 2, 10],
 	[8, 6, 7],
 	[9, 8, 1],
-];
-
-const ICOSAHEDRON_LINES: Array<[number, number]> = [
-	// Top
-	[0, 11],
-	[0, 5],
-	[0, 1],
-	[0, 7],
-	[0, 10],
-	[1, 5],
-	[5, 11],
-	[11, 10],
-	[10, 7],
-	[7, 1],
-
-	// Bottom
-	[3, 9],
-	[3, 4],
-	[3, 2],
-	[3, 6],
-	[3, 8],
-	[4, 9],
-	[2, 4],
-	[6, 2],
-	[8, 6],
-	[9, 8],
-
-	// Mid
-	[1, 9],
-	[5, 9],
-	[5, 4],
-	[11, 4],
-	[11, 2],
-	[10, 2],
-	[10, 6],
-	[7, 6],
-	[7, 8],
-	[1, 8],
 ];
