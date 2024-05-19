@@ -6,6 +6,7 @@ import { multiply, rotation, scaling, translation } from 'engine/math/transform'
 import { CameraController } from 'engine/input';
 import { TerrainMesh } from './terrain_mesh';
 import { Material } from 'engine/material';
+import { hsl } from 'engine/color';
 
 function randomColor(gfx: Gfx): Material {
 	return new Material(gfx, [Math.random() * 255, Math.random() * 255, Math.random() * 255, 255]);
@@ -18,10 +19,19 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
 	const gfx: Gfx = await Gfx.attachNotified(el);
 	const camera = new Camera(gfx);
-	camera.translate([0, 200, -300]);
-	camera.rotate(0.15, 0);
+	camera.translate([0, 128, -256]);
+	camera.rotate(0.1, 0);
 	const cameraController = new CameraController(el, camera);
 	const scene = new Scene(gfx);
+
+	const water = scene.addMesh(
+		new QuadMesh(
+			gfx,
+			[256, 256],
+			[20480, 20480],
+		),
+		translation(0, 0, 0),
+	);
 
 	const terrains = [];
 	const chunkSize: Size = [64, 64];
@@ -43,34 +53,20 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 						gfx,
 						chunkSize,
 						[x, y, d],
-						1,
+						seed,
 					),
 					multiply(
-						translation(chunkSize[0] * x * s, -32, chunkSize[1] * y * s),
+						translation(chunkSize[0] * x * s, 0, chunkSize[1] * y * s),
 						scaling(s, 1, s),
 					),
 				);
-				chunk.material = randomColor(gfx);
+				chunk.material = new Material(gfx, hsl(d / drawDist, 0.5, 0.5));
 			}
-		}
-	}
-
-	const icos = Array.from({ length: 1 }, () => {
-		const x = (Math.random() - 0.5) * 100.0;
-		const y = (Math.random() - 0.5) * 100.0;
-		const z = Math.random() * 100.0;
-		return scene.addMesh(new Icosahedron(gfx), translation(x, y, z));
-	});
-
-	function update(dt: number) {
-		for (const ico of icos) {
-			ico.transform = multiply(ico.transform, rotation(0, 1 * dt, 0));
 		}
 	}
 
 	gfx.run(async (dt) => {
 		cameraController.update(dt);
-		update(dt);
 		await gfx.draw(scene, camera);
 	});
 
