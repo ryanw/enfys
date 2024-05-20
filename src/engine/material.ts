@@ -5,6 +5,7 @@ import { UniformBuffer } from './uniform_buffer';
  * Material stored in a {@link GPUBuffer}
  */
 export class Material {
+	writeDepth = true;
 	readonly uniform: UniformBuffer;
 	private _color: Color;
 

@@ -11,6 +11,7 @@ import { SimpleMesh } from 'engine/mesh';
  */
 export class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
+	private pipelineNoDepth: GPURenderPipeline;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -68,6 +69,30 @@ export class RenderMeshPipeline extends Pipeline {
 				depthCompare: 'less',
 			}
 		});
+
+		this.pipelineNoDepth = device.createRenderPipeline({
+			label: 'RenderMeshPipeline NoDepthWrite',
+			layout: pipelineLayout,
+			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
+			fragment: {
+				module: shader,
+				entryPoint: 'fs_main',
+				targets: [
+					// Albedo output
+					{ format: 'rgba8unorm' },
+					// Normal output
+					{ format: 'rgba16float' },
+					// Meta output
+					{ format: 'r8uint' },
+				]
+			},
+			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
+			depthStencil: {
+				format: 'depth24plus',
+				depthWriteEnabled: false,
+				depthCompare: 'less',
+			}
+		});
 	}
 
 	draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, target: GBuffer) {
@@ -92,12 +117,9 @@ export class RenderMeshPipeline extends Pipeline {
 				{ view: normalView, ...baseAttachment },
 				{ view: metaView, ...baseAttachment },
 			],
-			depthStencilAttachment: {
-				view: depthView,
-				depthClearValue: 1.0,
-				depthLoadOp: 'load',
-				depthStoreOp: 'store',
-			}
+			depthStencilAttachment: src.material.writeDepth
+				? { view: depthView, depthLoadOp: 'load', depthStoreOp: 'store' }
+				: { view: depthView, depthReadOnly: true }
 		};
 
 		const bindGroup = device.createBindGroup({
@@ -112,7 +134,7 @@ export class RenderMeshPipeline extends Pipeline {
 
 
 		const pass = encoder.beginRenderPass(passDescriptor);
-		pass.setPipeline(this.pipeline);
+		pass.setPipeline(src.material.writeDepth ? this.pipeline : this.pipelineNoDepth);
 		pass.setVertexBuffer(0, src.object.buffer);
 		pass.setBindGroup(0, bindGroup);
 		pass.draw(src.object.vertexCount);

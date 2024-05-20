@@ -21,7 +21,7 @@ export class TerrainPipeline extends Pipeline {
 			['size', 'vec2u'],
 			['chunkId', 'vec3i'],
 			['triangleCount', 'u32'],
-			['t', 'f32'],
+			['seed', 'f32'],
 		]);
 
 		const shader = device.createShaderModule({ label: 'TerrainPipeline Shader', code: shaderSource });
@@ -59,7 +59,7 @@ export class TerrainPipeline extends Pipeline {
 		const triangleCount = quadCount * 2;
 		const vertexCount = quadCount * 6;
 
-		this.uniformBuffer.replace({ t: seed, size, chunkId, triangleCount });
+		this.uniformBuffer.replace({ seed, size, chunkId, triangleCount });
 
 		const vertexByteSize = (3 + 3 + 2) * 4;// FIXME derive from type? TextureVertex
 		const buffer = device.createBuffer({

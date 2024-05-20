@@ -59,14 +59,6 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 }
 
 
-fn world_from_screen_coord(coord : vec2f, depth_sample: f32) -> vec3f {
-  // reconstruct world-space position from the screen coordinate.
-  let posClip = vec4(coord.x * 2.0 - 1.0, (1.0 - coord.y) * 2.0 - 1.0, depth_sample, 1.0);
-  let posWorldW = u.invMvp * posClip;
-  let posWorld = posWorldW.xyz / posWorldW.www;
-  return posWorld;
-}
-
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let albedo = textureSample(albedoTex, colorSampler, in.uv);
@@ -80,7 +72,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let depthCoord = vec2u(depthSize * in.uv);
 	let depth = textureLoad(depthTex, depthCoord, 0).r;
 
-	let pos = world_from_screen_coord(in.uv, depth);
+	let pos = worldFromScreen(in.uv, depth, u.invMvp);
 
 	let metaSize = vec2f(textureDimensions(metaTex));
 	let metaCoord = vec2u(metaSize * in.uv);
@@ -209,7 +201,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 	// Draw edges
 	if isEdge {
-		color = mix(color, vec4(1.0), 0.2);
+		color = mix(color, vec4(0.0, 0.0, 0.0, 1.0), 0.5);
 	}
 	else {
 		switch (renderMode) {
@@ -262,3 +254,5 @@ fn intToColor(u: u32) -> vec4<f32> {
 		f32(a) / 255.0,
 	);
 }
+
+@import "engine/shaders/helpers.wgsl";

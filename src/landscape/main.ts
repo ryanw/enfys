@@ -7,6 +7,9 @@ import { CameraController } from 'engine/input';
 import { TerrainMesh } from './terrain_mesh';
 import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
+import { TerrainQueryPipeline } from './pipelines/terrain_query';
+import { Point2 } from 'engine/math';
+import { PointerController } from './pointer';
 
 function randomColor(gfx: Gfx): Material {
 	return new Material(gfx, [Math.random() * 255, Math.random() * 255, Math.random() * 255, 255]);
@@ -15,15 +18,17 @@ function randomColor(gfx: Gfx): Material {
 /**
  * Start the demo
  */
-export async function main(el: HTMLCanvasElement): Promise<Gfx> {
+export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerController]> {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
 	const gfx: Gfx = await Gfx.attachNotified(el);
+	const seed = Math.random() * 0xffffffff;
 
 	console.time('World Generation');
 	const camera = new Camera(gfx);
 	camera.translate([0, 64, 0]);
 	camera.rotate(0.1, 0);
 	const cameraController = new CameraController(el, camera);
+	const pointerController = new PointerController(el, camera, seed);
 	const scene = new Scene(gfx);
 
 	const water = scene.addMesh(
@@ -37,7 +42,6 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	water.material = new Material(gfx, [90, 160, 250, 255]);
 
 	const chunkSize: Size = [64, 64];
-	const seed = Math.random() * 0xffffffff;
 
 	const drawDist = 5;
 	const rad = 4;
@@ -68,10 +72,22 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	}
 	console.timeEnd('World Generation');
 
+
+	// Mouse pointer
+	const pointer = scene.addMesh(new Icosahedron(gfx));
+	pointer.material.color = [100, 200, 20, 255];
+	pointer.material.writeDepth = false;
+
 	gfx.run(async (dt) => {
+		const t = performance.now() / 1000;
 		cameraController.update(dt);
+		pointer.transform = multiply(
+			translation(...pointerController.worldPosition),
+			rotation(t*2, t, t*3),
+			scaling(4),
+		);
 		await gfx.draw(scene, camera);
 	});
 
-	return gfx;
+	return [gfx, pointerController];
 }

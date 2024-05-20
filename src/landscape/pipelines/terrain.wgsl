@@ -13,7 +13,7 @@ struct Uniforms {
 	size: vec2<i32>,
 	chunkId: vec3<i32>,
 	triangleCount: u32,
-	t: f32,
+	seed: f32,
 }
 
 @group(0) @binding(0)
@@ -72,7 +72,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	// FIXME this is a mess
 	for (var i = 0; i < 3; i++) {
 		let tp = (toVec(tri.vertices[i].position) + chunkP * lodScale);
-		var h = landHeight(tp, u.t);
+		var h = landHeight(tp, u.seed);
 		// Right + Left
 		for (var j = 0; j < 2; j++) {
 			let ij = abs(j-1);
@@ -80,8 +80,8 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 			let isMid = isEdgeVertex && ((i == 0 && quadP.y % 2 == j) || (i == 1 && quadP.y % 2 == ij) || (i == 2 && quadP.y % 2 == j));
 
 			if isMid {
-				let h0 = landHeight(tp + vec3(0.0, 0.0, 1.0), u.t);
-				let h1 = landHeight(tp - vec3(0.0, 0.0, 1.0), u.t);
+				let h0 = landHeight(tp + vec3(0.0, 0.0, 1.0), u.seed);
+				let h1 = landHeight(tp - vec3(0.0, 0.0, 1.0), u.seed);
 				h = ((h0 + h1) / 2.0);
 			}
 		}
@@ -92,8 +92,8 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 			let isMid = isEdgeVertex && ((i == 0 && quadP.x % 2 == j) || (i == 1 && quadP.x % 2 == ij) || (i == 2 && quadP.x % 2 == j));
 
 			if isMid {
-				let h0 = landHeight(tp + vec3(1.0, 0.0, 0.0), u.t);
-				let h1 = landHeight(tp - vec3(1.0, 0.0, 0.0), u.t);
+				let h0 = landHeight(tp + vec3(1.0, 0.0, 0.0), u.seed);
+				let h1 = landHeight(tp - vec3(1.0, 0.0, 0.0), u.seed);
 				h = ((h0 + h1) / 2.0);
 			}
 		}
@@ -133,12 +133,6 @@ fn oldlandHeight(op: vec3f, t: f32) -> f32 {
 fn terrainNoise(p: vec3f, freq: f32, amp: f32) -> f32 {
 	return smoothNoise(p * freq) * amp;
 }
-fn landscapeNoise(p: vec3f) -> f32 {
-	let t0 = continents(p);
-	let t1 = erosion(p);
-	let t2 = valleys(p);
-	return 0.2 + (t0 * t1 * t2) * 256.0;
-}
 
 fn calculateNormal(tri: Triangle) -> vec3f {
 	let p0 = toVec(tri.vertices[0].position);
@@ -154,85 +148,4 @@ fn toVec(v: array<f32, 3>) -> vec3f {
 	return vec3(v[0], v[1], v[2]);
 }
 
-var<private> continents_spline: array<f32, 10> = array<f32, 10>(1.0, 0.1, 0.11, 0.4, 0.42, 0.7, 0.8, 0.85, 0.9, 0.94);
-var<private> erosion_spline: array<f32, 10>    = array<f32, 10>(1.0, 0.8, 0.6, 0.7, 0.3, 0.27, 0.5, 0.47, 0.2, 0.1);
-var<private> valleys_spline: array<f32, 10>    = array<f32, 10>(0.0, 0.2, 0.4, 0.5, 0.55, 0.6, 0.7, 0.8, 0.9, 0.85);
-
-fn spline(t: f32, s: array<f32, 10>) -> f32 {
-	let idx = i32(floor(t * 10.0));
-	if idx >= 9 {
-		return s[9];
-	}
-	if idx < 0 {
-		return s[0];
-	}
-
-	// Gah
-	var n0 = 0.0;
-	var n1 = 0.0;
-	switch idx {
-		case 0: {
-			n0 = s[0];
-			n1 = s[1];
-		}
-		case 1: {
-			n0 = s[1];
-			n1 = s[2];
-		}
-		case 2: {
-			n0 = s[2];
-			n1 = s[3];
-		}
-		case 3: {
-			n0 = s[3];
-			n1 = s[4];
-		}
-		case 4: {
-			n0 = s[4];
-			n1 = s[5];
-		}
-		case 5: {
-			n0 = s[5];
-			n1 = s[6];
-		}
-		case 6: {
-			n0 = s[6];
-			n1 = s[7];
-		}
-		case 7: {
-			n0 = s[7];
-			n1 = s[8];
-		}
-		case 8: {
-			n0 = s[8];
-			n1 = s[9];
-		}
-		default: {
-		}
-	}
-
-	let d = fract(t * 10.0);
-	return mix(n0, n1, d) * 2.0 - 1.0;
-}
-
-fn continents(p: vec3<f32>) -> f32 {
-	let o = vec3(1000.0);
-	let t = fractalNoise((p + o) / 2.0, 3);
-	return spline(t, continents_spline);
-}
-
-fn erosion(p: vec3<f32>) -> f32 {
-	let o = vec3(1500.0);
-	let t = fractalNoise((p + o) / 4.0, 2);
-	return 0.5 + spline(t, erosion_spline) * 0.5;
-}
-
-fn valleys(p: vec3<f32>) -> f32 {
-	let o = vec3(3000.0);
-	let t = fractalNoise((p + o) * 3.0, 4);
-	return spline(t, valleys_spline);
-}
-
-
 @import "./terrain_height.wgsl";
-@import "engine/shaders/noise.wgsl";

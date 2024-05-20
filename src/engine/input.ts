@@ -1,6 +1,7 @@
 import { Camera } from 'engine/camera';
 import { Vector3 } from 'engine/math';
 import { normalize, scale } from 'engine/math/vectors';
+import { Gfx } from 'engine';
 
 export enum Key {
 	Forward,
@@ -22,10 +23,12 @@ export class CameraController {
 		'e': Key.Up,
 		'shift': Key.Boost,
 	};
+	readonly heldKeys = new Set<Key>;
+	readonly gfx: Gfx;
 
-	heldKeys = new Set<Key>;
 
 	constructor(private el: HTMLElement, public camera: Camera) {
+		this.gfx = camera.gfx;
 		el.addEventListener('mousedown', this.onMouseDown);
 		window.addEventListener('keydown', this.onKeyDown);
 		window.addEventListener('keyup', this.onKeyUp);
@@ -36,24 +39,24 @@ export class CameraController {
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {
-			case Key.Forward:
-				adjustment[2] = 1;
-				break;
-			case Key.Backward:
-				adjustment[2] = -1;
-				break;
-			case Key.Left:
-				adjustment[0] = -1;
-				break;
-			case Key.Right:
-				adjustment[0] = 1;
-				break;
-			case Key.Up:
-				adjustment[1] = 1;
-				break;
-			case Key.Down:
-				adjustment[1] = -1;
-				break;
+				case Key.Forward:
+					adjustment[2] = 1;
+					break;
+				case Key.Backward:
+					adjustment[2] = -1;
+					break;
+				case Key.Left:
+					adjustment[0] = -1;
+					break;
+				case Key.Right:
+					adjustment[0] = 1;
+					break;
+				case Key.Up:
+					adjustment[1] = 1;
+					break;
+				case Key.Down:
+					adjustment[1] = -1;
+					break;
 			}
 		}
 

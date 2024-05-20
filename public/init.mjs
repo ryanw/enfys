@@ -1,12 +1,15 @@
-const bundleName = window.location.search.match(/(?:\?|\&)run=([a-zA-Z]+)/)?.[1] || 'demo';
+const bundleName = window.location.search.match(/(?:\?|\&)run=([a-zA-Z]+)/)?.[1] || 'landscape';
 const { main } = await import(`./${bundleName}.bundle.js`);
 
 async function init() {
-	const gfx = await main(document.querySelector('#app canvas'))
+	const [gfx, pointer] = await main(document.querySelector('#app canvas'))
 
-	// FPS counter
 	const fps = document.querySelector('#fps span');
-	setInterval(() => fps.innerHTML = gfx.fps.toFixed(0), 200);
+	const mouse = document.querySelector('#mouse-pos span');
+	setInterval(() => {
+		fps.innerHTML = gfx.fps.toFixed(0);
+		mouse.innerHTML = pointer.worldPosition.map(v => v.toFixed(1)).join(', ');
+	}, 1000/30);
 
 	// Form elements
 	const canvasPixelInp = document.querySelector('#canvas-pixel');
