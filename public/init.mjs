@@ -17,7 +17,7 @@ async function init() {
 	const modeSel = document.querySelector('#render-mode');
 	function updateSettings() {
 		gfx.configure({
-			canvasPixelRatio: 1.0 / parseFloat(canvasPixelInp.value),
+			canvasPixelRatio: 1.0 / (parseFloat(canvasPixelInp.value) || 0.5),
 			ditherSize: parseInt(ditherSizeInp.value),
 			ditherDepth: parseInt(ditherDepthInp.value),
 			fog: parseFloat(fogInp.value),

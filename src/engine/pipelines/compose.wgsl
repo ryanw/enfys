@@ -186,38 +186,59 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let fogColor = vec4(0.0);
 
 
+	var renderMode = u.renderMode;
+	if renderMode == 1 {
+		// GBuffer split view
+		if in.uv.y < 0.5 {
+			if in.uv.x < 0.5 {
+				renderMode = 3;
+			}
+			else {
+				renderMode = 4;
+			}
+		}
+		else {
+			if in.uv.x < 0.5 {
+				renderMode = 6;
+			}
+			else {
+				renderMode = 7;
+			}
+		}
+	}
+
 	// Draw edges
 	if isEdge {
 		color = mix(color, vec4(1.0), 0.2);
 	}
 	else {
-		switch (u.renderMode) {
+		switch (renderMode) {
 			// Shading
-			case 1: {
+			case 2: {
 				color = vec4(vec3(brightness), 1.0);
 			}
 			// Albedo
-			case 2: {
+			case 3: {
 				color = albedo;
 			}
 			// Normal
-			case 3: {
+			case 4: {
 				color = vec4(normal.xyz * 0.5 + 0.5, 1.0);
 			}
 			// Position
-			case 4: {
+			case 5: {
 				color = vec4(pos.xyz / 100.0, 1.0);
 			}
 			// Depth
-			case 5: {
+			case 6: {
 				color = vec4(vec3((1.0-depth) * 100.0), 1.0);
 			}
 			// Meta
-			case 6: {
+			case 7: {
 				color = intToColor(metaVal);
 			}
 			// Fog
-			case 7: {
+			case 8: {
 				color = vec4(vec3(fogFactor), 1.0);
 				return color;
 			}

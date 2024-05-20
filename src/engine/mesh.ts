@@ -135,7 +135,7 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 function toVertex(position: Point3): TextureVertex {
 	return {
 		position: [...position],
-		normal: [0, 0, 0],
+		normal: [0, 1, 0],
 		uv: [0, 0]
 	};
 }
