@@ -49,15 +49,17 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	var p = vec3(f32(quadP.x), 0.0, f32(quadP.y));
 
 	// Which triangle of the quad to draw
+	let cellSize = lodScale;
+	let q = vec3(f32(quadId % u.size.x) * cellSize, 0.0, f32(quadId / u.size.x) * cellSize);
 	if triId % 2 == 0 {
 		// Top edge of 2nd quad
-		tri.vertices[0].position = array(p.x + 0.0, p.y, p.z + 0.0);
-		tri.vertices[1].position = array(p.x + 0.0, p.y, p.z + 1.0);
-		tri.vertices[2].position = array(p.x + 1.0, p.y, p.z + 1.0);
+		tri.vertices[0].position = array(q.x + 0.0, q.y, q.z + 0.0);
+		tri.vertices[1].position = array(q.x + 0.0, q.y, q.z + cellSize);
+		tri.vertices[2].position = array(q.x + cellSize, q.y, q.z + cellSize);
 	} else {
-		tri.vertices[0].position = array(p.x + 1.0, p.y, p.z + 1.0);
-		tri.vertices[1].position = array(p.x + 1.0, p.y, p.z + 0.0);
-		tri.vertices[2].position = array(p.x + 0.0, p.y, p.z + 0.0);
+		tri.vertices[0].position = array(q.x + cellSize, q.y, q.z + cellSize);
+		tri.vertices[1].position = array(q.x + cellSize, q.y, q.z + 0.0);
+		tri.vertices[2].position = array(q.x + 0.0, q.y, q.z + 0.0);
 	}
 
 	// Flatten edges to line up with lower LOD neighbour
@@ -69,7 +71,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	);
 	// FIXME this is a mess
 	for (var i = 0; i < 3; i++) {
-		let tp = (toVec(tri.vertices[i].position) + chunkP) * lodScale;
+		let tp = (toVec(tri.vertices[i].position) + chunkP * lodScale);
 		var h = landHeight(tp, u.t);
 		// Right + Left
 		for (var j = 0; j < 2; j++) {
@@ -106,12 +108,6 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	triangles[triId] = tri;
 }
 
-fn landHeight(op: vec3f, t: f32) -> f32 {
-	let scale = 1024.0;
-	var p = op.xz / scale;
-	let np = vec3(p.x, t, p.y);
-	return landscapeNoise(np);
-}
 
 fn oldlandHeight(op: vec3f, t: f32) -> f32 {
 	let scale = 256.0;
@@ -238,5 +234,5 @@ fn valleys(p: vec3<f32>) -> f32 {
 }
 
 
+@import "./terrain_height.wgsl";
 @import "engine/shaders/noise.wgsl";
-
