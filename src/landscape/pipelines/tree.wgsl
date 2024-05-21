@@ -30,7 +30,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 		var instance: Instance;
 		let count = atomicAdd(&counter, 1u);
 		instance.offset = array(p.x, p.y, p.z);
-		if (count < 51200) {
+		if (count < 512000) {
 			instances[count] = instance;
 		}
 	}

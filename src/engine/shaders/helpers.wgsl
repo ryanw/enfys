@@ -5,3 +5,12 @@ fn worldFromScreen(coord : vec2f, depth_sample: f32, mvp: mat4x4f) -> vec3f {
   let posWorld = posWorldW.xyz / posWorldW.www;
   return posWorld;
 }
+
+fn translate(offset: vec3f) -> mat4x4f {
+	return mat4x4f(
+		1.0, 0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		offset.x, offset.y, offset.z, 1.0,
+	);
+}

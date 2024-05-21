@@ -59,9 +59,9 @@ var<uniform> material: Material;
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
 
-	let mv = camera.view * entity.model;
+	let mv = camera.view * translate(in.offset) * entity.model;
 	let mvp = camera.projection * mv;
-	out.position = mvp * vec4(in.position + in.offset, 1.0);
+	out.position = mvp * vec4(in.position, 1.0);
 	out.uv = in.position.xy * 0.5 + 0.5;
 
 
@@ -92,3 +92,5 @@ fn fs_main(in: VertexOut) -> Fragment1Out {
 	out.metaOutput = in.triangleId;
 	return out;
 }
+
+@import "engine/shaders/helpers.wgsl";

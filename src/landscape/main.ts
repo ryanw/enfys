@@ -78,7 +78,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 		1000.0,
 		1.0,
 		seed
-	));
+	), scaling(0.333));
 	trees.material = new Material(gfx, [50, 200, 10, 255])
 
 

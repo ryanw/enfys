@@ -66,7 +66,7 @@ export class TreePipeline extends Pipeline {
 	async createInstanceBuffer(position: Point3, radius: number, density: number, seed: number): Promise<[GPUBuffer, number]> {
 		const { device } = this.gfx;
 
-		const maxInstances = 51200;
+		const maxInstances = 512000;
 		this.uniformBuffer.replace({ seed, position, radius, density });
 		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
@@ -96,7 +96,7 @@ export class TreePipeline extends Pipeline {
 
 		pass.setPipeline(this.pipeline);
 		pass.setBindGroup(0, bindGroup);
-		pass.dispatchWorkgroups(8, 8);
+		pass.dispatchWorkgroups(16, 16);
 		pass.end();
 
 
