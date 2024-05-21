@@ -67,7 +67,7 @@ export class WaterPipeline extends Pipeline {
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: { buffer: this.uniformBuffer.buffer } },
-				{ binding: 1, resource: { buffer: water.buffer } },
+				{ binding: 1, resource: { buffer: water.vertexBuffer } },
 			],
 		});
 

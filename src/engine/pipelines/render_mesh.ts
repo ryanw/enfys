@@ -46,10 +46,10 @@ export class RenderMeshPipeline extends Pipeline {
 			bindGroupLayouts: [cameraBindGroupLayout],
 		});
 
-		this.pipeline = device.createRenderPipeline({
+		const pipelineDescriptor: GPURenderPipelineDescriptor = {
 			label: 'RenderMeshPipeline',
 			layout: pipelineLayout,
-			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
+			vertex: { module: shader, entryPoint: 'vs_main', buffers: [pointVertexLayout, offsetInstanceLayout] },
 			fragment: {
 				module: shader,
 				entryPoint: 'fs_main',
@@ -68,25 +68,11 @@ export class RenderMeshPipeline extends Pipeline {
 				depthWriteEnabled: true,
 				depthCompare: 'less',
 			}
-		});
+		};
+		this.pipeline = device.createRenderPipeline(pipelineDescriptor);
 
 		this.pipelineNoDepth = device.createRenderPipeline({
-			label: 'RenderMeshPipeline NoDepthWrite',
-			layout: pipelineLayout,
-			vertex: { module: shader, entryPoint: 'vs_main', buffers: pointVertexLayout },
-			fragment: {
-				module: shader,
-				entryPoint: 'fs_main',
-				targets: [
-					// Albedo output
-					{ format: 'rgba8unorm' },
-					// Normal output
-					{ format: 'rgba16float' },
-					// Meta output
-					{ format: 'r8uint' },
-				]
-			},
-			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
+			...pipelineDescriptor,
 			depthStencil: {
 				format: 'depth24plus',
 				depthWriteEnabled: false,
@@ -135,14 +121,20 @@ export class RenderMeshPipeline extends Pipeline {
 
 		const pass = encoder.beginRenderPass(passDescriptor);
 		pass.setPipeline(src.material.writeDepth ? this.pipeline : this.pipelineNoDepth);
-		pass.setVertexBuffer(0, src.object.buffer);
+		pass.setVertexBuffer(0, src.object.vertexBuffer);
+		pass.setVertexBuffer(1, src.object.instanceBuffer);
 		pass.setBindGroup(0, bindGroup);
-		pass.draw(src.object.vertexCount);
+		if (src.object.instanceCount > 0) {
+			pass.draw(src.object.vertexCount, src.object.instanceCount);
+		} else {
+
+		}
 		pass.end();
 	}
 }
 
-const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
+const pointVertexLayout: GPUVertexBufferLayout = {
+	stepMode: 'vertex',
 	attributes: [{
 		// Position
 		shaderLocation: 0,
@@ -160,4 +152,15 @@ const pointVertexLayout: Array<GPUVertexBufferLayout> = [{
 		format: 'float32x2'
 	}],
 	arrayStride: 32,
-}];
+};
+
+const offsetInstanceLayout: GPUVertexBufferLayout = {
+	stepMode: 'instance',
+	attributes: [{
+		// Offset
+		shaderLocation: 3,
+		offset: 0,
+		format: 'float32x3'
+	}],
+	arrayStride: 12,
+};

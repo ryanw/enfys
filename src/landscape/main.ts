@@ -1,5 +1,5 @@
 import { Gfx, Size } from 'engine';
-import { Icosahedron, QuadMesh } from 'engine/mesh';
+import { Icosahedron, OffsetInstance, QuadMesh } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, scaling, translation } from 'engine/math/transform';
@@ -7,9 +7,8 @@ import { CameraController } from 'engine/input';
 import { TerrainMesh } from './terrain_mesh';
 import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
-import { TerrainQueryPipeline } from './pipelines/terrain_query';
-import { Point2 } from 'engine/math';
 import { PointerController } from './pointer';
+import { TreeMesh } from './tree_mesh';
 
 function randomColor(gfx: Gfx): Material {
 	return new Material(gfx, [Math.random() * 255, Math.random() * 255, Math.random() * 255, 255]);
@@ -47,6 +46,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 	const rad = 4;
 	const skip = rad / 2;
 
+	// Build terrain
 	for (let d = 0; d < drawDist; d++) {
 		// LoD d
 		for (let y = -rad; y < rad; y++) {
@@ -72,10 +72,19 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 	}
 	console.timeEnd('World Generation');
 
+	const trees = scene.addMesh(new TreeMesh(
+		gfx,
+		[0, 0, 0],
+		1000.0,
+		1.0,
+		seed
+	));
+	trees.material = new Material(gfx, [50, 200, 10, 255])
+
 
 	// Mouse pointer
 	const pointer = scene.addMesh(new Icosahedron(gfx));
-	pointer.material.color = [100, 200, 20, 255];
+	pointer.material.color = [255, 255, 255, 255];
 	pointer.material.writeDepth = false;
 
 	gfx.run(async (dt) => {
@@ -83,11 +92,19 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 		cameraController.update(dt);
 		pointer.transform = multiply(
 			translation(...pointerController.worldPosition),
-			rotation(t*2, t, t*3),
+			rotation(t * 2, t, t * 3),
 			scaling(4),
 		);
 		await gfx.draw(scene, camera);
 	});
 
 	return [gfx, pointerController];
+}
+
+function randRange(min: number = 0, max: number = 1): number {
+	const l = Math.min(min, max);
+	const r = Math.max(min, max);
+	const d = r - l;
+
+	return l + Math.random() * d;
 }

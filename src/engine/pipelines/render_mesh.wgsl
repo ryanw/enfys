@@ -5,6 +5,8 @@ struct VertexIn {
 	@location(0) position: vec3f,
 	@location(1) normal: vec3f,
 	@location(2) uv: vec2f,
+	// Instance
+	@location(3) offset: vec3f,
 }
 
 struct VertexOut {
@@ -59,7 +61,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 	let mv = camera.view * entity.model;
 	let mvp = camera.projection * mv;
-	out.position = mvp * vec4(in.position, 1.0);
+	out.position = mvp * vec4(in.position + in.offset, 1.0);
 	out.uv = in.position.xy * 0.5 + 0.5;
 
 

@@ -30,59 +30,92 @@ export interface TextureVertex extends NormalVertex {
 	uv: Point2,
 }
 
+/**
+ * Vertex with an offset
+ */
+export interface OffsetInstance {
+	offset: Point3,
+}
 
 
 /**
  * Collection of Vertices representing some kind of 3D geometry.
  * @typeParm V - Type of the vertices in this mesh
  */
-export class Mesh<V extends Vertex<V>> {
+export class Mesh<V extends Vertex<V>, I extends Vertex<I> = {}> {
 	// Matches the `in: VertexIn` order
-	attributeOrder: Array<keyof V> = [];
-	buffer!: GPUBuffer;
+	vertexOrder: Array<keyof V> = [];
+	instanceOrder: Array<keyof I> = [];
+	vertexBuffer!: GPUBuffer;
+	instanceBuffer!: GPUBuffer;
 	vertexCount: number = 0;
+	instanceCount: number = 0;
 
 	/**
 	 * @param vertices Array of Vertices
+	 * @param vertices Array of Instances
 	 */
-	constructor(readonly gfx: Gfx, vertices: Array<V> = []) {
-		if (vertices.length > 0) {
-			this.uploadVertices(vertices);
-		}
+	constructor(readonly gfx: Gfx, vertices: Array<V> = [], instances: Array<I> = []) {
+		this.uploadVertices(vertices);
+		this.uploadInstances(instances);
+	}
+
+	uploadInstances(instances: Array<I>) {
+		const { device } = this.gfx;
+		const keys = this.instanceOrder.length === 0 && instances.length > 0
+			? Object.keys(instances[0]).sort() as Array<keyof I>
+			: this.instanceOrder;
+		// Write instances
+		const instanceData = toArrayBuffer(instances, keys);
+		const instanceBuffer = device.createBuffer({
+			label: 'Mesh Instance Buffer',
+			size: instanceData.byteLength,
+			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+		});
+		device.queue.writeBuffer(instanceBuffer, 0, instanceData);
+
+		this.instanceCount = instances.length;
+		this.instanceBuffer = instanceBuffer;
 	}
 
 	uploadVertices(vertices: Array<V>) {
-		if (this.attributeOrder.length === 0 && vertices.length < 1) {
-			throw new Error('Mesh must have at least 1 vertex');
-		}
 		const { device } = this.gfx;
-		const keys = this.attributeOrder.length === 0
+		const keys = this.vertexOrder.length === 0 && vertices.length > 0
 			? Object.keys(vertices[0]).sort() as Array<keyof V>
-			: this.attributeOrder;
+			: this.vertexOrder;
 
-		const data = toArrayBuffer(vertices, keys);
-		const buffer = device.createBuffer({
-			label: 'Mesh Attribute Buffer',
-			size: data.byteLength,
+		// Write vertices
+		const vertexData = toArrayBuffer(vertices, keys);
+		const vertexBuffer = device.createBuffer({
+			label: 'Mesh Vertex Buffer',
+			size: vertexData.byteLength,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
-		device.queue.writeBuffer(buffer, 0, data);
+		device.queue.writeBuffer(vertexBuffer, 0, vertexData);
 
 		this.vertexCount = vertices.length;
-		this.buffer = buffer;
+		this.vertexBuffer = vertexBuffer;
 	}
 }
 
 /**
- * Mesh made of {@link TextureVertex} vertices
+ * Instanced Mesh made of {@link TextureVertex} vertices
  */
-export class SimpleMesh extends Mesh<TextureVertex> {
-	attributeOrder: Array<keyof TextureVertex> = ['position', 'normal', 'uv'];
-	constructor(gfx: Gfx, vertices: Array<TextureVertex> = []) {
+export class SimpleMesh extends Mesh<TextureVertex, OffsetInstance> {
+	vertexOrder: Array<keyof TextureVertex> = ['position', 'normal', 'uv'];
+	instanceOrder: Array<keyof OffsetInstance> = ['offset'];
+	constructor(gfx: Gfx, vertices: Array<TextureVertex> = [], instances?: Array<OffsetInstance>) {
 		super(gfx);
 		this.uploadVertices(vertices);
+		if (instances) {
+			this.uploadInstances(instances);
+		}
+		else {
+			this.uploadInstances([{ offset: [0, 0, 0] }])
+		}
 	}
 }
+
 
 
 /**
@@ -205,14 +238,14 @@ export class Cube extends SimpleMesh {
  * Mesh shaped like an Icosahedron
  */
 export class Icosahedron extends SimpleMesh {
-	constructor(gfx: Gfx) {
+	constructor(gfx: Gfx, instances?: Array<OffsetInstance>) {
 		const vertices = buildIcosahedron(position => ({
 			position: [...position],
 			normal: [0, 0, 0],
 			uv: [0, 0]
 		} as TextureVertex));
 		calculateNormals(vertices);
-		super(gfx, vertices);
+		super(gfx, vertices, instances);
 	}
 }
 

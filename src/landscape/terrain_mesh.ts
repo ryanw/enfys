@@ -18,7 +18,7 @@ export class TerrainMesh extends SimpleMesh {
 	}
 
 	private async createVertexBuffer() {
-		this.buffer = await this.terrainPipeline.createVertexBuffer(this.size, this.chunkId, this.seed);
+		this.vertexBuffer = await this.terrainPipeline.createVertexBuffer(this.size, this.chunkId, this.seed);
 		this.vertexCount = this.size[0] * this.size[1] * 6;
 	}
 }

@@ -69,7 +69,7 @@ export class TerrainPipeline extends Pipeline {
 		});
 
 		const workgroupSize = 256;
-		const workgroupCount = Math.ceil(triangleCount / workgroupSize) | 0;
+		const workgroupCount = Math.ceil(triangleCount / workgroupSize);
 
 		const enc = encoder || device.createCommandEncoder({ label: 'TerrainPipeline Command Encoder' });
 		const pass = enc.beginComputePass({ label: 'TerrainPipeline Compute Pass' });
@@ -113,7 +113,7 @@ export class TerrainPipeline extends Pipeline {
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: { buffer: this.uniformBuffer.buffer } },
-				{ binding: 1, resource: { buffer: terrain.buffer } },
+				{ binding: 1, resource: { buffer: terrain.vertexBuffer } },
 			],
 		});
 
