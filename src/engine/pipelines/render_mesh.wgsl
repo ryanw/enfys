@@ -4,7 +4,7 @@ struct VertexIn {
 	@builtin(vertex_index) id: u32,
 	@location(0) position: vec3f,
 	@location(1) normal: vec3f,
-	@location(2) uv: vec2f,
+	@location(2) color: vec4f,
 	// Instance
 	@location(3) offset: vec3f,
 }
@@ -13,9 +13,10 @@ struct VertexOut {
 	@builtin(position) position: vec4f,
 	@location(0) uv: vec2f,
 	@location(1) normal: vec3f,
-	@location(2) modelPosition: vec3f,
-	@location(3) modelNormal: vec3f,
-	@location(4) @interpolate(flat) triangleId: u32,
+	@location(2) color: vec4f,
+	@location(3) modelPosition: vec3f,
+	@location(4) modelNormal: vec3f,
+	@location(5) @interpolate(flat) triangleId: u32,
 }
 
 struct Fragment1Out {
@@ -72,6 +73,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
 
+	out.color = in.color;
 	out.triangleId = (rnd3uu(vec3(triangleId + entity.id))) % 0xff;
 
 	return out;
@@ -81,7 +83,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 @fragment
 fn fs_main(in: VertexOut) -> Fragment1Out {
 	var out: Fragment1Out;
-	var color = material.color;
+	var color = material.color * in.color;
 
 	var lightDir = normalize(vec3(-0.3, -0.1, 0.6));
 	var shade = dot(lightDir, in.normal);

@@ -54,7 +54,7 @@ fn smoothNoise(v: vec3<f32>) -> f32 {
 	var bfr = rnd3(id + vec3<f32>(1.0, 0.0, 1.0));
 	var bf = mix(bfl, bfr, lv.x);
 
-	let b = mix(bn, bf, lv.z);
+	var b = mix(bn, bf, lv.z);
 
 	var tnl = rnd3(id + vec3<f32>(0.0, 1.0, 0.0));
 	var tnr = rnd3(id + vec3<f32>(1.0, 1.0, 0.0));
@@ -64,9 +64,9 @@ fn smoothNoise(v: vec3<f32>) -> f32 {
 	var tfr = rnd3(id + vec3<f32>(1.0, 1.0, 1.0));
 	var tf = mix(tfl, tfr, lv.x);
 
-	let t = mix(tn, tf, lv.z);
+	var t = mix(tn, tf, lv.z);
 
-	let c = mix(b, t, lv.y);
+	var c = mix(b, t, lv.y);
 
 	return c;
 }

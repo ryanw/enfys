@@ -215,7 +215,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			}
 			// Normal
 			case 4: {
-				color = vec4(normal.xyz * 0.5 + 0.5, 1.0);
+				color = vec4(normal.xyz, 1.0);
 			}
 			// Position
 			case 5: {

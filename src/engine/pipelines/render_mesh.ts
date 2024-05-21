@@ -146,12 +146,12 @@ const pointVertexLayout: GPUVertexBufferLayout = {
 		offset: 12,
 		format: 'float32x3'
 	}, {
-		// UV
+		// Color
 		shaderLocation: 2,
 		offset: 24,
-		format: 'float32x2'
+		format: 'float32x4'
 	}],
-	arrayStride: 32,
+	arrayStride: 40,
 };
 
 const offsetInstanceLayout: GPUVertexBufferLayout = {

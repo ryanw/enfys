@@ -65,7 +65,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 					),
 					translation(chunkSize[0] * x * s, 0, chunkSize[1] * y * s),
 				);
-				chunk.material = new Material(gfx, hsl(d / drawDist, 0.6, 0.6));
+				//chunk.material = new Material(gfx, hsl(d / drawDist, 0.6, 0.6));
 				//chunk.material = randomColor(gfx);
 			}
 		}
@@ -79,7 +79,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 		1.0,
 		seed
 	), scaling(0.333));
-	trees.material = new Material(gfx, [50, 200, 10, 255])
+	//trees.material = new Material(gfx, [50, 200, 10, 255])
 
 
 	// Mouse pointer
@@ -93,7 +93,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 		pointer.transform = multiply(
 			translation(...pointerController.worldPosition),
 			rotation(t * 2, t, t * 3),
-			scaling(4),
+			scaling(1),
 		);
 		await gfx.draw(scene, camera);
 	});

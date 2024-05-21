@@ -1,6 +1,6 @@
 import { Gfx, Size, calculateNormals } from "engine";
 import { Point3 } from "engine/math";
-import { CUBE_VERTS, Icosahedron, SimpleMesh, TextureVertex } from "engine/mesh";
+import { CUBE_VERTS, ColorVertex, Icosahedron, SimpleMesh, TextureVertex } from "engine/mesh";
 import { TreePipeline } from "./pipelines/tree";
 
 export class TreeMesh extends SimpleMesh {
@@ -13,11 +13,11 @@ export class TreeMesh extends SimpleMesh {
 		readonly density: number,
 		readonly seed: number,
 	) {
-		const vertices = buildTreeMesh<TextureVertex>(position => ({
+		const vertices = buildTreeMesh(position => ({
 			position: [...position],
 			normal: [0, 0, 0],
-			uv: [0, 0]
-		}));
+			color: [0.41, 0.24, 0.81, 1.0]
+		} as ColorVertex));
 		calculateNormals(vertices);
 		super(gfx, vertices);
 		this.pipeline = new TreePipeline(this.gfx);

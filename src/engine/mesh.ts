@@ -1,5 +1,5 @@
 import { Gfx, Size, calculateNormals } from 'engine';
-import { PHI, Point2, Point3, Vector3 } from './math';
+import { PHI, Point2, Point3, Vector3, Vector4 } from './math';
 import { add, normalize } from './math/vectors';
 
 /**
@@ -28,6 +28,13 @@ export interface NormalVertex extends PointVertex {
  */
 export interface TextureVertex extends NormalVertex {
 	uv: Point2,
+}
+
+/**
+ * Vertex that can be used to draw textured polygons
+ */
+export interface ColorVertex extends NormalVertex {
+	color: Vector4,
 }
 
 /**
@@ -99,12 +106,12 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = {}> {
 }
 
 /**
- * Instanced Mesh made of {@link TextureVertex} vertices
+ * Instanced Mesh made of {@link ColorVertex} vertices
  */
-export class SimpleMesh extends Mesh<TextureVertex, OffsetInstance> {
-	vertexOrder: Array<keyof TextureVertex> = ['position', 'normal', 'uv'];
+export class SimpleMesh extends Mesh<ColorVertex, OffsetInstance> {
+	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color'];
 	instanceOrder: Array<keyof OffsetInstance> = ['offset'];
-	constructor(gfx: Gfx, vertices: Array<TextureVertex> = [], instances?: Array<OffsetInstance>) {
+	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<OffsetInstance>) {
 		super(gfx);
 		this.uploadVertices(vertices);
 		if (instances) {
@@ -165,11 +172,11 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 	return data;
 }
 
-function toVertex(position: Point3): TextureVertex {
+function toVertex(position: Point3): ColorVertex {
 	return {
 		position: [...position],
 		normal: [0, 1, 0],
-		uv: [0, 0]
+		color: [1.0, 0.0, 1.0, 1.0]
 	};
 }
 
@@ -242,8 +249,8 @@ export class Icosahedron extends SimpleMesh {
 		const vertices = buildIcosahedron(position => ({
 			position: [...position],
 			normal: [0, 0, 0],
-			uv: [0, 0]
-		} as TextureVertex));
+			color: [1.0, 1.0, 0.0, 1.0]
+		} as ColorVertex));
 		calculateNormals(vertices);
 		super(gfx, vertices, instances);
 	}
