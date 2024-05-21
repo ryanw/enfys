@@ -259,7 +259,7 @@ export function buildIcosahedron<T>(callback: (position: Point3, index: number) 
 	).flat();
 }
 
-const CUBE_VERTS: Array<Point3> = [
+export const CUBE_VERTS: Array<Point3> = [
 	[-1, -1, 1],
 	[1, -1, 1],
 	[1, 1, 1],
