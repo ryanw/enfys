@@ -1,20 +1,30 @@
-import path from 'node:path';
-import fs from 'node:fs';
-
 export default function wgsl(config = {}) {
 	return {
 		name: 'wgsl',
 		transform(code, filename) {
 			if (filename.split('.').pop() !== 'wgsl') return;
-
-			const fullpath = path.resolve(process.cwd(), filename);
-			let source = transpileWgsl(fullpath, code);
-
+			let [source, imports] = transpileWgsl(code);
 			if (config.stripWhitespace) {
 				source = stripWhitespace(source);
 			}
+			const escapedCode = JSON
+				.stringify(source)
+				// Put whitespace back in for readability in non-minified code
+				.replaceAll("\\n", "\n")
+				.replaceAll("\\t", "\t")
+				// Remove wrapping qutoes
+				.slice(1, -1);
+
+			// Inject all the imports
+			let finalCode = Array.from(imports).map(file =>
+				`import __wgslSource$${djb2(file)} from ${JSON.stringify(file)};`
+			).join("\n");
+
+			// Append the actual code
+			finalCode += `export default \`${escapedCode}\`;`;
+
 			return {
-				code: `export default ${JSON.stringify(source)};`,
+				code: finalCode,
 				map: { mappings: '' }
 			};
 		}
@@ -32,23 +42,21 @@ function stripWhitespace(source) {
 		.replace(/\s([,:;=+-/*{}()[\]])/g, '$1');
 }
 
-function transpileWgsl(fullpath, source, imports = new Set()) {
-	const dirname = path.dirname(fullpath);
-	imports.add(fullpath);
-	return source.replace(/@import\s+(?:"([^"]*)"|'([^']*)')\s*;?/gm, (_match, filename) => {
-		let importpath = filename;
-		// Starts with ./ or ../
-		if (/^\.\.?\//.test(filename)) {
-			importpath = path.resolve(dirname, filename);
-		}
-		else {
-			importpath = path.resolve('./src/', filename);
-		}
-		if (imports.has(importpath)) {
-			return '';
-		}
-		imports.add(importpath);
-		const data = fs.readFileSync(importpath, 'utf8');
-		return transpileWgsl(importpath, data, imports) + '\n';
+function transpileWgsl(source) {
+	const imports = new Set();
+	const compiled = source.replace(/@import\s+(?:"([^"]*)"|'([^']*)')\s*;?/gm, (_match, filename) => {
+		imports.add(filename);
+		const sourceVariableName = "__wgslSource$" + djb2(filename);
+		return "\n${" + sourceVariableName + "}\n";
 	});
+	return [compiled, imports];
+}
+
+function djb2(str) {
+	let hash = 5381;
+	const chars = str.split('').map(c => c.charCodeAt(0));
+	for (const c of chars) {
+		hash = ((hash << 5) + hash) + c;
+	}
+	return btoa(hash).replace(/=/g, '');
 }
