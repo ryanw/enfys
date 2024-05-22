@@ -26,7 +26,7 @@ export class PointerController {
 		this.updating = true;
 		const { u, v } = this.mousePosition;
 		const uv: Point2 = [u, v];
-		this._worldPosition = await this.pipeline.queryPoint(
+		this._worldPosition = await this.pipeline.queryScreenPoint(
 			uv,
 			this.seed,
 			this.camera,

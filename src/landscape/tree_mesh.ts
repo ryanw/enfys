@@ -1,6 +1,6 @@
 import { Gfx, Size, calculateNormals } from "engine";
 import { Point3 } from "engine/math";
-import { CUBE_VERTS, ColorVertex, Icosahedron, SimpleMesh, TextureVertex } from "engine/mesh";
+import { CUBE_VERTS, ColorVertex, buildIcosahedron, Icosahedron, SimpleMesh, TextureVertex } from "engine/mesh";
 import { TreePipeline } from "./pipelines/tree";
 
 export class TreeMesh extends SimpleMesh {
@@ -38,7 +38,11 @@ export class TreeMesh extends SimpleMesh {
 }
 
 export function buildTreeMesh<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	const trunk: Point3[] = CUBE_VERTS.map(p => [p[0] / 3.0, p[1] * 10.0, p[2] / 3.0]);
-	const bush: Point3[] = CUBE_VERTS.map(p => [p[0] * 3.0, p[1] * 3.0 + 10.0, p[2] * 3.0]);
+	const trunk: Point3[] = CUBE_VERTS.map(p => [p[0] / 2.0, p[1] * 10.0, p[2] / 2.0]);
+	const bush: Point3[] = buildIcosahedron(p => [
+		p[0] * 4.0,
+		p[1] * 4.0 + 8.0,
+		p[2] * 4.0,
+	]);
 	return [...trunk, ...bush].map(callback);
 }

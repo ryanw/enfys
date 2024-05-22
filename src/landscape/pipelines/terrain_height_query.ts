@@ -1,6 +1,6 @@
 import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
-import shaderSource from './terrain_query.wgsl';
+import shaderSource from './terrain_height_query.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point2, Point3 } from 'engine/math';
 import { identity, inverse, multiply } from 'engine/math/transform';
@@ -9,12 +9,12 @@ import { Camera } from 'engine/camera';
 /**
  * Compute shader to get the terrain height at a given point
  */
-export class TerrainQueryPipeline extends Pipeline {
+export class TerrainHeightQueryPipeline extends Pipeline {
 	private pipeline: GPUComputePipeline;
 	private uniformBuffer: UniformBuffer;
 	private resultBuffer: GPUBuffer;
 	private readBuffer: GPUBuffer;
-	private previousResult: Point3 = [0, 0, 0];
+	private previousResult = 0;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -26,12 +26,11 @@ export class TerrainQueryPipeline extends Pipeline {
 		this.readBuffer = device.createBuffer({ size: 3 * 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
-			['invMvp', 'mat4x4f'],
-			['uv', 'vec2f'],
+			['point', 'vec3f'],
 			['seed', 'f32'],
 		]);
 
-		const shader = device.createShaderModule({ label: 'TerrainQueryPipeline Query Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'TerrainHeightQueryPipeline Query Shader', code: shaderSource });
 		const bindGroupLayout = device.createBindGroupLayout({
 			entries: [
 				{
@@ -41,11 +40,6 @@ export class TerrainQueryPipeline extends Pipeline {
 				},
 				{
 					binding: 1,
-					visibility: GPUShaderStage.COMPUTE,
-					texture: { sampleType: 'unfilterable-float' }
-				},
-				{
-					binding: 2,
 					visibility: GPUShaderStage.COMPUTE,
 					buffer: {
 						type: 'storage',
@@ -59,14 +53,14 @@ export class TerrainQueryPipeline extends Pipeline {
 		});
 
 		this.pipeline = gfx.device.createComputePipeline({
-			label: 'TerrainQueryPipeline Query Pipeline',
+			label: 'TerrainHeightQueryPipeline Query Pipeline',
 			layout: pipelineLayout,
 			compute: { module: shader, entryPoint: 'main' },
 		});
 
 	}
 
-	async queryScreenPoint(uv: Point2, seed: number, camera: Camera, depth: GPUTexture): Promise<Point3> {
+	async queryWorldPoint(p: Point3, seed: number): Promise<number> {
 		// FIXME better handling of pending maps
 		if (this.readBuffer.mapState === 'pending') {
 			return this.previousResult;
@@ -74,23 +68,20 @@ export class TerrainQueryPipeline extends Pipeline {
 
 		const { device } = this.gfx;
 
-		const cameraInvMvp = inverse(multiply(camera.projection, camera.view));
-		const invMvp = cameraInvMvp || identity();
-		this.uniformBuffer.replace({ invMvp, uv, seed });
+		this.uniformBuffer.set('seed', seed);
+		this.uniformBuffer.set('point', p);
 
-		const enc = device.createCommandEncoder({ label: 'TerrainQueryPipeline Query Command Encoder' });
-		const pass = enc.beginComputePass({ label: 'TerrainQueryPipeline Query Compute Pass' });
+		const enc = device.createCommandEncoder({ label: 'TerrainHeightQueryPipeline Query Command Encoder' });
+		const pass = enc.beginComputePass({ label: 'TerrainHeightQueryPipeline Query Compute Pass' });
 
 		const bindGroup = device.createBindGroup({
-			label: 'TerrainQueryPipeline Query Bind Group',
+			label: 'TerrainHeightQueryPipeline Query Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				// Uniforms
 				{ binding: 0, resource: this.uniformBuffer.bindingResource() },
-				// Depth texture for mouse test
-				{ binding: 1, resource: depth.createView() },
 				// Query output buffer
-				{ binding: 2, resource: { buffer: this.resultBuffer } },
+				{ binding: 1, resource: { buffer: this.resultBuffer } },
 			],
 		});
 
@@ -106,7 +97,7 @@ export class TerrainQueryPipeline extends Pipeline {
 		// Read back the result
 		await this.readBuffer.mapAsync(GPUMapMode.READ);
 		const result = new Float32Array(this.readBuffer.getMappedRange());
-		this.previousResult = [result[0], result[1], result[2]];
+		this.previousResult = result[1];
 		this.readBuffer.unmap();
 
 		return this.previousResult;

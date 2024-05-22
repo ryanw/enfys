@@ -9,6 +9,9 @@ import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
 import { PointerController } from './pointer';
 import { TreeMesh } from './tree_mesh';
+import { TerrainQueryPipeline } from './pipelines/terrain_query';
+import { Point3 } from 'engine/math';
+import { TerrainHeightQueryPipeline } from './pipelines/terrain_height_query';
 
 function randomColor(gfx: Gfx): Material {
 	return new Material(gfx, [Math.random() * 255, Math.random() * 255, Math.random() * 255, 255]);
@@ -18,13 +21,18 @@ function randomColor(gfx: Gfx): Material {
  * Start the demo
  */
 export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerController]> {
-	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
 	const gfx: Gfx = await Gfx.attachNotified(el);
 	const seed = Math.random() * 0xffffffff;
 
+	// Set initial camera position just above the surface
+	const queryTerrain = new TerrainHeightQueryPipeline(gfx);
+	const cameraPosition: Point3 = [0, 0, 0];
+	const cameraHeight = await queryTerrain.queryWorldPoint(cameraPosition, seed);
+	cameraPosition[1] = 3.0 + Math.max(0, cameraHeight);
+
 	console.time('World Generation');
 	const camera = new Camera(gfx);
-	camera.translate([0, 64, 0]);
+	camera.translate(cameraPosition);
 	camera.rotate(0.1, 0);
 	const cameraController = new CameraController(el, camera);
 	const pointerController = new PointerController(el, camera, seed);
