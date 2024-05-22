@@ -71,17 +71,30 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 		(flattenEdges & BOTTOM) > 0 && quadP.y == 0,
 		(flattenEdges & TOP) > 0 && quadP.y == u.size.y - 1,
 	);
+
 	// FIXME this is a mess
+	let p0 = toVec(tri.vertices[0].position);
+	let p1 = toVec(tri.vertices[1].position);
+	let p2 = toVec(tri.vertices[2].position);
+	// Centroid of triangle, so its all one colour
+	var trip = ((p0 + p1 + p2) / 3.0 + chunkP * lodScale);
+	h = landHeight(trip, u.seed);
+	let shadeCount = 3.0;
+	var shade = floor(clamp(h/5.0, 0.0, 1.0) * shadeCount)/shadeCount;
+	let color = mix(
+		// Sand
+		vec3(0.9, 0.7, 0.2),
+		// Grass
+		vec3(0.4, 0.7, 0.1),
+		shade
+	);
+
 	for (var i = 0; i < 3; i++) {
 		var tp = (toVec(tri.vertices[i].position) + chunkP * lodScale);
+		h = landHeight(trip, u.seed);
 		h = landHeight(tp, u.seed);
-		let color = mix(
-			vec3(0.94, 0.61, 0.2),
-			vec3(0.41, 0.84, 0.1),
-			smoothstep(0.0, 1.0, h/7.0)
-		);
-		tri.vertices[i].color = array(color.r, color.g, color.b, 1.0);
 		tri.vertices[i].position[1] += h;
+		tri.vertices[i].color = array(color.r, color.g, color.b, 1.0);
 	/*
 		// Right + Left
 		for (var j = 0; j < 2; j++) {

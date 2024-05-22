@@ -34,16 +34,16 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 		new QuadMesh(
 			gfx,
 			[32, 32],
-			[5120, 5120],
+			[51200, 51200],
 		),
 		translation(0, 0, 0),
 	);
 	water.material = new Material(gfx, [90, 160, 250, 255]);
 
-	const chunkSize: Size = [64, 64];
+	const chunkSize: Size = [128, 128];
 
-	const drawDist = 5;
-	const rad = 4;
+	const drawDist = 7;
+	const rad = 2;
 	const skip = rad / 2;
 
 	// Build terrain

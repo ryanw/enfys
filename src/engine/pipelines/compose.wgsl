@@ -201,7 +201,8 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 	// Draw edges
 	if isEdge {
-		color = mix(color, vec4(0.0, 0.0, 0.0, 1.0), 0.5);
+		let ef = smoothstep(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
+		color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
 	}
 	else {
 		switch (renderMode) {

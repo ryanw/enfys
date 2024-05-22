@@ -21,14 +21,19 @@ var<storage, read_write> instances: array<Instance>;
 
 @compute @workgroup_size(16, 16)
 fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
-	var p = vec3(f32(globalId.x), 0.0, f32(globalId.y)) * 4.0;
+	var p = (vec3(f32(globalId.x), 0.0, f32(globalId.y)) - vec3(128.0, 0.0, 128.0)) * 16.0;
 	p.y = landHeight(p, u.seed);
 
 	var n = rnd3(p);
 
-	if p.y > 0.6 && n < 1.0 / 5.0 {
+	if p.y > 0.6 && n < 1.0 / 1.0 {
+		var n0 = (rnd3(p + vec3(123.0)) - 0.5) * 32.0;
+		var n1 = (rnd3(p + vec3(323.0)) - 0.5) * 32.0;
 		var instance: Instance;
 		let count = atomicAdd(&counter, 1u);
+		p.x += n0;
+		p.z += n1;
+		p.y = landHeight(p, u.seed);
 		instance.offset = array(p.x, p.y, p.z);
 		if (count < 512000) {
 			instances[count] = instance;
