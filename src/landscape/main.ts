@@ -1,21 +1,15 @@
 import { Gfx, Size } from 'engine';
-import { Icosahedron, OffsetInstance, QuadMesh } from 'engine/mesh';
+import { Icosahedron, QuadMesh } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, scaling, translation } from 'engine/math/transform';
 import { CameraController } from 'engine/input';
 import { TerrainMesh } from './terrain_mesh';
 import { Material } from 'engine/material';
-import { hsl } from 'engine/color';
 import { PointerController } from './pointer';
 import { TreeMesh } from './tree_mesh';
-import { TerrainQueryPipeline } from './pipelines/terrain_query';
 import { Point3 } from 'engine/math';
 import { TerrainHeightQueryPipeline } from './pipelines/terrain_height_query';
-
-function randomColor(gfx: Gfx): Material {
-	return new Material(gfx, [Math.random() * 255, Math.random() * 255, Math.random() * 255, 255]);
-}
 
 /**
  * Start the demo
@@ -64,7 +58,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 					continue;
 				}
 				const s = 1 << d;
-				const chunk = scene.addMesh(
+				scene.addMesh(
 					new TerrainMesh(
 						gfx,
 						chunkSize,
@@ -73,26 +67,22 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 					),
 					translation(chunkSize[0] * x * s, 0, chunkSize[1] * y * s),
 				);
-				//chunk.material = new Material(gfx, hsl(d / drawDist, 0.6, 0.6));
-				//chunk.material = randomColor(gfx);
 			}
 		}
 	}
 	console.timeEnd('World Generation');
 
-	const trees = scene.addMesh(new TreeMesh(
+	scene.addMesh(new TreeMesh(
 		gfx,
 		[0, 0, 0],
 		1000.0,
 		1.0,
 		seed
 	), scaling(0.333));
-	//trees.material = new Material(gfx, [50, 200, 10, 255])
 
 
 	// Mouse pointer
 	const pointer = scene.addMesh(new Icosahedron(gfx));
-	pointer.material.color = [255, 255, 255, 255];
 	pointer.material.writeDepth = false;
 
 	gfx.run(async (dt) => {
@@ -107,12 +97,4 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 	});
 
 	return [gfx, pointerController];
-}
-
-function randRange(min: number = 0, max: number = 1): number {
-	const l = Math.min(min, max);
-	const r = Math.max(min, max);
-	const d = r - l;
-
-	return l + Math.random() * d;
 }
