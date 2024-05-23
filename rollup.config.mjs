@@ -2,6 +2,7 @@ import path from 'node:path';
 import typescript from '@rollup/plugin-typescript';
 import alias from '@rollup/plugin-alias';
 import terser from '@rollup/plugin-terser';
+import replace from '@rollup/plugin-replace';
 import wgsl from './src/wgsl_loader.mjs';
 
 const entries = ['hello', 'demo', 'landscape'];
@@ -34,6 +35,10 @@ export default entries.map(entry => ({
 					replacement: enginePath
 				}
 			]
+		}),
+		replace({
+			'process.env.PRODUCTION': JSON.stringify(production),
+			'process.env.DEBUG': JSON.stringify(!production),
 		}),
 		production && terser(),
 	],

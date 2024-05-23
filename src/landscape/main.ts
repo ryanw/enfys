@@ -10,11 +10,17 @@ import { PointerController } from './pointer';
 import { TreeMesh } from './tree_mesh';
 import { Point3 } from 'engine/math';
 import { TerrainHeightQueryPipeline } from './pipelines/terrain_height_query';
+import { Chunker } from './chunker';
+import { debugChunker } from './chunker.debug';
 
 /**
  * Start the demo
  */
 export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerController]> {
+	if (process.env.DEBUG) {
+		const c = new Chunker(8, [6, 4]);
+		debugChunker(document.body, c);
+	}
 	const gfx: Gfx = await Gfx.attachNotified(el);
 	const seed = Math.random() * 0xffffffff;
 
