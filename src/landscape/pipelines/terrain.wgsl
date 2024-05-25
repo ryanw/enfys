@@ -24,6 +24,57 @@ var<uniform> u: Uniforms;
 @group(0) @binding(1)
 var<storage, read_write> triangles: array<Triangle>;
 
+
+var<private> terrain_colors: array<vec3f, 32> = array(
+	// Sand
+	vec3(0.9, 0.7, 0.2),
+	// Grass
+	vec3(0.4, 0.7, 0.1),
+	vec3(0.4, 0.7, 0.1),
+
+	vec3(0.7, 0.6, 0.3),
+	vec3(0.7, 0.7, 0.4),
+	vec3(0.7, 0.7, 0.5),
+
+	vec3(0.4),
+	vec3(0.5),
+	vec3(0.6),
+	vec3(0.5),
+	vec3(0.5),
+	vec3(0.5),
+	vec3(0.6),
+	vec3(0.4),
+	vec3(0.5),
+	vec3(0.4),
+	vec3(0.5),
+	vec3(0.5),
+	vec3(0.7),
+	vec3(0.5),
+	vec3(0.4),
+	vec3(0.5),
+	vec3(0.5),
+	vec3(0.6),
+	vec3(0.5),
+	vec3(0.7),
+	vec3(0.4),
+	vec3(0.5),
+	vec3(0.6),
+	vec3(0.4),
+	vec3(0.5),
+	vec3(1.0),
+);
+
+fn getTerrainColor(shade: f32) -> vec3f {
+	let intervalCount = 32;
+	let idx = f32(intervalCount) * shade;
+	let b = i32(ceil(idx));
+	let t = i32(floor(idx));
+	let topColor = terrain_colors[t];
+	let bottomColor = terrain_colors[b];
+
+	return mix(topColor, bottomColor, fract(idx));
+}
+
 @compute @workgroup_size(256)
 fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	var triId = i32(globalId.x);
@@ -79,15 +130,9 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	// Centroid of triangle, so its all one colour
 	var trip = ((p0 + p1 + p2) / 3.0 + chunkP * lodScale);
 	h = landHeight(trip, u.seed);
-	let shadeCount = 3.0;
-	var shade = floor(clamp(h/5.0, 0.0, 1.0) * shadeCount)/shadeCount;
-	let color = mix(
-		// Sand
-		vec3(0.9, 0.7, 0.2),
-		// Grass
-		vec3(0.4, 0.7, 0.1),
-		shade
-	);
+	//let shadeCount = 3.0;
+	//var shade = floor(clamp(h/5.0, 0.0, 1.0) * shadeCount)/shadeCount;
+	let color = getTerrainColor(h / 64.0);
 
 	for (var i = 0; i < 3; i++) {
 		var tp = (toVec(tri.vertices[i].position) + chunkP * lodScale);
