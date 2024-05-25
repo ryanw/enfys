@@ -29,9 +29,18 @@ export class CameraController {
 
 	constructor(private el: HTMLElement, public camera: Camera) {
 		this.gfx = camera.gfx;
+		document.addEventListener('pointerlockchange', this.onPointerLockChange);
 		el.addEventListener('mousedown', this.onMouseDown);
 		window.addEventListener('keydown', this.onKeyDown);
 		window.addEventListener('keyup', this.onKeyUp);
+	}
+
+	grab() {
+		this.el.requestPointerLock();
+	}
+
+	release() {
+		document.exitPointerLock();
 	}
 
 	update(dt: number) {
@@ -66,6 +75,14 @@ export class CameraController {
 
 		const velocity = scale(normalize(adjustment), speed * dt);
 		this.camera.translate(velocity);
+	}
+
+	onPointerLockChange = (e: Event) => {
+		if (document.pointerLockElement === this.el) {
+			document.addEventListener('mousemove', this.onMouseMove);
+		} else {
+			document.removeEventListener('mousemove', this.onMouseMove);
+		}
 	}
 
 	onMouseDown = (e: MouseEvent) => {

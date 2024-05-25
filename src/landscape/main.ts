@@ -1,5 +1,5 @@
 import { Gfx, Size } from 'engine';
-import { Icosahedron, QuadMesh } from 'engine/mesh';
+import { Cube, Icosahedron, QuadMesh } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, scaling, translation } from 'engine/math/transform';
@@ -21,14 +21,18 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 
 	// Set initial camera position just above the surface
 	const queryTerrain = new TerrainHeightQueryPipeline(gfx);
-	const cameraPosition: Point3 = [0, 0, 0];
-	const cameraHeight = await queryTerrain.queryWorldPoint(cameraPosition, seed);
-	cameraPosition[1] = 3.0 + Math.max(0, cameraHeight);
+
+	const spawnPosition: Point3 = [0, 0, 0];
+	spawnPosition[1] = 1.0 + await queryTerrain.queryWorldPoint(spawnPosition, seed);
+
+	const cameraPosition: Point3 = [0, 0, -20];
+	cameraPosition[1] = 12.0 + spawnPosition[1];
+
 
 	console.time('World Generation');
 	const camera = new Camera(gfx);
 	camera.translate(cameraPosition);
-	camera.rotate(0.06, 0);
+	camera.rotate(0.1, 0);
 	const cameraController = new CameraController(el, camera);
 	const pointerController = new PointerController(el, camera, seed);
 	const scene = new Scene(gfx);
@@ -51,6 +55,9 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 		seed
 	), scaling(0.333));
 
+	const player = scene.addMesh(new Cube(gfx), translation(...spawnPosition));
+	player.material = new Material(gfx, [255, 0, 0, 255]);
+
 
 	// Mouse pointer
 	const pointer = scene.addMesh(new Icosahedron(gfx));
@@ -71,8 +78,8 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 		chunker.move(camera.position[0], camera.position[2]);
 		chunker.processQueue(scene),
 
-		await gfx.draw(scene, camera);
-});
+			await gfx.draw(scene, camera);
+	});
 
-return [gfx, pointerController];
+	return [gfx, pointerController];
 }

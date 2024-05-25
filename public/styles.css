@@ -37,6 +37,12 @@ html, body {
 	display: flex;
 	flex-direction: column;
 }
+#settings button {
+	margin-bottom: 0.5em;
+	padding: 0.5em;
+	font: inherit;
+	font-size: 1em;
+}
 #settings:hover {
 	transition: opacity 100ms;
 	opacity: 1.0;

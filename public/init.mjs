@@ -2,16 +2,18 @@ const bundleName = window.location.search.match(/(?:\?|\&)run=([a-zA-Z]+)/)?.[1]
 const { main } = await import(`./${bundleName}.bundle.js`);
 
 async function init() {
-	const [gfx, pointer] = await main(document.querySelector('#app canvas'))
+	const el = document.querySelector('#app canvas');
+	const [gfx, pointer] = await main(el)
 
 	const fps = document.querySelector('#fps span');
 	const mouse = document.querySelector('#mouse-pos span');
 	setInterval(() => {
 		fps.innerHTML = gfx.fps.toFixed(0);
 		mouse.innerHTML = pointer.worldPosition.map(v => v.toFixed(1)).join(', ');
-	}, 1000/30);
+	}, 1000 / 30);
 
 	// Form elements
+	const lockMouseBtn = document.querySelector('#lock-mouse');
 	const canvasPixelInp = document.querySelector('#canvas-pixel');
 	const ditherSizeInp = document.querySelector('#dither-size');
 	const ditherDepthInp = document.querySelector('#dither-depth');
@@ -37,6 +39,8 @@ async function init() {
 		input.addEventListener('change', updateSettings);
 	}
 	updateSettings();
+
+	lockMouseBtn.addEventListener('click', () => el.requestPointerLock());
 }
 
 await init();

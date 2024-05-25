@@ -24,7 +24,7 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 		// Underwater, add an island on the surface
 		n = mix(1.0, n, d);
 	} else {
-		n = mix(cn + n * 0.1, n, d);
+		n = mix(cn + n * 0.2, n, d);
 	}
 
 
