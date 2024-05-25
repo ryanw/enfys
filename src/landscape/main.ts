@@ -17,10 +17,6 @@ import { debugChunker } from './chunker.debug';
  * Start the demo
  */
 export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerController]> {
-	if (process.env.DEBUG) {
-		const c = new Chunker(7);
-		debugChunker(document.body, c);
-	}
 	const gfx: Gfx = await Gfx.attachNotified(el);
 	const seed = Math.random() * 0xffffffff;
 
@@ -48,36 +44,6 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 	);
 	water.material = new Material(gfx, [90, 160, 250, 255]);
 
-	const chunkSize: Size = [128, 128];
-
-	const drawDist = 7;
-	const rad = 2;
-	const skip = rad / 2;
-
-	// Build terrain
-	for (let d = 0; d < drawDist; d++) {
-		// LoD d
-		for (let y = -rad; y < rad; y++) {
-			for (let x = -rad; x < rad; x++) {
-				if (d > 0 && (x >= -skip && x < skip) && (y >= -skip && y < skip)) {
-					// Skip where LoD d-1 sits
-					continue;
-				}
-				const s = 1 << d;
-				scene.addMesh(
-					new TerrainMesh(
-						gfx,
-						chunkSize,
-						[x, y, d],
-						seed,
-					),
-					translation(chunkSize[0] * x * s, 0, chunkSize[1] * y * s),
-				);
-			}
-		}
-	}
-	console.timeEnd('World Generation');
-
 	scene.addMesh(new TreeMesh(
 		gfx,
 		[0, 0, 0],
@@ -91,6 +57,10 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 	const pointer = scene.addMesh(new Icosahedron(gfx));
 	pointer.material.writeDepth = false;
 
+	const chunker = new Chunker(seed, 5);
+	if (process.env.DEBUG) {
+		debugChunker(el.parentElement!, chunker);
+	}
 	gfx.run(async (dt) => {
 		const t = performance.now() / 1000;
 		cameraController.update(dt);
@@ -99,8 +69,11 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 			rotation(t * 2, t, t * 3),
 			scaling(1),
 		);
-		await gfx.draw(scene, camera);
-	});
+		chunker.move(camera.position[0], camera.position[2]);
+		chunker.processQueue(scene),
 
-	return [gfx, pointerController];
+		await gfx.draw(scene, camera);
+});
+
+return [gfx, pointerController];
 }

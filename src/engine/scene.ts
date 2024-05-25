@@ -89,4 +89,12 @@ export class Scene {
 			transform
 		));
 	}
+
+	removeEntity(entity: Entity<unknown>) {
+		this.entities = this.entities.filter(e => e !== entity);
+		if (isEntityOf(entity, SimpleMesh)) {
+			entity.object.vertexBuffer.destroy();
+			entity.object.instanceBuffer.destroy();
+		}
+	}
 }

@@ -1,19 +1,18 @@
-import { Chunker, subdivideChunk } from "./chunker";
+import { generateChunks, subdivideChunk } from "./chunker";
 
 describe('Chunker', () => {
 	test('it finds the correct chunks for 0 level', () => {
-		const chunker = new Chunker(0, [0.1, 0.1]);
 		const expectedChunks = [
 			{ lod: 0, position: [0, 0] },
 			{ lod: 0, position: [1, 0] },
 			{ lod: 0, position: [1, 1] },
 			{ lod: 0, position: [0, 1] },
 		];
-		expect(chunker.activeChunks).toEqual(expectedChunks);
+		const actualChunks = generateChunks(0.1, 0.1, 0, 0);
+		expect(actualChunks).toEqual(expectedChunks);
 	});
 
 	test('it finds the correct chunks for 4 levels near origin', () => {
-		const chunker = new Chunker(4, [0.1, 0.1]);
 		const expectedChunks = [
 			{ lod: 0, position: [0, 0] },
 			{ lod: 0, position: [1, 0] },
@@ -32,14 +31,14 @@ describe('Chunker', () => {
 			{ lod: 4, position: [16, 16] },
 			{ lod: 4, position: [0, 16] },
 		];
-		expect(chunker.activeChunks.length).toEqual(expectedChunks.length);
+		const actualChunks = generateChunks(0.1, 0.1, 0, 4);
+		expect(actualChunks.length).toEqual(expectedChunks.length);
 		for (const expected of expectedChunks) {
-			expect(chunker.activeChunks).toContainEqual(expected);
+			expect(actualChunks).toContainEqual(expected);
 		}
 	});
 
 	test('it finds the correct chunks for 4 levels near right side', () => {
-		const chunker = new Chunker(4, [15.9, 0.1]);
 		const expectedChunks = [
 			{ lod: 0, position: [ 14, 0 ] },
 			{ lod: 0, position: [ 15, 0 ] },
@@ -58,9 +57,10 @@ describe('Chunker', () => {
 			{ lod: 4, position: [ 0, 16 ] },
 			{ lod: 4, position: [ 16, 16 ] }
 		];
-		expect(chunker.activeChunks.length).toEqual(expectedChunks.length);
+		const actualChunks = generateChunks(15.9, 0.1, 0, 4);
+		expect(actualChunks.length).toEqual(expectedChunks.length);
 		for (const expected of expectedChunks) {
-			expect(chunker.activeChunks).toContainEqual(expected);
+			expect(actualChunks).toContainEqual(expected);
 		}
 	});
 

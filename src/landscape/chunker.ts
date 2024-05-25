@@ -1,10 +1,32 @@
-import { Point2 } from "engine/math";
+import { Point2, Point3 } from "engine/math";
+import { Entity, Scene } from "engine/scene";
+import { TerrainMesh } from "./terrain_mesh";
+import { Size } from "engine";
+import { translation } from "engine/math/transform";
 import { add } from "engine/math/vectors";
 
 export type Chunk = {
 	lod: number,
 	position: Point2,
 };
+
+export function generateChunks(x: number, y: number, minLod: number = 0, maxLod: number = 6) {
+	const point = [x, y] as Point2;
+	const range = 1;
+	let chunks: Array<Chunk> = [];
+	for (let lod = minLod; lod < maxLod; lod++) {
+		const scale = 1 << lod;
+		for (let y = -range; y <= range; y++) {
+			for (let x = -range; x <= range; x++) {
+				chunks = [
+					...chunks,
+					...recursiveSubdivide(add(point, [x * scale, y * scale]), maxLod, lod),
+				];
+			}
+		}
+	}
+	return removeOverlaps(removeDuplicateChunks(chunks));
+}
 
 function equalChunks(c0: Chunk, c1: Chunk): boolean {
 	return (
@@ -44,12 +66,21 @@ function removeOverlaps(chunks: Array<Chunk>): Array<Chunk> {
 	});
 }
 
+export type ChunkKey = string;
+export function toChunkHash(chunk: Chunk): ChunkKey {
+	return [chunk.lod, ...chunk.position].join(',');
+}
+
+
 export class Chunker {
-	activeChunks: Array<Chunk> = [];
-	queuedChunks: Array<Chunk> = [];
-	expiredChunks: Array<Chunk> = [];
+	liveChunks: Map<ChunkKey, Chunk> = new Map();
+	queuedChunks: Map<ChunkKey, Chunk> = new Map();
+	activeChunks: Map<ChunkKey, Chunk> = new Map();
+	entities: Map<ChunkKey, Entity<TerrainMesh>> = new Map();
+	chunkSize: Size = [128, 128];
 
 	constructor(
+		public seed: number,
 		public maxLod: number = 5,
 		public point: Point2 = [0, 0],
 	) {
@@ -58,23 +89,71 @@ export class Chunker {
 
 	move(x: number, y: number, minLod: number = 0) {
 		this.point = [x, y];
-		const range = 1;
-		let chunks: Array<Chunk> = [];
-		for (let lod = minLod; lod < this.maxLod; lod++) {
-			const scale = 1 << lod;
-			for (let y = -range; y <= range; y++) {
-				for (let x = -range; x <= range; x++) {
-					chunks = [
-						...chunks,
-						...recursiveSubdivide(add(this.point, [x * scale, y * scale]), this.maxLod, lod),
-					];
-				}
-			}
+		this.activeChunks = new Map();
+		const chunks = generateChunks(x / this.chunkSize[0], y / this.chunkSize[1], minLod, this.maxLod);
+		for (const chunk of chunks) {
+			this.activeChunks.set(toChunkHash(chunk), chunk);
 		}
-		const cleaned = removeOverlaps(removeDuplicateChunks(chunks));
-		console.log("TOTAL", minLod, (this.maxLod - minLod), chunks.length, cleaned.length);
-		this.activeChunks = cleaned;
+		this.updateQueue();
 	}
+
+	processQueue(scene: Scene) {
+		const chunkies = this.queuedChunks.keys();
+		for (const key of chunkies) {
+			const chunk = this.queuedChunks.get(key);
+			if (!chunk) continue;
+			this.queuedChunks.delete(key);
+			this.generateChunk(scene, chunk);
+		}
+		// Timeout to avoid flicker
+		setTimeout(() => this.removeExpiredChunks(scene), 10);
+	}
+
+	private removeExpiredChunks(scene: Scene) {
+		for (const [key, chunk] of this.liveChunks.entries()) {
+			if (this.activeChunks.has(key)) continue;
+			// Chunk has expired, remove it
+			const entity = this.entities.get(key);
+			if (!entity) continue;
+			scene.removeEntity(entity);
+			this.liveChunks.delete(key);
+		}
+	}
+
+	private generateChunk(scene: Scene, chunk: Chunk) {
+		const scale = 1 << chunk.lod;
+		const chunkId: Point3 = [
+			chunk.position[0] / scale | 0,
+			chunk.position[1] / scale | 0,
+			chunk.lod,
+		];
+		const position: Point3 = [
+			chunkId[0] * scale * this.chunkSize[0],
+			0,
+			chunkId[1] * scale * this.chunkSize[1],
+		];
+		const key = toChunkHash(chunk);
+		this.liveChunks.set(key, chunk);
+		const terrain = scene.addMesh(
+			new TerrainMesh(
+				scene.gfx,
+				this.chunkSize,
+				chunkId,
+				this.seed,
+			),
+			translation(...position),
+		);
+		//terrain.material = new Material(scene.gfx, hsl(chunkId[2] / 7, 0.5, 0.5));
+		this.entities.set(toChunkHash(chunk), terrain)
+	}
+
+	private updateQueue() {
+		for (const [key, chunk] of this.activeChunks.entries()) {
+			if (this.liveChunks.has(key)) continue;
+			this.queuedChunks.set(key, chunk);
+		}
+	}
+
 }
 
 export function recursiveSubdivide(p: Point2, lod: number, minLod: number = 0): Array<Chunk> {
@@ -89,7 +168,7 @@ export function recursiveSubdivide(p: Point2, lod: number, minLod: number = 0): 
 		];
 	}
 	for (const sub of subdivideChunk(p, lod)) {
-		// Subdivide chunk point is inside
+		// Subdivide chunk that the point is inside
 		if (lod > minLod) {
 			if (chunkContains(sub, p, lod)) {
 				chunks.push(...recursiveSubdivide(p, lod - 1, minLod));

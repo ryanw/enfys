@@ -4,12 +4,12 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 	const el = document.createElement('div');
 	parent.appendChild(el);
 	el.style.position = 'fixed';
-	el.style.background = '#000000bb';
 	el.style.top = '0px';
 	el.style.right = '0px';
 	el.style.bottom = '0px';
 	el.style.left = '0px';
 	el.style.zIndex = '1000';
+	el.style.pointerEvents = 'none';
 	const color = [
 		'red',
 		'orange',
@@ -22,13 +22,14 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 	const s = 4;
 	function rebuildCells() {
 		el.innerHTML = '';
-		for (const chunk of chunker.activeChunks) {
+		for (const chunk of chunker.activeChunks.values()) {
 			const cel = document.createElement('div');
 			const scale = 1 << chunk.lod;
 
 			cel.style.position = 'absolute';
+			cel.style.background = '#000000bb';
 			cel.style.left = s * chunk.position[0] + 'px';
-			cel.style.top = s * chunk.position[1] + 'px';
+			cel.style.bottom = s * chunk.position[1] + 'px';
 			cel.style.width = (s * scale) + 'px';
 			cel.style.height = (s * scale) + 'px';
 			cel.style.border = `1px solid ${color[chunk.lod % color.length]}`;
@@ -57,6 +58,7 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 		el.removeEventListener('mousemove', onMouse);
 	});
 	el.addEventListener('click', onMouse);
-	rebuildCells();
+
+	setInterval(rebuildCells, 1000);
 }
 
