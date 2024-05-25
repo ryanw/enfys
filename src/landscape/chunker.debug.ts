@@ -27,9 +27,9 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 			const scale = 1 << chunk.lod;
 
 			cel.style.position = 'absolute';
-			cel.style.background = '#000000bb';
-			cel.style.left = s * chunk.position[0] + 'px';
-			cel.style.bottom = s * chunk.position[1] + 'px';
+			//cel.style.background = '#000000bb';
+			cel.style.left = s * chunk.position[0] + 300 + 'px';
+			cel.style.bottom = s * chunk.position[1] + 300 + 'px';
 			cel.style.width = (s * scale) + 'px';
 			cel.style.height = (s * scale) + 'px';
 			cel.style.border = `1px solid ${color[chunk.lod % color.length]}`;

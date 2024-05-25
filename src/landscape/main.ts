@@ -4,7 +4,6 @@ import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, scaling, translation } from 'engine/math/transform';
 import { CameraController } from 'engine/input';
-import { TerrainMesh } from './terrain_mesh';
 import { Material } from 'engine/material';
 import { PointerController } from './pointer';
 import { TreeMesh } from './tree_mesh';
@@ -57,7 +56,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 	const pointer = scene.addMesh(new Icosahedron(gfx));
 	pointer.material.writeDepth = false;
 
-	const chunker = new Chunker(seed, 5);
+	const chunker = new Chunker(seed, 7);
 	if (process.env.DEBUG) {
 		debugChunker(el.parentElement!, chunker);
 	}
