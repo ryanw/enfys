@@ -138,7 +138,7 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 	for (const key of attributes) {
 		const prop = proto[key];
 		if (Array.isArray(prop)) {
-			vertexSize += prop.length;
+			vertexSize += (prop as Array<number>).length;
 		}
 		else {
 			vertexSize += 1;
@@ -159,8 +159,9 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 			if (!prop) continue;
 
 			if (Array.isArray(prop)) {
-				data.set(prop, offset);
-				offset += prop.length;
+				// FIXME tsc is ignoring `isArray`
+				data.set(prop as Array<number>, offset);
+				offset += (prop as Array<number>).length;
 			} else if (typeof prop === 'number') {
 				data.set([prop], offset);
 				offset += 1;
