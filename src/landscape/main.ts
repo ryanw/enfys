@@ -18,7 +18,7 @@ import { debugChunker } from './chunker.debug';
  */
 export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerController]> {
 	if (process.env.DEBUG) {
-		const c = new Chunker(8, [6, 4]);
+		const c = new Chunker(7);
 		debugChunker(document.body, c);
 	}
 	const gfx: Gfx = await Gfx.attachNotified(el);

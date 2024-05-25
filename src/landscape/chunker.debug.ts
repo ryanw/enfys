@@ -3,10 +3,11 @@ import { Chunker } from './chunker';
 export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 	const el = document.createElement('div');
 	parent.appendChild(el);
-	el.style.width = '1024px';
-	el.style.height = '768px';
 	el.style.position = 'fixed';
+	el.style.background = '#000000bb';
 	el.style.top = '0px';
+	el.style.right = '0px';
+	el.style.bottom = '0px';
 	el.style.left = '0px';
 	el.style.zIndex = '1000';
 	const color = [
@@ -18,7 +19,7 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 		'indigo',
 		'violet',
 	];
-	const s = 8;
+	const s = 4;
 	function rebuildCells() {
 		el.innerHTML = '';
 		for (const chunk of chunker.activeChunks) {
@@ -30,17 +31,24 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 			cel.style.top = s * chunk.position[1] + 'px';
 			cel.style.width = (s * scale) + 'px';
 			cel.style.height = (s * scale) + 'px';
-			cel.style.border = `1px solid ${color[chunk.lod]}`;
+			cel.style.border = `1px solid ${color[chunk.lod % color.length]}`;
 
 			el.appendChild(cel);
 		}
 	}
+	let minLod = 0;
 	function onMouse(e: MouseEvent) {
 		const x = e.clientX / s;
 		const y = e.clientY / s;
-		chunker.move(x, y);
+		chunker.move(x, y, minLod | 0);
 		rebuildCells();
 	}
+	el.addEventListener('wheel', e => {
+		minLod += e.deltaY / 120;
+		minLod = Math.max(0, minLod);
+		minLod = Math.min(chunker.maxLod, minLod);
+		onMouse(e as MouseEvent);
+	});
 	el.addEventListener('mousedown', e => {
 		el.addEventListener('mousemove', onMouse);
 		onMouse(e);

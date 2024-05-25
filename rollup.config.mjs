@@ -37,6 +37,7 @@ export default entries.map(entry => ({
 			]
 		}),
 		replace({
+			preventAssignment: true,
 			'process.env.PRODUCTION': JSON.stringify(production),
 			'process.env.DEBUG': JSON.stringify(!production),
 		}),
