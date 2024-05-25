@@ -26,15 +26,20 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 
 	var n = rnd3(p);
 
-	if p.y > 0.4 && p.y < 9.0 && n < 1.0 / 4.0 {
+
+	if p.y > 0.4 && p.y < 9.0 && n < 1.0 / 1.0 {
 		var n0 = (rnd3(p + vec3(123.0)) - 0.5) * 32.0;
 		var n1 = (rnd3(p + vec3(323.0)) - 0.5) * 32.0;
 		var instance: Instance;
-		let count = atomicAdd(&counter, 1u);
 		p.x += n0;
 		p.z += n1;
 		p.y = landHeight(p, u.seed);
+		// Gap around player start
+		if length(p.xz) < 8.0 {
+			return;
+		}
 		instance.offset = array(p.x, p.y, p.z);
+		let count = atomicAdd(&counter, 1u);
 		if (count < 512000) {
 			instances[count] = instance;
 		}

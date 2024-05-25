@@ -28,7 +28,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 	console.time('World Generation');
 	const camera = new Camera(gfx);
 	camera.translate(cameraPosition);
-	camera.rotate(0.1, 0);
+	camera.rotate(0.06, 0);
 	const cameraController = new CameraController(el, camera);
 	const pointerController = new PointerController(el, camera, seed);
 	const scene = new Scene(gfx);
@@ -58,7 +58,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, PointerControll
 
 	const chunker = new Chunker(seed, 7);
 	if (process.env.DEBUG) {
-		debugChunker(el.parentElement!, chunker);
+		//debugChunker(el.parentElement!, chunker);
 	}
 	gfx.run(async (dt) => {
 		const t = performance.now() / 1000;

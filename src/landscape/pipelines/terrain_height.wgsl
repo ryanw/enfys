@@ -4,16 +4,29 @@ var<private> valleys_spline: array<f32, 10>    = array<f32, 10>(0.0, 0.2, 0.4, 0
 
 fn landHeight(op: vec3f, t: f32) -> f32 {
 	var scale = 1024.0;
-	var worldRadius = 3072.0;
+	var worldRadius = 10240.0;
+	var startRadius = 128.0;
+
 	var p = op.xz / scale;
 	var np = vec3(p.x, t, p.y);
 	var n = landscapeNoise(np);
+	var cn = landscapeNoise(vec3(0.0, t, 0.0));
 
 	var rad = length(op);
 
 	// Drop into water at edges
 	var d = clamp((rad - worldRadius) / worldRadius, 0.0, 1.0);
-	//n -= mix(0.0, 512.0, d);
+	n -= mix(0.0, 512.0, d);
+
+	// Flatten near origin for player start
+	d = clamp(pow(rad  / startRadius, 2.0), 0.0, 1.0);
+	if cn <= 0.0 {
+		// Underwater, add an island on the surface
+		n = mix(1.0, n, d);
+	} else {
+		n = mix(cn + n * 0.1, n, d);
+	}
+
 
 	return n;
 }
