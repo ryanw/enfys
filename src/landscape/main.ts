@@ -1,5 +1,5 @@
 import { Gfx } from 'engine';
-import { Cube, QuadMesh } from 'engine/mesh';
+import { QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { scaling, translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
@@ -40,7 +40,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const player = scene.addMesh(new ShipMesh(gfx), translation(...world.player.position));
 
 
-	const chunker = new Chunker(seed, 7);
+	const chunker = new Chunker(seed, 4);
 	function syncGraphics() {
 		// Update player model
 		player.transform = translation(...world.player.position);

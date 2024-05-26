@@ -132,7 +132,8 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	h = landHeight(trip, u.seed);
 	//let shadeCount = 3.0;
 	//var shade = floor(clamp(h/5.0, 0.0, 1.0) * shadeCount)/shadeCount;
-	let color = getTerrainColor(h / 64.0);
+	let colorN = (fractalNoise(trip/64.0, 3) - 0.5) / 4.0;
+	let color = getTerrainColor(clamp(colorN + h / 64.0, 0.0, 1.0));
 
 	for (var i = 0; i < 3; i++) {
 		var tp = (toVec(tri.vertices[i].position) + chunkP * lodScale);
