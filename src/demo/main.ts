@@ -5,7 +5,7 @@ import { Entity, Scene } from 'engine/scene';
 import { translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
 import { hsl } from 'engine/color';
-import { CameraController } from 'engine/input';
+import { FreeCameraController } from 'engine/input';
 import { TerrainPipeline } from './pipelines/terrain';
 import { WaterPipeline } from './pipelines/water';
 import { Vector2 } from 'engine/math';
@@ -24,7 +24,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const camera = new Camera(gfx);
 	camera.translate([0, 64, -64]);
 	camera.rotate(0.15, 0);
-	const cameraController = new CameraController(el, camera);
+	const cameraController = new FreeCameraController(el, camera);
 	const scene = new Scene(gfx);
 
 	const hue = randRange(0, 1);

@@ -53,12 +53,19 @@ export class Entity<T> {
 	bindingResource(): GPUBindingResource {
 		return this.buffer.bindingResource();
 	}
+
+	destroy() {
+		if (isEntityOf(this, SimpleMesh)) {
+			this.object.vertexBuffer.destroy();
+			this.object.instanceBuffer.destroy();
+		}
+	}
 }
 
 export type AddArguments = Parameters<Scene['addEntity']> | Parameters<Scene['addMesh']>;
 
 /**
- * Contains all GPU resources that can be rendered in a scene
+ * Contains the graph of all GPU objects draw in a scene
  */
 export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
@@ -92,9 +99,6 @@ export class Scene {
 
 	removeEntity(entity: Entity<unknown>) {
 		this.entities = this.entities.filter(e => e !== entity);
-		if (isEntityOf(entity, SimpleMesh)) {
-			entity.object.vertexBuffer.destroy();
-			entity.object.instanceBuffer.destroy();
-		}
+		entity.destroy();
 	}
 }

@@ -3,7 +3,7 @@ import { Icosahedron } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, translation } from 'engine/math/transform';
-import { CameraController } from 'engine/input';
+import { FreeCameraController } from 'engine/input';
 
 /**
  * Start the demo
@@ -12,7 +12,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
 	const gfx: Gfx = await Gfx.attachNotified(el);
 	const camera = new Camera(gfx);
-	const cameraController = new CameraController(el, camera);
+	const cameraController = new FreeCameraController(el, camera);
 	const scene = new Scene(gfx);
 
 	const icos = Array.from({ length: 100 }, () => {

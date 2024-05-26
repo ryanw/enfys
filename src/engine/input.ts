@@ -1,7 +1,8 @@
 import { Camera } from 'engine/camera';
-import { Vector3 } from 'engine/math';
-import { normalize, scale } from 'engine/math/vectors';
+import { Point3, Vector3 } from 'engine/math';
+import { add, normalize, scale } from 'engine/math/vectors';
 import { Gfx } from 'engine';
+import { multiply, multiplyVector, rotation, transformPoint, translation } from './math/transform';
 
 export enum Key {
 	Forward,
@@ -13,7 +14,10 @@ export enum Key {
 	Boost,
 }
 
-export class CameraController {
+export type CameraController = FreeCameraController | OrbitCameraController;
+
+export class FreeCameraController {
+	disabled = false;
 	bindings: Record<string, Key> = {
 		'w': Key.Forward,
 		'a': Key.Left,
@@ -23,6 +27,7 @@ export class CameraController {
 		'e': Key.Up,
 		'shift': Key.Boost,
 	};
+	target: Point3 = [0, 0, 0];
 	readonly heldKeys = new Set<Key>;
 	readonly gfx: Gfx;
 
@@ -44,6 +49,7 @@ export class CameraController {
 	}
 
 	update(dt: number) {
+		if (this.disabled) return;
 		const speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
@@ -78,6 +84,7 @@ export class CameraController {
 	}
 
 	onPointerLockChange = (e: Event) => {
+		if (this.disabled) return;
 		if (document.pointerLockElement === this.el) {
 			document.addEventListener('mousemove', this.onMouseMove);
 		} else {
@@ -86,6 +93,7 @@ export class CameraController {
 	}
 
 	onMouseDown = (e: MouseEvent) => {
+		if (this.disabled) return;
 		if (e.button === 0) {
 			document.addEventListener('mouseup', this.onMouseUp);
 			document.addEventListener('mousemove', this.onMouseMove);
@@ -100,21 +108,107 @@ export class CameraController {
 	};
 
 	onMouseMove = (e: MouseEvent) => {
+		if (this.disabled) return;
 		const x = e.movementX / 1000;
 		const y = e.movementY / 1000;
 		this.camera.rotate(y, x);
 	};
 
 	onKeyDown = (e: KeyboardEvent) => {
+		if (this.disabled) return;
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.add(key);
 	};
 
 	onKeyUp = (e: KeyboardEvent) => {
+		if (this.disabled) return;
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.delete(key);
+	};
+}
+
+
+export class OrbitCameraController {
+	disabled = false;
+	bindings: Record<string, Key> = {
+		'w': Key.Forward,
+		'a': Key.Left,
+		's': Key.Backward,
+		'd': Key.Right,
+		'q': Key.Down,
+		'e': Key.Up,
+		'shift': Key.Boost,
+	};
+	target: Point3 = [0, 0, 0];
+	distance: number = 10;
+	readonly heldKeys = new Set<Key>;
+	readonly gfx: Gfx;
+
+
+	constructor(private el: HTMLElement, public camera: Camera) {
+		this.gfx = camera.gfx;
+		document.addEventListener('pointerlockchange', this.onPointerLockChange);
+		el.addEventListener('mousedown', this.onMouseDown);
+		el.addEventListener('wheel', this.onWheel);
+	}
+
+	grab() {
+		this.el.requestPointerLock();
+	}
+
+	release() {
+		document.exitPointerLock();
+	}
+
+	update(dt: number) {
+		if (this.disabled) return;
+		const speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
+		let transform = translation(...this.target);
+		transform = multiply(transform, this.camera.rotationMatrix());
+		transform = multiply(transform, translation(0, 0, -this.distance));
+		this.camera.position = transformPoint(transform, [0, 0, 0]);
+	}
+
+	onPointerLockChange = (e: Event) => {
+		if (this.disabled) return;
+		if (document.pointerLockElement === this.el) {
+			document.addEventListener('mousemove', this.onMouseMove);
+		} else {
+			document.removeEventListener('mousemove', this.onMouseMove);
+		}
+	};
+
+	onWheel = (e: WheelEvent) => {
+		if (this.disabled) return;
+		this.distance *= 1.0 - (e.deltaY / -1000.0);
+		this.distance = Math.min(Math.max(this.distance, 5), 200);
+	};
+
+	onMouseDown = (e: MouseEvent) => {
+		if (this.disabled) return;
+		if (e.button === 0) {
+			document.addEventListener('mouseup', this.onMouseUp);
+			document.addEventListener('mousemove', this.onMouseMove);
+		}
+	};
+
+	onMouseUp = (e: MouseEvent) => {
+		if (e.button === 0) {
+			document.removeEventListener('mouseup', this.onMouseUp);
+			document.removeEventListener('mousemove', this.onMouseMove);
+		}
+	};
+
+	onMouseMove = (e: MouseEvent) => {
+		if (this.disabled) return;
+		const x = e.movementX / 1000;
+		const y = e.movementY / 1000;
+		const position = this.camera.position;
+		let transform = translation(...position);
+
+		this.camera.rotate(y, x);
 	};
 }
 

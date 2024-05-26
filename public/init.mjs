@@ -3,13 +3,12 @@ const { main } = await import(`./${bundleName}.bundle.js`);
 
 async function init() {
 	const el = document.querySelector('#app canvas');
-	const [gfx, pointer] = await main(el)
+	const gfx = await main(el)
 
 	const fps = document.querySelector('#fps span');
 	const mouse = document.querySelector('#mouse-pos span');
 	setInterval(() => {
 		fps.innerHTML = gfx.fps.toFixed(0);
-		mouse.innerHTML = pointer.worldPosition.map(v => v.toFixed(1)).join(', ');
 	}, 1000 / 30);
 
 	// Form elements

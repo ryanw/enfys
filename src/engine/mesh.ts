@@ -235,8 +235,8 @@ export class QuadMesh extends SimpleMesh {
  * Mesh shaped like an Cube
  */
 export class Cube extends SimpleMesh {
-	constructor(gfx: Gfx) {
-		const vertices = CUBE_VERTS.map(toVertex);
+	constructor(gfx: Gfx, scale: number = 1) {
+		const vertices = CUBE_VERTS.map(v => toVertex(v.map(i => i * scale) as Point3));
 		calculateNormals(vertices);
 		super(gfx, vertices);
 	}

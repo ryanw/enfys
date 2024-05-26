@@ -15,7 +15,7 @@ export class Camera {
 	private _projection: Matrix4 = identity();
 	private _aspect: number = 1.0;
 
-	constructor(readonly gfx: Gfx) {
+	constructor(public gfx: Gfx) {
 		this.uniform = new UniformBuffer(gfx, [
 			['view', 'mat4x4f'],
 			['projection', 'mat4x4f'],
@@ -39,17 +39,17 @@ export class Camera {
 
 	set position(position: Point3) {
 		this._position = [...position];
-		this.updateUniform();
+		this.updateView();
 	}
 
 	set rotation(rotation: Vector3) {
 		this._rotation = [...rotation];
-		this.updateUniform();
+		this.updateView();
 	}
 
 	set scaling(scaling: Vector3) {
 		this._scaling = [...scaling];
-		this.updateUniform();
+		this.updateView();
 	}
 
 	get view(): Matrix4 {
@@ -67,7 +67,7 @@ export class Camera {
 	set aspect(a: number) {
 		this._aspect = a;
 		this._projection = perspective(a, 45.0, 1.0, 100000.0);
-		this.updateUniform();
+		this.updateView();
 	}
 
 	updateUniform() {
