@@ -6,6 +6,7 @@ import { Material } from 'engine/material';
 import { TreeMesh } from './tree_mesh';
 import { Chunker } from './chunker';
 import { World } from './world';
+import { ShipMesh } from './ship_mesh';
 
 /**
  * Start the demo
@@ -36,8 +37,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		seed
 	), scaling(0.333));
 
-	const player = scene.addMesh(new Cube(gfx, 0.2), translation(...world.player.position));
-	player.material = new Material(gfx, [255, 0, 0, 255]);
+	const player = scene.addMesh(new ShipMesh(gfx), translation(...world.player.position));
 
 
 	const chunker = new Chunker(seed, 7);

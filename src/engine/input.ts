@@ -71,7 +71,7 @@ export class PlayerController {
 		const direction = multiplyVector(
 			multiply(
 				camera.rotationMatrix(),
-				rotation(-0.4, 0, 0),
+				rotation(-0.3, 0, 0),
 			),
 			[...adjustment, 0]
 		);
