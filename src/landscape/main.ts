@@ -52,12 +52,10 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	}
 
 	gfx.run(async (dt) => {
+		await world.update(dt);
 		syncGraphics();
 
-		await Promise.all([
-			world.update(dt),
-			gfx.draw(scene, world.activeCamera.camera),
-		]);
+		await gfx.draw(scene, world.activeCamera.camera);
 	});
 
 	return gfx;
