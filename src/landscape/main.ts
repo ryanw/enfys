@@ -40,10 +40,13 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const player = scene.addMesh(new ShipMesh(gfx), translation(...world.player.position));
 
 
+
 	const chunker = new Chunker(seed, 4);
 	function syncGraphics() {
 		// Update player model
 		player.transform = translation(...world.player.position);
+
+		scene.shadowBuffer.moveShadow(0, world.player.position);
 
 		// Sync terrain with camera view
 		const [x, _, z] = world.activeCamera.camera.position;
@@ -52,6 +55,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	}
 
 	gfx.run(async (dt) => {
+
 		await world.update(dt);
 		syncGraphics();
 

@@ -4,6 +4,7 @@ import { Color, Gfx } from 'engine';
 import { SimpleMesh } from './mesh';
 import { UniformBuffer } from './uniform_buffer';
 import { identity } from './math/transform';
+import { ShadowBuffer } from './shadow_buffer';
 
 /**
  * Type Guard to test if the `T` in {@link Entity} is a specific type
@@ -70,8 +71,18 @@ export type AddArguments = Parameters<Scene['addEntity']> | Parameters<Scene['ad
 export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
 	entities: Entity<unknown>[] = [];
+	shadowBuffer: ShadowBuffer;
 
-	constructor(readonly gfx: Gfx) { }
+	constructor(readonly gfx: Gfx) {
+		this.shadowBuffer = new ShadowBuffer(gfx, 32);
+		this.shadowBuffer.push({
+			position: [0.0, 1000.0, 0.0],
+			radius: 0.75,
+			umbra: 0.33,
+			shape: 0,
+			color: 0xff00ffff,
+		});
+	}
 
 	add(...args: AddArguments): Entity<unknown> | void {
 		// FIXME this is a big hacky

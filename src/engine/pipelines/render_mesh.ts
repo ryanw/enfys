@@ -5,6 +5,7 @@ import { Entity } from 'engine/scene';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
+import { ShadowBuffer } from 'engine/shadow_buffer';
 
 /**
  * Render Pipeline to draw {@link SimpleMesh} instances to a {@link GBuffer}
@@ -12,11 +13,13 @@ import { SimpleMesh } from 'engine/mesh';
 export class RenderMeshPipeline extends Pipeline {
 	private pipeline: GPURenderPipeline;
 	private pipelineNoDepth: GPURenderPipeline;
+	private emptyShadows: ShadowBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
 
 		const { device } = gfx;
+		this.emptyShadows = new ShadowBuffer(gfx, 1);
 
 		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: shaderSource });
 
@@ -25,20 +28,26 @@ export class RenderMeshPipeline extends Pipeline {
 				// Camera
 				{
 					binding: 0,
-					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+					visibility: GPUShaderStage.VERTEX,
 					buffer: {}
 				},
 				// Entity
 				{
 					binding: 1,
-					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+					visibility: GPUShaderStage.VERTEX,
 					buffer: {}
 				},
 				// Material
 				{
 					binding: 2,
-					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+					visibility: GPUShaderStage.FRAGMENT,
 					buffer: {}
+				},
+				// Shadows
+				{
+					binding: 3,
+					visibility: GPUShaderStage.FRAGMENT,
+					buffer: { type: 'read-only-storage' }
 				},
 			]
 		});
@@ -81,7 +90,7 @@ export class RenderMeshPipeline extends Pipeline {
 		});
 	}
 
-	draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, target: GBuffer) {
+	draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
 		if (src.object.vertexCount === 0) {
 			return;
 		}
@@ -115,6 +124,7 @@ export class RenderMeshPipeline extends Pipeline {
 				{ binding: 0, resource: camera.uniform.bindingResource() },
 				{ binding: 1, resource: src.bindingResource() },
 				{ binding: 2, resource: src.material.bindingResource() },
+				{ binding: 3, resource: shadows.bindingResource() },
 			],
 		});
 

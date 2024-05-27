@@ -25,14 +25,14 @@ export class Renderer {
 		for (const entity of scene.entities) {
 			if (isEntityOf(entity, SimpleMesh)) {
 				if (entity.material.writeDepth) {
-					this.pipelines.mesh.draw(encoder, entity, camera, target);
+					this.pipelines.mesh.draw(encoder, entity, camera, scene.shadowBuffer, target);
 				}
 			}
 		}
 		for (const entity of scene.entities) {
 			if (isEntityOf(entity, SimpleMesh)) {
 				if (!entity.material.writeDepth) {
-					this.pipelines.mesh.draw(encoder, entity, camera, target);
+					this.pipelines.mesh.draw(encoder, entity, camera, scene.shadowBuffer, target);
 				}
 			}
 		}

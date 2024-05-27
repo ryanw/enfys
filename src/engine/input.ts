@@ -69,14 +69,11 @@ export class PlayerController {
 		}
 
 		const direction = multiplyVector(
-			multiply(
-				camera.rotationMatrix(),
-				rotation(-0.3, 0, 0),
-			),
+			rotation(0, camera.rotation[1], 0),
 			[...adjustment, 0]
 		);
 
-		const velocity = scale(normalize(direction.slice(0, 3) as Vector3), speed * dt);
+		const velocity = scale(normalize(direction.slice(0,3) as Point3), speed * dt);
 		player.velocity = add(player.velocity, velocity);
 
 	}
@@ -288,6 +285,8 @@ export class OrbitCameraController {
 
 	onMouseDown = (e: MouseEvent) => {
 		if (this.disabled) return;
+		// Ignore press if pointer is locked
+		if (document.pointerLockElement === this.el) return;
 		if (e.button === 0) {
 			document.addEventListener('mouseup', this.onMouseUp);
 			document.addEventListener('mousemove', this.onMouseMove);
@@ -295,6 +294,8 @@ export class OrbitCameraController {
 	};
 
 	onMouseUp = (e: MouseEvent) => {
+		// Ignore press if pointer is locked
+		if (document.pointerLockElement === this.el) return;
 		if (e.button === 0) {
 			document.removeEventListener('mouseup', this.onMouseUp);
 			document.removeEventListener('mousemove', this.onMouseMove);
