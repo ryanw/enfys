@@ -41,7 +41,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 
 
-	const chunker = new Chunker(seed, 4);
+	const chunker = new Chunker(seed, 5);
 	function syncGraphics() {
 		// Update player model
 		player.transform = translation(...world.player.position);
