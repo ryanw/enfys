@@ -43,6 +43,10 @@ html, body {
 	font: inherit;
 	font-size: 1em;
 }
+#settings a {
+	color: inherit;
+	margin-bottom: 0.5em;
+}
 #settings:hover {
 	transition: opacity 100ms;
 	opacity: 1.0;

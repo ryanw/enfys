@@ -5,6 +5,30 @@ import { Gfx } from 'engine';
 import { multiply, multiplyVector, rotation, transformPoint, translation } from './math/transform';
 import { Player } from '../landscape/world';
 
+const DEADZONE = 1.0 / 8.0;
+
+export enum XboxAxis {
+	LeftStickX,
+	LeftStickY,
+	RightStickX,
+	RightStickY,
+}
+
+export enum XboxButton {
+	A,
+	B,
+	X,
+	Y,
+	LeftBumper,
+	RightBumper,
+	LeftTrigger,
+	RightTrigger,
+	Options,
+	Menu,
+	LeftStick,
+	RightStick,
+}
+
 export enum Key {
 	Forward,
 	Backward,
@@ -13,13 +37,18 @@ export enum Key {
 	Up,
 	Down,
 	Boost,
+	Thrust,
+	Brake,
 }
 
 export type CameraController = FreeCameraController | OrbitCameraController;
 
 export class PlayerController {
 	disabled = false;
-	readonly heldKeys = new Set<Key>;
+	gamepads: Array<Gamepad> = [];
+	readonly heldKeys = new Map<Key, number>;
+	readonly axis = new Map<XboxAxis, number>;
+	readonly previousButtons: Record<number, number> = {};
 	bindings: Record<string, Key> = {
 		'w': Key.Forward,
 		'a': Key.Left,
@@ -28,54 +57,122 @@ export class PlayerController {
 		'q': Key.Down,
 		'e': Key.Up,
 		'shift': Key.Boost,
+		' ': Key.Thrust,
+		[XboxButton[XboxButton.LeftTrigger]]: Key.Brake,
+		[XboxButton[XboxButton.RightTrigger]]: Key.Thrust,
+		[XboxAxis[XboxAxis.LeftStickX]]: Key.Left,
+		[XboxAxis[XboxAxis.LeftStickY]]: Key.Forward,
 	};
 
 	constructor(private el: HTMLElement) {
 		el.addEventListener('mousedown', this.onMouseDown);
 		window.addEventListener('keydown', this.onKeyDown);
 		window.addEventListener('keyup', this.onKeyUp);
+		window.addEventListener('gamepadconnected', this.onGamepadConnected);
+		window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected);
 	}
 
 	update(player: Player, camera: Camera, dt: number) {
 		if (this.disabled) return;
 
-		const speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
+		this.updateGamepads();
+
+		let speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
 		const adjustment: Vector3 = [0, 0, 0];
-		for (const key of this.heldKeys) {
+		let pitch = 0.0;
+		let yaw = 0.0;
+		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
 				case Key.Forward:
-					adjustment[2] = 1;
+					pitch = value;
+					//adjustment[2] = value;
 					break;
 				case Key.Backward:
-					adjustment[2] = -1;
+					pitch = -value;
+					//adjustment[2] = -value;
 					break;
 				case Key.Left:
-					adjustment[0] = -1;
+					yaw = -value;
+					//adjustment[0] = -value;
 					break;
 				case Key.Right:
-					adjustment[0] = 1;
+					yaw = value;
+					//adjustment[0] = value;
 					break;
 				case Key.Up:
-					adjustment[1] = 1;
+				case Key.Thrust:
+					adjustment[1] = value;
 					break;
 				case Key.Down:
-					adjustment[1] = -1;
+				case Key.Brake:
+					adjustment[1] = -value;
+					break;
+			}
+		}
+		for (const [key, value] of this.axis.entries()) {
+			if (Math.abs(value) < DEADZONE) {
+				continue;
+			}
+			switch (key) {
+				case XboxAxis.LeftStickX:
+					yaw = value;
+					break;
+				case XboxAxis.LeftStickY:
+					pitch -= value;
 					break;
 			}
 		}
 
+		if (pitch !== 0 || yaw !== 0) {
+			player.rotate(pitch * dt, yaw * dt);
+		}
 		if (adjustment[0] === 0 && adjustment[1] === 0 && adjustment[2] === 0) {
 			return;
 		}
 
 		const direction = multiplyVector(
-			rotation(0, camera.rotation[1], 0),
+			multiply(
+				//rotation(0, camera.rotation[1], 0),
+				player.rotationMatrix(),
+			),
 			[...adjustment, 0]
 		);
 
-		const velocity = scale(normalize(direction.slice(0,3) as Point3), speed * dt);
+		const velocity = scale(direction.slice(0, 3) as Point3, speed * dt);
 		player.velocity = add(player.velocity, velocity);
+	}
 
+	updateGamepads() {
+		for (const pad of navigator.getGamepads()) {
+			// We get nulls for some reason
+			if (!pad) continue;
+			const {
+				axes: [leftStickX, leftStickY, rightStickX, rightStickY],
+				buttons,
+			} = pad;
+
+			this.axis.set(XboxAxis.LeftStickX, leftStickX);
+			this.axis.set(XboxAxis.LeftStickY, leftStickY);
+			this.axis.set(XboxAxis.RightStickX, rightStickX);
+			this.axis.set(XboxAxis.RightStickY, rightStickY);
+
+			for (let i = 0; i < buttons.length; i++) {
+				const button = buttons[i];
+				if (this.previousButtons[i] === button.value) {
+					// Value unchanged
+					continue;
+				}
+				this.previousButtons[i] = button.value;
+				if (button.value > 0.001) {
+					const key = this.bindings[XboxButton[i]];
+					if (key) {
+						this.heldKeys.set(key, button.value);
+					}
+				} else {
+					this.heldKeys.delete(i);
+				}
+			}
+		}
 	}
 
 	onMouseDown = (e: MouseEvent) => {
@@ -103,7 +200,7 @@ export class PlayerController {
 		if (this.disabled) return;
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
-		this.heldKeys.add(key);
+		this.heldKeys.set(key, 1.0);
 	};
 
 	onKeyUp = (e: KeyboardEvent) => {
@@ -111,6 +208,12 @@ export class PlayerController {
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.delete(key);
+	};
+
+	onGamepadConnected = (e: GamepadEvent) => {
+	};
+
+	onGamepadDisconnected = (e: GamepadEvent) => {
 	};
 }
 

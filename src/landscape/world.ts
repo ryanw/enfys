@@ -1,9 +1,10 @@
 import { Gfx } from "engine";
 import { Camera } from "engine/camera";
-import { Point3, Vector3 } from "engine/math";
+import { Matrix4, Point3, Vector3 } from "engine/math";
 import { TerrainHeightQueryPipeline } from "./pipelines/terrain_height_query";
 import { CameraController, FreeCameraController, OrbitCameraController, PlayerController } from "engine/input";
 import { add, scale } from "engine/math/vectors";
+import { rotation } from "engine/math/transform";
 
 export class World {
 	player = new Player();
@@ -76,6 +77,25 @@ export class Player {
 	facing: Vector3 = [0, 0, 1];
 	surfaceHeight = 0.0;
 	hoverGap = 2.0;
+	rotation: Vector3 = [0.0, 0.0, 0.0];
+
+	rotate(pitch: number, yaw: number) {
+		this.rotation[0] += Math.PI * pitch;
+		this.rotation[1] += Math.PI * yaw;
+
+		const pad = 0.01;
+
+		if (this.rotation[0] < -Math.PI / 2 + pad) {
+			this.rotation[0] = -Math.PI / 2 + pad;
+		}
+		if (this.rotation[0] > Math.PI / 2 - pad) {
+			this.rotation[0] = Math.PI / 2 - pad;
+		}
+	}
+
+	rotationMatrix(): Matrix4 {
+		return rotation(this.rotation[0], this.rotation[1], 0);
+	}
 
 	update(dt: number) {
 		// Add gravity

@@ -1,19 +1,22 @@
 import { Gfx } from 'engine';
 import { QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
-import { scaling, translation } from 'engine/math/transform';
+import { multiply, rotation, scaling, translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
 import { TreeMesh } from './tree_mesh';
 import { Chunker } from './chunker';
 import { World } from './world';
 import { ShipMesh } from './ship_mesh';
+import { add } from 'engine/math/vectors';
 
 /**
  * Start the demo
  */
-export async function main(el: HTMLCanvasElement): Promise<Gfx> {
+export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	const gfx: Gfx = await Gfx.attachNotified(el);
-	const seed = Math.random() * 0xffffffff;
+	const seedParam = window.location.search.match(/(?:\?|\&)seed=([-0-9]+)/)?.[1];
+	const seed = Math.abs(seedParam ? parseFloat(seedParam) : Math.random() * 0xffffffff | 0);
+	console.log("SEED?", seed);
 	const world = new World(gfx, el, seed);
 
 
@@ -44,9 +47,12 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const chunker = new Chunker(seed, 5);
 	function syncGraphics() {
 		// Update player model
-		player.transform = translation(...world.player.position);
+		player.transform = multiply(
+			translation(...world.player.position),
+			world.player.rotationMatrix(),
+		);
 
-		scene.shadowBuffer.moveShadow(0, world.player.position);
+		scene.shadowBuffer.moveShadow(0, add(world.player.position, [0, -1, 0]));
 
 		// Sync terrain with camera view
 		const [x, _, z] = world.activeCamera.camera.position;
@@ -62,5 +68,5 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		await gfx.draw(scene, world.activeCamera.camera);
 	});
 
-	return gfx;
+	return [gfx, seed];
 }

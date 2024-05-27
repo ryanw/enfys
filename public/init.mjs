@@ -3,10 +3,12 @@ const { main } = await import(`./${bundleName}.bundle.js`);
 
 async function init() {
 	const el = document.querySelector('#app canvas');
-	const gfx = await main(el)
+	const [gfx, seed] = await main(el)
 
 	const fps = document.querySelector('#fps span');
-	const mouse = document.querySelector('#mouse-pos span');
+	const permalink = document.querySelector('#perma-link');
+	permalink.setAttribute('href', '?seed=' + seed);
+	permalink.innerHTML = seed;
 	setInterval(() => {
 		fps.innerHTML = gfx.fps.toFixed(0);
 	}, 1000 / 30);
