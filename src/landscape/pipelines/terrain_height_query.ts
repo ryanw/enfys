@@ -22,8 +22,8 @@ export class TerrainHeightQueryPipeline extends Pipeline {
 		const { device } = gfx;
 
 		// Query pipeline
-		this.resultBuffer = device.createBuffer({ size: 3 * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-		this.readBuffer = device.createBuffer({ size: 3 * 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
+		this.resultBuffer = device.createBuffer({ label: 'TerrainHeightQuery Result Buffer', size: 3 * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
+		this.readBuffer = device.createBuffer({  label: 'TerrainHeightQuery Read Buffer', size: 3 * 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['point', 'vec3f'],
@@ -60,9 +60,9 @@ export class TerrainHeightQueryPipeline extends Pipeline {
 
 	}
 
-	async queryWorldPoint(p: Point3, seed: number): Promise<number> {
+	async queryWorldPoint(p: Point3, seed: number, relaxed: boolean = false): Promise<number> {
 		// FIXME better handling of pending maps
-		if (this.readBuffer.mapState === 'pending') {
+		if (this.readBuffer.mapState !== 'unmapped') {
 			return this.previousResult;
 		}
 
@@ -95,10 +95,18 @@ export class TerrainHeightQueryPipeline extends Pipeline {
 		device.queue.submit([enc.finish()]);
 
 		// Read back the result
-		await this.readBuffer.mapAsync(GPUMapMode.READ);
-		const result = new Float32Array(this.readBuffer.getMappedRange());
-		this.previousResult = result[1];
-		this.readBuffer.unmap();
+		if (relaxed) {
+			this.readBuffer.mapAsync(GPUMapMode.READ).then(() => {
+				const result = new Float32Array(this.readBuffer.getMappedRange());
+				this.previousResult = result[1];
+				this.readBuffer.unmap();
+			});
+		} else {
+			await this.readBuffer.mapAsync(GPUMapMode.READ);
+			const result = new Float32Array(this.readBuffer.getMappedRange());
+			this.previousResult = result[1];
+			this.readBuffer.unmap();
+		}
 
 		return this.previousResult;
 	}

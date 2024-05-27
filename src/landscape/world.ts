@@ -14,12 +14,13 @@ export class World {
 	currentCameraId = 0;
 
 	constructor(public gfx: Gfx, el: HTMLElement, public seed: number) {
+		this.queryTerrain = new TerrainHeightQueryPipeline(gfx);
 		this.playerController = new PlayerController(el);
 		this.cameras = [
 			new OrbitCameraController(el, new Camera(gfx)),
 			new FreeCameraController(el, new Camera(gfx)),
 		];
-		this.queryTerrain = new TerrainHeightQueryPipeline(gfx);
+
 		window.addEventListener('keydown', e => {
 			if (e.key === 'Tab') {
 				this.currentCameraId = (this.currentCameraId + 1) % this.cameras.length
@@ -45,6 +46,8 @@ export class World {
 	}
 
 	async update(dt: number) {
+
+		this.player.surfaceHeight = await this.queryTerrain.queryWorldPoint(this.player.position, this.seed, true);
 		this.playerController.update(this.player, this.activeCamera.camera, dt);
 		this.player.update(dt);
 
@@ -71,10 +74,30 @@ export class Player {
 	position: Point3 = [0, 0, 0];
 	velocity: Vector3 = [0, 0, 0];
 	facing: Vector3 = [0, 0, 1];
+	surfaceHeight = 0.0;
+	hoverGap = 2.0;
 
 	update(dt: number) {
+		// Add gravity
+		this.velocity[1] -= 10.0 * dt;
 		this.position = add(this.position, scale(this.velocity, dt))
+		if (this.position[1] < this.surfaceHeight + this.hoverGap) {
+			this.velocity[1] = 0.0;
+
+			const diff = (this.surfaceHeight + this.hoverGap) - this.position[1];
+			if (diff < 0.01) {
+				this.position[1] = this.surfaceHeight + this.hoverGap;
+			}
+			else {
+				const time = 0.1;
+				this.position[1] += diff * (1.0/time * dt);
+			}
+		}
+
+		// Dampening
 		const vt = 1.0 - (1.0 * dt);
-		this.velocity = scale(this.velocity, vt);
+		const scaled = scale(this.velocity, vt);;
+		this.velocity[0] = scaled[0]
+		this.velocity[2] = scaled[2]
 	}
 }
