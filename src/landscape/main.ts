@@ -8,6 +8,7 @@ import { Chunker } from './chunker';
 import { World } from './world';
 import { ShipMesh } from './ship_mesh';
 import { add } from 'engine/math/vectors';
+import { hsl } from 'engine/color';
 
 /**
  * Start the demo
@@ -42,9 +43,51 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	const player = scene.addMesh(new ShipMesh(gfx), translation(...world.player.position));
 	const thruster = scene.addMesh(new Cube(gfx));
 
+	const rnd = (l: number, r: number) => Math.random() * (r - l) + l;
+	const sand = Math.random();
+	const grass = sand + rnd(0.3, 0.7);
+	const soil = grass - rnd(0.1, 0.2);
+	const rock = Math.random();
+	const snow = Math.random();
+
+	const colorScheme = [
+		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.7)),
+		hsl(sand, rnd(0.3, 0.6), rnd(0.3, 0.6)),
+		hsl(grass, rnd(0.3, 0.6), rnd(0.3, 0.6)),
+		hsl(grass, rnd(0.3, 0.6), rnd(0.3, 0.6)),
+		hsl(grass, rnd(0.3, 0.6), rnd(0.2, 0.7)),
+		hsl(grass, rnd(0.3, 0.6), rnd(0.2, 0.7)),
+		hsl(grass, rnd(0.3, 0.6), rnd(0.2, 0.7)),
+		hsl(soil, rnd(0.3, 0.6), rnd(0.2, 0.6)),
+		hsl(soil, rnd(0.3, 0.6), rnd(0.2, 0.6)),
+		hsl(soil, rnd(0.3, 0.6), rnd(0.2, 0.6)),
+		hsl(soil, rnd(0.3, 0.6), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(snow, rnd(0.1, 0.2), rnd(0.6, 1.0)),
+		hsl(snow, rnd(0.1, 0.2), rnd(0.6, 1.0)),
+		hsl(snow, rnd(0.1, 0.2), rnd(0.6, 1.0)),
+	];
 
 
-	const chunker = new Chunker(seed, 5);
+	const chunker = new Chunker(gfx, seed, 5, [0, 0], colorScheme);
 	function syncGraphics() {
 		// Update player model
 		player.transform = multiply(

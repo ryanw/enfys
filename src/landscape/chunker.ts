@@ -1,9 +1,10 @@
 import { Point2, Point3 } from "engine/math";
 import { Entity, Scene } from "engine/scene";
-import { TerrainMesh } from "./terrain_mesh";
-import { Size } from "engine";
+import { DEFAULT_COLORS, TerrainMesh } from "./terrain_mesh";
+import { Color, Gfx, Size } from "engine";
 import { translation } from "engine/math/transform";
 import { add } from "engine/math/vectors";
+import { TerrainPipeline } from "./pipelines/terrain";
 
 export type Chunk = {
 	lod: number,
@@ -78,12 +79,16 @@ export class Chunker {
 	activeChunks: Map<ChunkKey, Chunk> = new Map();
 	entities: Map<ChunkKey, Entity<TerrainMesh>> = new Map();
 	chunkSize: Size = [128, 128];
+	private terrainPipeline: TerrainPipeline;
 
 	constructor(
+		readonly gfx: Gfx,
 		public seed: number,
 		public maxLod: number = 5,
 		public point: Point2 = [0, 0],
+		colorScheme: Array<Color>,
 	) {
+		this.terrainPipeline = new TerrainPipeline(this.gfx, colorScheme);
 		this.move(...point);
 	}
 
@@ -140,6 +145,7 @@ export class Chunker {
 				this.chunkSize,
 				chunkId,
 				this.seed,
+				this.terrainPipeline,
 			),
 			translation(...position),
 		);

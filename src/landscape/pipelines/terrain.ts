@@ -4,6 +4,7 @@ import { Pipeline } from 'engine/pipelines';
 import shaderSource from './terrain.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point2, Point3 } from 'engine/math';
+import { Color, hsl } from 'engine/color';
 
 /**
  * Compute Shader that takes a subdivided {@link QuadMesh}, updates the Y of every vertex, and recalculates every triangle's normal
@@ -11,8 +12,9 @@ import { Point2, Point3 } from 'engine/math';
 export class TerrainPipeline extends Pipeline {
 	private pipeline: GPUComputePipeline;
 	private uniformBuffer: UniformBuffer;
+	private terrainColors: GPUTexture;
 
-	constructor(gfx: Gfx) {
+	constructor(gfx: Gfx, colors: Array<Color>) {
 		super(gfx);
 
 		const { device } = gfx;
@@ -23,6 +25,21 @@ export class TerrainPipeline extends Pipeline {
 			['triangleCount', 'u32'],
 			['seed', 'f32'],
 		]);
+
+		this.terrainColors = device.createTexture({
+			label: 'Terrain Colours Texture',
+			dimension: '1d',
+			format: 'rgba8unorm',
+			size: { width: colors.length },
+			usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+		});
+		device.queue.writeTexture(
+			{ texture: this.terrainColors },
+			new Uint8Array(colors.flat()),
+			{},
+			{ width: colors.length, height: 1 },
+		);
+
 
 		const shader = device.createShaderModule({ label: 'TerrainPipeline Shader', code: shaderSource });
 		const bindGroupLayout = device.createBindGroupLayout({
@@ -37,6 +54,14 @@ export class TerrainPipeline extends Pipeline {
 					visibility: GPUShaderStage.COMPUTE,
 					buffer: {
 						type: 'storage',
+					}
+				},
+				// Terrain colour palette
+				{
+					binding: 2,
+					visibility: GPUShaderStage.COMPUTE,
+					texture: {
+						viewDimension: '1d',
 					}
 				},
 			]
@@ -82,6 +107,8 @@ export class TerrainPipeline extends Pipeline {
 				{ binding: 0, resource: this.uniformBuffer.bindingResource() },
 				// Mesh output buffer
 				{ binding: 1, resource: { buffer: buffer } },
+				// Terrain colour
+				{ binding: 2, resource: this.terrainColors.createView() },
 			],
 		});
 

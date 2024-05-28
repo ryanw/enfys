@@ -1,5 +1,3 @@
-@import "./terrain_height.wgsl";
-
 struct Vertex {
 	// array instead of vec to avoid alignment issues
 	position: array<f32, 3>,
@@ -24,53 +22,16 @@ var<uniform> u: Uniforms;
 @group(0) @binding(1)
 var<storage, read_write> triangles: array<Triangle>;
 
+@group(0) @binding(2)
+var terrainColors: texture_1d<f32>;
 
-var<private> terrain_colors: array<vec3f, 32> = array(
-	// Sand
-	vec3(0.9, 0.7, 0.2),
-	// Grass
-	vec3(0.4, 0.7, 0.1),
-	vec3(0.4, 0.7, 0.1),
-
-	vec3(0.7, 0.6, 0.3),
-	vec3(0.7, 0.7, 0.4),
-	vec3(0.7, 0.7, 0.5),
-
-	vec3(0.4),
-	vec3(0.5),
-	vec3(0.6),
-	vec3(0.5),
-	vec3(0.5),
-	vec3(0.5),
-	vec3(0.6),
-	vec3(0.4),
-	vec3(0.5),
-	vec3(0.4),
-	vec3(0.5),
-	vec3(0.5),
-	vec3(0.7),
-	vec3(0.5),
-	vec3(0.4),
-	vec3(0.5),
-	vec3(0.5),
-	vec3(0.6),
-	vec3(0.5),
-	vec3(0.7),
-	vec3(0.4),
-	vec3(0.5),
-	vec3(0.6),
-	vec3(0.4),
-	vec3(0.5),
-	vec3(1.0),
-);
-
-fn getTerrainColor(shade: f32) -> vec3f {
-	let intervalCount = 32;
+fn getTerrainColor(shade: f32) -> vec4f {
+	let intervalCount = textureDimensions(terrainColors) - 1;
 	let idx = f32(intervalCount) * shade;
 	let b = i32(ceil(idx));
 	let t = i32(floor(idx));
-	let topColor = terrain_colors[t];
-	let bottomColor = terrain_colors[b];
+	let topColor = textureLoad(terrainColors, t, 0); 
+	let bottomColor = textureLoad(terrainColors, b, 0);
 
 	return mix(topColor, bottomColor, fract(idx));
 }
@@ -217,4 +178,6 @@ fn calculateNormal(tri: Triangle) -> vec3f {
 fn toVec(v: array<f32, 3>) -> vec3f {
 	return vec3(v[0], v[1], v[2]);
 }
+
+@import "./terrain_height.wgsl";
 
