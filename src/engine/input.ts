@@ -343,7 +343,7 @@ export class OrbitCameraController {
 		'shift': Key.Boost,
 	};
 	target: Point3 = [0, 0, 0];
-	distance: number = 10;
+	distance: number = 24;
 	readonly heldKeys = new Set<Key>;
 	readonly gfx: Gfx;
 
@@ -415,4 +415,3 @@ export class OrbitCameraController {
 		this.camera.rotate(y, x);
 	};
 }
-

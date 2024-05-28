@@ -76,7 +76,7 @@ export class Player {
 	velocity: Vector3 = [0, 0, 0];
 	facing: Vector3 = [0, 0, 1];
 	surfaceHeight = 0.0;
-	hoverGap = 2.0;
+	hoverGap = 1.0;
 	rotation: Vector3 = [0.0, 0.0, 0.0];
 
 	rotate(pitch: number, yaw: number) {
@@ -98,7 +98,7 @@ export class Player {
 	}
 
 	update(dt: number) {
-		// Add gravity
+		// Add gravity -- approx Earth gravity
 		this.velocity[1] -= 10.0 * dt;
 		this.position = add(this.position, scale(this.velocity, dt))
 		if (this.position[1] < this.surfaceHeight + this.hoverGap) {

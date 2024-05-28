@@ -52,7 +52,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 			world.player.rotationMatrix(),
 		);
 
-		scene.shadowBuffer.moveShadow(0, add(world.player.position, [0, -1, 0]));
+		scene.shadowBuffer.moveShadow(0, add(world.player.position, [0, -0.5, 0]));
 
 		// Sync terrain with camera view
 		const [x, _, z] = world.activeCamera.camera.position;

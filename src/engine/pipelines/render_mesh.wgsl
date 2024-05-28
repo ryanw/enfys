@@ -116,7 +116,8 @@ fn fs_main(in: VertexOut) -> Fragment1Out {
 			var radius = shadow.radius * radalt;
 
 			if (shadowDist < radius) {
-				let d = sdPentagon(p / radius * 2.0, 1.0);
+				//let d = sdPentagon(p / radius * 2.0, 1.0);
+				let d = (shadowDist - radius) / radius;
 				if d < 0.0 {
 					shade = smoothstep(0.0, -0.6, d);
 					shade *= 0.7 - clamp(alt/10.0, 0.0, 0.4);

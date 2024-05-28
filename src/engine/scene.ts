@@ -77,7 +77,7 @@ export class Scene {
 		this.shadowBuffer = new ShadowBuffer(gfx, 32);
 		this.shadowBuffer.push({
 			position: [0.0, 1000.0, 0.0],
-			radius: 0.75,
+			radius: 0.4,
 			umbra: 0.33,
 			shape: 0,
 			color: 0xff00ffff,
