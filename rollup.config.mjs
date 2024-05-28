@@ -5,7 +5,7 @@ import terser from '@rollup/plugin-terser';
 import replace from '@rollup/plugin-replace';
 import wgsl from './src/wgsl_loader.mjs';
 
-const entries = ['hello', 'demo', 'landscape'];
+const entries = ['hello', 'landscape'];
 
 const projectRootDir = path.dirname(import.meta.url.replace("file://", ""));
 const enginePath = path.resolve(projectRootDir, './src/engine/');
