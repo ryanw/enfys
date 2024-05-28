@@ -101,6 +101,7 @@ export class Camera {
 	 * @param yaw Yaw in radians
 	 */
 	rotate(pitch: number, yaw: number) {
+		if (pitch === 0.0 && yaw === 0.0) return;
 		this._rotation[0] += Math.PI * pitch;
 		this._rotation[1] += Math.PI * yaw;
 

@@ -74,10 +74,9 @@ export class World {
 export class Player {
 	position: Point3 = [0, 0, 0];
 	velocity: Vector3 = [0, 0, 0];
-	facing: Vector3 = [0, 0, 1];
+	rotation: Vector3 = [0, 0, 0];
 	surfaceHeight = 0.0;
 	hoverGap = 1.0;
-	rotation: Vector3 = [0.0, 0.0, 0.0];
 
 	rotate(pitch: number, yaw: number) {
 		this.rotation[0] += Math.PI * pitch;

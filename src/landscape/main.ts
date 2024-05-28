@@ -1,5 +1,5 @@
 import { Gfx } from 'engine';
-import { QuadMesh } from 'engine/mesh';
+import { Cube, QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, scaling, translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
@@ -16,7 +16,6 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	const gfx: Gfx = await Gfx.attachNotified(el);
 	const seedParam = window.location.search.match(/(?:\?|\&)seed=([-0-9]+)/)?.[1];
 	const seed = Math.abs(seedParam ? parseFloat(seedParam) : Math.random() * 0xffffffff | 0);
-	console.log("SEED?", seed);
 	const world = new World(gfx, el, seed);
 
 
@@ -41,6 +40,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	), scaling(0.333));
 
 	const player = scene.addMesh(new ShipMesh(gfx), translation(...world.player.position));
+	const thruster = scene.addMesh(new Cube(gfx));
 
 
 
@@ -51,8 +51,15 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 			translation(...world.player.position),
 			world.player.rotationMatrix(),
 		);
+		const thrust = world.playerController.thrust;
+		thruster.transform = multiply(
+			player.transform,
+			translation(0, -0.5, 0),
+			scaling(0.3, 1.0 * thrust, 0.3),
+			translation(0, -1, 0),
+		);
 
-		scene.shadowBuffer.moveShadow(0, add(world.player.position, [0, -0.5, 0]));
+		scene.shadowBuffer.moveShadow(0, add(world.player.position, [0, -0.8, 0]));
 
 		// Sync terrain with camera view
 		const [x, _, z] = world.activeCamera.camera.position;

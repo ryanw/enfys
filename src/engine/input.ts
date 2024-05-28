@@ -39,6 +39,8 @@ export enum Key {
 	Boost,
 	Thrust,
 	Brake,
+	CameraYaw,
+	CameraPitch,
 }
 
 export type CameraController = FreeCameraController | OrbitCameraController;
@@ -49,6 +51,7 @@ export class PlayerController {
 	readonly heldKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
+	thrust: number = 0;
 	bindings: Record<string, Key> = {
 		'w': Key.Forward,
 		'a': Key.Left,
@@ -62,6 +65,8 @@ export class PlayerController {
 		[XboxButton[XboxButton.RightTrigger]]: Key.Thrust,
 		[XboxAxis[XboxAxis.LeftStickX]]: Key.Left,
 		[XboxAxis[XboxAxis.LeftStickY]]: Key.Forward,
+		[XboxAxis[XboxAxis.RightStickX]]: Key.CameraYaw,
+		[XboxAxis[XboxAxis.RightStickY]]: Key.CameraPitch,
 	};
 
 	constructor(private el: HTMLElement) {
@@ -81,6 +86,7 @@ export class PlayerController {
 		const adjustment: Vector3 = [0, 0, 0];
 		let pitch = 0.0;
 		let yaw = 0.0;
+		this.thrust = 0;
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
 				case Key.Forward:
@@ -101,7 +107,10 @@ export class PlayerController {
 					break;
 				case Key.Up:
 				case Key.Thrust:
-					adjustment[1] = value;
+					if (Math.abs(value) > DEADZONE) {
+						this.thrust = value;
+						adjustment[1] = value;
+					}
 					break;
 				case Key.Down:
 				case Key.Brake:
@@ -343,8 +352,10 @@ export class OrbitCameraController {
 		'shift': Key.Boost,
 	};
 	target: Point3 = [0, 0, 0];
-	distance: number = 24;
-	readonly heldKeys = new Set<Key>;
+	distance: number = 16;
+	readonly heldKeys = new Map<Key, number>;
+	readonly axis = new Map<XboxAxis, number>;
+	readonly previousButtons: Record<number, number> = {};
 	readonly gfx: Gfx;
 
 
@@ -365,10 +376,62 @@ export class OrbitCameraController {
 
 	update(dt: number) {
 		if (this.disabled) return;
+		this.updateGamepads();
+
+		let pitch = 0;
+		let yaw = 0;
+		for (const [key, value] of this.axis.entries()) {
+			if (Math.abs(value) < DEADZONE) {
+				continue;
+			}
+			switch (key) {
+				case XboxAxis.RightStickX:
+					yaw = value;
+					break;
+				case XboxAxis.RightStickY:
+					pitch = value;
+					break;
+			}
+		}
+		this.camera.rotate(pitch * dt, yaw * dt);
+
 		let transform = translation(...this.target);
 		transform = multiply(transform, this.camera.rotationMatrix());
 		transform = multiply(transform, translation(0, 0, -this.distance));
 		this.camera.position = transformPoint(transform, [0, 1, 0]);
+	}
+
+	updateGamepads() {
+		for (const pad of navigator.getGamepads()) {
+			// We get nulls for some reason
+			if (!pad) continue;
+			const {
+				axes: [leftStickX, leftStickY, rightStickX, rightStickY],
+				buttons,
+			} = pad;
+
+			this.axis.set(XboxAxis.LeftStickX, leftStickX);
+			this.axis.set(XboxAxis.LeftStickY, leftStickY);
+			this.axis.set(XboxAxis.RightStickX, rightStickX);
+			this.axis.set(XboxAxis.RightStickY, rightStickY);
+
+			for (let i = 0; i < buttons.length; i++) {
+				const button = buttons[i];
+				if (this.previousButtons[i] === button.value) {
+					// Value unchanged
+					continue;
+				}
+				this.previousButtons[i] = button.value;
+				if (button.value > 0.001) {
+					const key = this.bindings[XboxButton[i]];
+					if (key) {
+						this.heldKeys.set(key, button.value);
+					}
+				} else {
+					this.heldKeys.delete(i);
+				}
+			}
+		}
 	}
 
 	onPointerLockChange = (e: Event) => {
@@ -409,8 +472,6 @@ export class OrbitCameraController {
 		if (this.disabled) return;
 		const x = e.movementX / 1000;
 		const y = e.movementY / 1000;
-		const position = this.camera.position;
-		let transform = translation(...position);
 
 		this.camera.rotate(y, x);
 	};

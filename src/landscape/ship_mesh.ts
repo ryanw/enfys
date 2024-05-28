@@ -1,7 +1,6 @@
-import { Color, Gfx, Size, calculateNormals } from "engine";
+import { Color, Gfx, calculateNormals } from "engine";
 import { PHI, Point3 } from "engine/math";
-import { CUBE_VERTS, ColorVertex, buildIcosahedron, Icosahedron, SimpleMesh, TextureVertex } from "engine/mesh";
-import { TreePipeline } from "./pipelines/tree";
+import { ColorVertex, SimpleMesh } from "engine/mesh";
 
 const { cos, sin } = Math;
 
@@ -10,16 +9,16 @@ export class ShipMesh extends SimpleMesh {
 		const vertices: Array<ColorVertex> = buildShipMesh((position, i) => {
 			let color: Color = [1, 0, 0, 1];
 			// Every even triangle is on the top
-			const isTop = (i/3|0) % 2 == 0;
+			const isTop = (i / 3 | 0) % 2 == 0;
 			if (i < 3) {
 				// First tri is the window
 				color = [0, 0, 0, 1];
 			}
 			else if (isTop) {
-				color = [0.6, 0.3, 0.9, 1];
+				color = [0.7, 0.4, 1.0, 1];
 			}
 			else {
-				color = [0.8, 0.7, 0.3, 1];
+				color = [1.0, 0.7, 0.3, 1];
 			}
 			return {
 				position: [...position],
@@ -35,7 +34,7 @@ export class ShipMesh extends SimpleMesh {
 function buildNGon(sides: number): Array<Point3> {
 	const vertices: Point3[] = [];
 	for (let i = 0; i < sides; i++) {
-		const a = 2 * (Math.PI / sides) * i - Math.PI / 4;
+		const a = 2 * (Math.PI / sides) * i - Math.PI / sides;
 		const x = sin(a);
 		const y = cos(a);
 		vertices.push([x, 0, y]);
@@ -59,7 +58,7 @@ function buildNGon(sides: number): Array<Point3> {
 }
 
 export function buildShipMesh<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	const hull = buildNGon(5);
+	const hull = buildNGon(3 + Math.random() * 6 | 0);
 	return hull.map(callback);
 }
 
