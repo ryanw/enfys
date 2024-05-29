@@ -42,6 +42,8 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 
 	const player = scene.addMesh(new ShipMesh(gfx), translation(...world.player.position));
 	const thruster = scene.addMesh(new Cube(gfx));
+	// FIXME don't set this directly
+	thruster.material.uniform.set('emissive', true);
 
 	const rnd = (l: number, r: number) => Math.random() * (r - l) + l;
 	const sand = Math.random();
@@ -102,7 +104,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 			translation(0, -1, 0),
 		);
 
-		scene.shadowBuffer.moveShadow(0, add(world.player.position, [0, -0.8, 0]));
+		scene.shadowBuffer.moveShadow(0, add(world.player.position, [0, -0.0, 0]));
 
 		// Sync terrain with camera view
 		const [x, _, z] = world.activeCamera.camera.position;

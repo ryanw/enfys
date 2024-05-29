@@ -19,14 +19,10 @@ struct VertexOut {
 	@location(5) @interpolate(flat) triangleId: u32,
 }
 
-struct Fragment1Out {
+struct FragmentOut {
 	@location(0) albedo: vec4f,
 	@location(1) normal: vec4f,
 	@location(2) metaOutput: u32,
-}
-
-struct Fragment2Out {
-	@location(0) metaOutput: u32,
 }
 
 struct Camera {
@@ -44,6 +40,8 @@ struct Entity {
 struct Material {
 	color: vec4f,
 	dither: u32,
+	emissive: u32,
+	receiveShadows: u32,
 }
 
 struct Shadow {
@@ -93,34 +91,36 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 
 @fragment
-fn fs_main(in: VertexOut) -> Fragment1Out {
-	var out: Fragment1Out;
+fn fs_main(in: VertexOut) -> FragmentOut {
+	var out: FragmentOut;
 	var color = material.color * in.color;
 
 	var shade = 0.0;
 	var shadowCount = 8u;
 
-	for (var i = 0u; i < shadowCount; i++) {
-		let shadow = shadows[i];
-		if (shadow.radius <= 0.0) {
-			continue;
-		}
+	if material.receiveShadows > 0 {
+		for (var i = 0u; i < shadowCount; i++) {
+			let shadow = shadows[i];
+			if (shadow.radius <= 0.0) {
+				continue;
+			}
 
-		// If object is below shadow
-		if (shadow.position.y >= in.modelPosition.y) {
-			let p = in.modelPosition.xz - shadow.position.xz;
-			var shadowDist = length(p);
-			var alt = abs(in.modelPosition.y - shadow.position.y);
+			// If object is below shadow
+			if (shadow.position.y >= in.modelPosition.y) {
+				let p = in.modelPosition.xz - shadow.position.xz;
+				var shadowDist = length(p);
+				var alt = abs(in.modelPosition.y - shadow.position.y);
 
-			var radalt = clamp(alt/2.0 + 2.0, 0.0, 32.0);
-			var radius = shadow.radius * radalt;
+				var radalt = clamp(alt/2.0 + 2.0, 0.0, 32.0);
+				var radius = shadow.radius * radalt;
 
-			if (shadowDist < radius) {
-				//let d = sdPentagon(p / radius * 2.0, 1.0);
-				let d = (shadowDist - radius) / radius;
-				if d < 0.0 {
-					shade = smoothstep(0.0, -0.6, d);
-					shade *= 0.7 - clamp(alt/10.0, 0.0, 0.4);
+				if (shadowDist < radius) {
+					//let d = sdPentagon(p / radius * 2.0, 1.0);
+					let d = (shadowDist - radius) / radius;
+					if d < 0.0 {
+						shade = smoothstep(0.0, -0.6, d);
+						shade *= 0.7 - clamp(alt/10.0, 0.0, 0.4);
+					}
 				}
 			}
 		}
@@ -128,7 +128,11 @@ fn fs_main(in: VertexOut) -> Fragment1Out {
 
 	out.albedo =  vec4(color.rgb * (1.0-shade), color.a);
 
-	out.normal = vec4(in.normal, 0.0);
+	if material.emissive > 0 {
+		out.normal = vec4(0.0);
+	} else {
+		out.normal = vec4(in.normal, 0.0);
+	}
 	out.metaOutput = in.triangleId;
 	return out;
 }

@@ -1,6 +1,6 @@
 import { Point2, Point3 } from "engine/math";
 import { Entity, Scene } from "engine/scene";
-import { DEFAULT_COLORS, TerrainMesh } from "./terrain_mesh";
+import { TerrainMesh } from "./terrain_mesh";
 import { Color, Gfx, Size } from "engine";
 import { translation } from "engine/math/transform";
 import { add } from "engine/math/vectors";
@@ -149,6 +149,7 @@ export class Chunker {
 			),
 			translation(...position),
 		);
+		terrain.material.receiveShadows = true;
 		//terrain.material = new Material(scene.gfx, hsl(chunkId[2] / 7, 0.5, 0.5));
 		this.entities.set(toChunkHash(chunk), terrain)
 	}

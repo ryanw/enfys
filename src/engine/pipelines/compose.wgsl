@@ -142,22 +142,25 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	let lightPos = vec3(cos(u.t/2.0) * 64.0, 64.0, 64.0 + sin(u.t/-2.0) * 64.0);
-	let lightDir = normalize(pos - lightPos);
-	let shade = 0.5 - (dot(normal, lightDir) * 0.5);
-
-
-
 	var brightness = 1.0;
-	if u.ditherSize > 0 {
-		let shadeLevels = f32(u.ditherDepth);
-		let div = f32(u.ditherSize);
-		let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
-		let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
-		brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
-	}
-	else {
-		brightness = shade;
+
+	if length(normal) > 0.0 {
+		let lightPos = vec3(cos(u.t/2.0) * 64.0, 64.0, 64.0 + sin(u.t/-2.0) * 64.0);
+		let lightDir = normalize(pos - lightPos);
+		let shade = 0.5 - (dot(normal, lightDir) * 0.5);
+
+
+
+		if u.ditherSize > 0 {
+			let shadeLevels = f32(u.ditherDepth);
+			let div = f32(u.ditherSize);
+			let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
+			let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
+			brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
+		}
+		else {
+			brightness = shade;
+		}
 	}
 
 	var color = vec4(0.0);

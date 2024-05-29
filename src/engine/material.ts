@@ -8,6 +8,7 @@ export class Material {
 	writeDepth = true;
 	readonly uniform: UniformBuffer;
 	private _color: Color;
+	private _receiveShadows = false;
 
 	constructor(
 		readonly gfx: Gfx,
@@ -18,11 +19,22 @@ export class Material {
 		this.uniform = new UniformBuffer(gfx, [
 			['color', 'vec4f'],
 			['dither', 'u32'],
+			['emissive', 'u32'],
+			['receiveShadows', 'u32'],
 		]);
 		this.updateUniform();
 	}
 
-	get color() {
+	get receiveShadows(): boolean {
+		return this._receiveShadows;
+	}
+
+	set receiveShadows(flag: boolean) {
+		this._receiveShadows = flag;
+		this.updateUniform();
+	}
+
+	get color(): Color {
 		return [...this._color];
 	}
 
@@ -36,6 +48,7 @@ export class Material {
 	}
 
 	updateUniform() {
+		this.uniform.set('receiveShadows', this._receiveShadows);
 		this.uniform.set('color', this._color.map(v => v/255));
 	}
 }
