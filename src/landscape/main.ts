@@ -1,5 +1,5 @@
 import { Gfx } from 'engine';
-import { Cube, QuadMesh } from 'engine/mesh';
+import { Cube, Icosahedron, QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, scaling, translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
@@ -41,9 +41,12 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	), scaling(0.333));
 
 	const player = scene.addMesh(new ShipMesh(gfx), translation(...world.player.position));
-	const thruster = scene.addMesh(new Cube(gfx));
+	const thruster = scene.addMesh(new Icosahedron(gfx));
 	// FIXME don't set this directly
+	
+	thruster.material.color = [255, 200, 10, 255];
 	thruster.material.uniform.set('emissive', true);
+
 
 	const rnd = (l: number, r: number) => Math.random() * (r - l) + l;
 	const sand = Math.random();
@@ -88,7 +91,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 		const thrust = world.playerController.thrust;
 		thruster.transform = multiply(
 			player.transform,
-			translation(0, -0.5, 0),
+			translation(0, 0, 0),
 			scaling(0.3, 1.0 * thrust, 0.3),
 			translation(0, -1, 0),
 		);

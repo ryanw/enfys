@@ -40,7 +40,7 @@ export class World {
 		const h = await this.queryTerrain.queryWorldPoint(this.spawnPosition, this.seed);
 		for (const camera of this.cameras) {
 			camera.camera.position = [0, 6.0 + h, -8];
-			camera.camera.rotate(0.12, 0);
+			camera.camera.rotate(0.1, 0);
 		}
 		this.spawnPosition[1] = 1.0 + h;
 		this.spawnPlayer();
