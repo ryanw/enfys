@@ -12,7 +12,7 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 	var n = landscapeNoise(np);
 	var cn = landscapeNoise(vec3(0.0, t, 0.0));
 
-	var rad = length(op);
+	var rad = length(op.xz);
 
 	// Drop into water at edges
 	var d = clamp((rad - worldRadius) / worldRadius, 0.0, 1.0);
