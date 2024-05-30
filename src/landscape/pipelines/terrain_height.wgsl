@@ -3,7 +3,7 @@ var<private> erosion_spline: array<f32, 10>    = array<f32, 10>(1.0, 0.8, 0.6, 0
 var<private> valleys_spline: array<f32, 10>    = array<f32, 10>(0.0, 0.2, 0.4, 0.5, 0.55, 0.6, 0.7, 0.8, 0.9, 0.85);
 
 fn landHeight(op: vec3f, t: f32) -> f32 {
-	var scale = 1024.0;
+	var scale = 2560.0;
 	var worldRadius = 10240.0;
 	var startRadius = 128.0;
 
@@ -97,19 +97,19 @@ fn spline(t: f32, s: array<f32, 10>) -> f32 {
 
 fn continents(p: vec3<f32>) -> f32 {
 	var o = vec3(1000.0);
-	var t = fractalNoise((p + o) / 2.0, 3);
+	var t = fractalNoise((p + o) / 2.0, 4);
 	return spline(t, continents_spline);
 }
 
 fn erosion(p: vec3<f32>) -> f32 {
 	var o = vec3(1500.0);
-	var t = fractalNoise((p + o) / 4.0, 2);
+	var t = fractalNoise((p + o) / 4.0, 3);
 	return 0.5 + spline(t, erosion_spline) * 0.5;
 }
 
 fn valleys(p: vec3<f32>) -> f32 {
 	var o = vec3(3000.0);
-	var t = fractalNoise((p + o) * 3.0, 4);
+	var t = fractalNoise((p + o) * 3.0, 5);
 	return spline(t, valleys_spline);
 }
 
