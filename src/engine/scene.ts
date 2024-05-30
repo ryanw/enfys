@@ -99,7 +99,7 @@ export class Scene {
 		return entity;
 	}
 
-	addMesh<T extends SimpleMesh | SimpleMesh>(item: T, transform?: Matrix4): Entity<T> {
+	addMesh<T extends SimpleMesh>(item: T, transform?: Matrix4): Entity<T> {
 		return this.addEntity(new Entity(
 			this.gfx,
 			item,

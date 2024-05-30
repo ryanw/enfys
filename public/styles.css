@@ -56,6 +56,7 @@ html, body {
 }
 #settings label {
 	user-select: none;
+	display: block;
 }
 #settings label input,
 #settings label select {

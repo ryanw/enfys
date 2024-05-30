@@ -121,6 +121,7 @@ export class ComposePipeline extends Pipeline {
 		const targetView = target.createView();
 
 		const cameraInvMvp = inverse(multiply(camera.projection, camera.view));
+		// FIXME combine these into 1 write
 		this.uniformBuffer.set('invMvp', cameraInvMvp || identity());
 		this.uniformBuffer.set('ditherSize', this.config.ditherSize);
 		this.uniformBuffer.set('ditherDepth', this.config.ditherDepth);

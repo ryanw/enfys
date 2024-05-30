@@ -4,6 +4,7 @@ import alias from '@rollup/plugin-alias';
 import terser from '@rollup/plugin-terser';
 import replace from '@rollup/plugin-replace';
 import wgsl from './src/wgsl_loader.mjs';
+import html from './src/html_loader.mjs';
 
 const entries = ['hello', 'landscape'];
 
@@ -23,6 +24,7 @@ export default entries.map(entry => ({
 	},
 	plugins: [
 		wgsl({ stripWhitespace: production }),
+		html({ stripWhitespace: production }),
 		typescript({
 			tsconfig: 'tsconfig.json',
 			sourceMap: !production,

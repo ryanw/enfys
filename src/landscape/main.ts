@@ -9,9 +9,10 @@ import { World } from './world';
 import { ShipMesh } from './ship_mesh';
 import { add } from 'engine/math/vectors';
 import { hsl } from 'engine/color';
+import { ui } from '../ui';
 
 /**
- * Start the demo
+ * Procedurally generated alien worlds
  */
 export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	const gfx: Gfx = await Gfx.attachNotified(el);
@@ -19,6 +20,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	const seed = Math.abs(seedParam ? parseFloat(seedParam) : Math.random() * 0xffffffff | 0);
 	const world = new World(gfx, el, seed);
 
+	ui(el.parentElement!, gfx, seed);
 
 	const scene = new Scene(gfx);
 
@@ -32,6 +34,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	);
 	water.material = new Material(gfx, [90, 160, 250, 255]);
 
+	// FIXME maybe should be in World?
 	scene.addMesh(new TreeMesh(
 		gfx,
 		[0, 0, 0],
