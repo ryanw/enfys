@@ -1,7 +1,7 @@
 import { Gfx } from 'engine';
-import { Cube, Icosahedron, QuadMesh } from 'engine/mesh';
+import { Icosahedron, QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
-import { multiply, rotation, scaling, translation } from 'engine/math/transform';
+import { multiply, scaling, translation } from 'engine/math/transform';
 import { Material } from 'engine/material';
 import { TreeMesh } from './tree_mesh';
 import { Chunker } from './chunker';
@@ -15,7 +15,7 @@ import { hsl } from 'engine/color';
  */
 export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	const gfx: Gfx = await Gfx.attachNotified(el);
-	const seedParam = window.location.search.match(/(?:\?|\&)seed=([-0-9]+)/)?.[1];
+	const seedParam = window.location.search.match(/(?:\?|&)seed=([-0-9]+)/)?.[1];
 	const seed = Math.abs(seedParam ? parseFloat(seedParam) : Math.random() * 0xffffffff | 0);
 	const world = new World(gfx, el, seed);
 

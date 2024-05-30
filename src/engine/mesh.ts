@@ -49,7 +49,7 @@ export interface OffsetInstance {
  * Collection of Vertices representing some kind of 3D geometry.
  * @typeParm V - Type of the vertices in this mesh
  */
-export class Mesh<V extends Vertex<V>, I extends Vertex<I> = {}> {
+export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	// Matches the `in: VertexIn` order
 	vertexOrder: Array<keyof V> = [];
 	instanceOrder: Array<keyof I> = [];
@@ -118,7 +118,7 @@ export class SimpleMesh extends Mesh<ColorVertex, OffsetInstance> {
 			this.uploadInstances(instances);
 		}
 		else {
-			this.uploadInstances([{ offset: [0, 0, 0] }])
+			this.uploadInstances([{ offset: [0, 0, 0] }]);
 		}
 	}
 }

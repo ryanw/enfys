@@ -10,15 +10,15 @@ export default function wgsl(config = {}) {
 			const escapedCode = JSON
 				.stringify(source)
 				// Put whitespace back in for readability in non-minified code
-				.replaceAll("\\n", "\n")
-				.replaceAll("\\t", "\t")
+				.replaceAll('\\n', '\n')
+				.replaceAll('\\t', '\t')
 				// Remove wrapping qutoes
 				.slice(1, -1);
 
 			// Inject all the imports
 			let finalCode = Array.from(imports).map(file =>
 				`import __wgslSource$${djb2(file)} from ${JSON.stringify(file)};`
-			).join("\n");
+			).join('\n');
 
 			// Append the actual code
 			finalCode += `export default \`${escapedCode}\`;`;
@@ -46,8 +46,8 @@ function transpileWgsl(source) {
 	const imports = new Set();
 	const compiled = source.replace(/@import\s+(?:"([^"]*)"|'([^']*)')\s*;?/gm, (_match, filename) => {
 		imports.add(filename);
-		const sourceVariableName = "__wgslSource$" + djb2(filename);
-		return "\n${" + sourceVariableName + "}\n";
+		const sourceVariableName = '__wgslSource$' + djb2(filename);
+		return '\n${' + sourceVariableName + '}\n';
 	});
 	return [compiled, imports];
 }

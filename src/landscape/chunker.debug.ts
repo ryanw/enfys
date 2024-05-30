@@ -54,7 +54,7 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 		el.addEventListener('mousemove', onMouse);
 		onMouse(e);
 	});
-	el.addEventListener('mouseup', e => {
+	el.addEventListener('mouseup', _e => {
 		el.removeEventListener('mousemove', onMouse);
 	});
 	el.addEventListener('click', onMouse);

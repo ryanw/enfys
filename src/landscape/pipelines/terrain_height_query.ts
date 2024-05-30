@@ -2,9 +2,7 @@ import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
 import shaderSource from './terrain_height_query.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
-import { Point2, Point3 } from 'engine/math';
-import { identity, inverse, multiply } from 'engine/math/transform';
-import { Camera } from 'engine/camera';
+import { Point3 } from 'engine/math';
 
 /**
  * Compute shader to get the terrain height at a given point

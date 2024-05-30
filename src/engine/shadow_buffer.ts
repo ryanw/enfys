@@ -1,5 +1,5 @@
-import { Gfx } from "engine";
-import { Point3 } from "./math";
+import { Gfx } from 'engine';
+import { Point3 } from './math';
 
 export type Shadow = {
 	position: Point3,

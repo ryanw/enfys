@@ -91,7 +91,7 @@ export class RenderMeshPipeline extends Pipeline {
 	}
 
 	draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
-		if (src.object.vertexCount === 0) {
+		if (src.object.vertexCount === 0 || src.object.instanceCount === 0) {
 			return;
 		}
 		const { device } = this.gfx;
@@ -134,11 +134,7 @@ export class RenderMeshPipeline extends Pipeline {
 		pass.setVertexBuffer(0, src.object.vertexBuffer);
 		pass.setVertexBuffer(1, src.object.instanceBuffer);
 		pass.setBindGroup(0, bindGroup);
-		if (src.object.instanceCount > 0) {
-			pass.draw(src.object.vertexCount, src.object.instanceCount);
-		} else {
-
-		}
+		pass.draw(src.object.vertexCount, src.object.instanceCount);
 		pass.end();
 	}
 }

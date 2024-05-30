@@ -1,10 +1,10 @@
-import { Point2, Point3 } from "engine/math";
-import { Entity, Scene } from "engine/scene";
-import { TerrainMesh } from "./terrain_mesh";
-import { Color, Gfx, Size } from "engine";
-import { translation } from "engine/math/transform";
-import { add } from "engine/math/vectors";
-import { TerrainPipeline } from "./pipelines/terrain";
+import { Point2, Point3 } from 'engine/math';
+import { Entity, Scene } from 'engine/scene';
+import { TerrainMesh } from './terrain_mesh';
+import { Color, Gfx, Size } from 'engine';
+import { translation } from 'engine/math/transform';
+import { add } from 'engine/math/vectors';
+import { TerrainPipeline } from './pipelines/terrain';
 
 export type Chunk = {
 	lod: number,
@@ -56,7 +56,7 @@ function removeDuplicateChunks(chunks: Array<Chunk>): Array<Chunk> {
 }
 
 function removeOverlaps(chunks: Array<Chunk>): Array<Chunk> {
-	return chunks.filter((chunk, i) => {
+	return chunks.filter(chunk => {
 		// If  a smaller (lower lod) chunk overlaps, remove this chunk
 		const smallerExists = chunks.findIndex(other => {
 			if (other.lod >= chunk.lod) return false;
@@ -115,7 +115,7 @@ export class Chunker {
 	}
 
 	private removeExpiredChunks(scene: Scene) {
-		for (const [key, chunk] of this.liveChunks.entries()) {
+		for (const [key, _chunk] of this.liveChunks.entries()) {
 			if (this.activeChunks.has(key)) continue;
 			// Chunk has expired, remove it
 			const entity = this.entities.get(key);
@@ -151,7 +151,7 @@ export class Chunker {
 		);
 		terrain.material.receiveShadows = true;
 		//terrain.material = new Material(scene.gfx, hsl(chunkId[2] / 7, 0.5, 0.5));
-		this.entities.set(toChunkHash(chunk), terrain)
+		this.entities.set(toChunkHash(chunk), terrain);
 	}
 
 	private updateQueue() {
@@ -188,17 +188,6 @@ export function recursiveSubdivide(p: Point2, lod: number, minLod: number = 0): 
 	}
 
 	return chunks;
-}
-
-function chunkNear(chunk: Point2, point: Point2, lod: number, tolerance: number = 1.0): boolean {
-	const scale = 1 << lod;
-	const t = tolerance * scale;
-	if (point[0] + t < chunk[0]) return false;
-	if (point[1] + t < chunk[1]) return false;
-	if (point[0] - t >= chunk[0] + scale) return false;
-	if (point[1] - t >= chunk[1] + scale) return false;
-
-	return true;
 }
 
 function chunkContains(chunk: Point2, point: Point2, lod: number): boolean {

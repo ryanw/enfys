@@ -2,7 +2,7 @@ import { Camera } from 'engine/camera';
 import { Point3, Vector3 } from 'engine/math';
 import { add, normalize, scale } from 'engine/math/vectors';
 import { Gfx } from 'engine';
-import { multiply, multiplyVector, rotation, transformPoint, translation } from './math/transform';
+import { multiply, multiplyVector, transformPoint, translation } from './math/transform';
 import { Player } from '../landscape/world';
 
 const DEADZONE = 1.0 / 8.0;
@@ -70,11 +70,8 @@ export class PlayerController {
 	};
 
 	constructor(private el: HTMLElement) {
-		el.addEventListener('mousedown', this.onMouseDown);
 		window.addEventListener('keydown', this.onKeyDown);
 		window.addEventListener('keyup', this.onKeyUp);
-		window.addEventListener('gamepadconnected', this.onGamepadConnected);
-		window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected);
 	}
 
 	update(player: Player, camera: Camera, dt: number) {
@@ -82,40 +79,40 @@ export class PlayerController {
 
 		this.updateGamepads();
 
-		let speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
+		const speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
 		const adjustment: Vector3 = [0, 0, 0];
 		let pitch = 0.0;
 		let yaw = 0.0;
 		this.thrust = 0;
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
-				case Key.Forward:
-					pitch = value;
-					//adjustment[2] = value;
-					break;
-				case Key.Backward:
-					pitch = -value;
-					//adjustment[2] = -value;
-					break;
-				case Key.Left:
-					yaw = -value;
-					//adjustment[0] = -value;
-					break;
-				case Key.Right:
-					yaw = value;
-					//adjustment[0] = value;
-					break;
-				case Key.Up:
-				case Key.Thrust:
-					if (Math.abs(value) > DEADZONE) {
-						this.thrust = value;
-						adjustment[1] = value;
-					}
-					break;
-				case Key.Down:
-				case Key.Brake:
-					adjustment[1] = -value;
-					break;
+			case Key.Forward:
+				pitch = value;
+				//adjustment[2] = value;
+				break;
+			case Key.Backward:
+				pitch = -value;
+				//adjustment[2] = -value;
+				break;
+			case Key.Left:
+				yaw = -value;
+				//adjustment[0] = -value;
+				break;
+			case Key.Right:
+				yaw = value;
+				//adjustment[0] = value;
+				break;
+			case Key.Up:
+			case Key.Thrust:
+				if (Math.abs(value) > DEADZONE) {
+					this.thrust = value;
+					adjustment[1] = value;
+				}
+				break;
+			case Key.Down:
+			case Key.Brake:
+				adjustment[1] = -value;
+				break;
 			}
 		}
 		for (const [key, value] of this.axis.entries()) {
@@ -123,12 +120,12 @@ export class PlayerController {
 				continue;
 			}
 			switch (key) {
-				case XboxAxis.LeftStickX:
-					yaw = value;
-					break;
-				case XboxAxis.LeftStickY:
-					pitch -= value;
-					break;
+			case XboxAxis.LeftStickX:
+				yaw = value;
+				break;
+			case XboxAxis.LeftStickY:
+				pitch -= value;
+				break;
 			}
 		}
 
@@ -184,27 +181,6 @@ export class PlayerController {
 		}
 	}
 
-	onMouseDown = (e: MouseEvent) => {
-		if (this.disabled) return;
-		if (e.button === 0) {
-			document.addEventListener('mouseup', this.onMouseUp);
-			document.addEventListener('mousemove', this.onMouseMove);
-		}
-	};
-
-	onMouseUp = (e: MouseEvent) => {
-		if (e.button === 0) {
-			document.removeEventListener('mouseup', this.onMouseUp);
-			document.removeEventListener('mousemove', this.onMouseMove);
-		}
-	};
-
-	onMouseMove = (e: MouseEvent) => {
-		if (this.disabled) return;
-		const x = e.movementX / 1000;
-		const y = e.movementY / 1000;
-	};
-
 	onKeyDown = (e: KeyboardEvent) => {
 		if (this.disabled) return;
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
@@ -217,12 +193,6 @@ export class PlayerController {
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.delete(key);
-	};
-
-	onGamepadConnected = (e: GamepadEvent) => {
-	};
-
-	onGamepadDisconnected = (e: GamepadEvent) => {
 	};
 }
 
@@ -264,24 +234,24 @@ export class FreeCameraController {
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {
-				case Key.Forward:
-					adjustment[2] = 1;
-					break;
-				case Key.Backward:
-					adjustment[2] = -1;
-					break;
-				case Key.Left:
-					adjustment[0] = -1;
-					break;
-				case Key.Right:
-					adjustment[0] = 1;
-					break;
-				case Key.Up:
-					adjustment[1] = 1;
-					break;
-				case Key.Down:
-					adjustment[1] = -1;
-					break;
+			case Key.Forward:
+				adjustment[2] = 1;
+				break;
+			case Key.Backward:
+				adjustment[2] = -1;
+				break;
+			case Key.Left:
+				adjustment[0] = -1;
+				break;
+			case Key.Right:
+				adjustment[0] = 1;
+				break;
+			case Key.Up:
+				adjustment[1] = 1;
+				break;
+			case Key.Down:
+				adjustment[1] = -1;
+				break;
 			}
 		}
 
@@ -293,14 +263,14 @@ export class FreeCameraController {
 		this.camera.translate(velocity);
 	}
 
-	onPointerLockChange = (e: Event) => {
+	onPointerLockChange = (_e: Event) => {
 		if (this.disabled) return;
 		if (document.pointerLockElement === this.el) {
 			document.addEventListener('mousemove', this.onMouseMove);
 		} else {
 			document.removeEventListener('mousemove', this.onMouseMove);
 		}
-	}
+	};
 
 	onMouseDown = (e: MouseEvent) => {
 		if (this.disabled) return;
@@ -385,12 +355,12 @@ export class OrbitCameraController {
 				continue;
 			}
 			switch (key) {
-				case XboxAxis.RightStickX:
-					yaw = value;
-					break;
-				case XboxAxis.RightStickY:
-					pitch = value;
-					break;
+			case XboxAxis.RightStickX:
+				yaw = value;
+				break;
+			case XboxAxis.RightStickY:
+				pitch = value;
+				break;
 			}
 		}
 		this.camera.rotate(pitch * dt, yaw * dt);
@@ -434,7 +404,7 @@ export class OrbitCameraController {
 		}
 	}
 
-	onPointerLockChange = (e: Event) => {
+	onPointerLockChange = (_e: Event) => {
 		if (this.disabled) return;
 		if (document.pointerLockElement === this.el) {
 			document.addEventListener('mousemove', this.onMouseMove);

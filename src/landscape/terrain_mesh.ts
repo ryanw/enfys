@@ -1,8 +1,8 @@
-import { Gfx, Size } from "engine";
-import { Point3 } from "engine/math";
-import { SimpleMesh } from "engine/mesh";
-import { TerrainPipeline } from "./pipelines/terrain";
-import { hsl } from "engine/color";
+import { Gfx, Size } from 'engine';
+import { Point3 } from 'engine/math';
+import { SimpleMesh } from 'engine/mesh';
+import { TerrainPipeline } from './pipelines/terrain';
+import { hsl } from 'engine/color';
 
 export class TerrainMesh extends SimpleMesh {
 	private terrainPipeline: TerrainPipeline;

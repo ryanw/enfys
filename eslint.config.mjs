@@ -7,10 +7,11 @@ export default [
 	pluginJs.configs.recommended,
 	...tseslint.configs.recommended,
 	{
-		// FIXME this doesn't work, --ignore-pattern in package.json is used instead
-		ignores: ['src/wgsl_loader.mjs'],
 		languageOptions: {
-			globals: globals.browser
+			globals: {
+				...globals.browser,
+				btoa: true,
+			}
 		},
 		rules: {
 			"indent": [
@@ -34,7 +35,12 @@ export default [
 				"off"
 			],
 			"@typescript-eslint/no-unused-vars": [
-				"warn"
+				"warn",
+				{
+					"argsIgnorePattern": "^_",
+					"varsIgnorePattern": "^_",
+					"caughtErrorsIgnorePattern": "^_"
+				}
 			],
 			"@typescript-eslint/no-explicit-any": [
 				"off"

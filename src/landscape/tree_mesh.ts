@@ -1,7 +1,7 @@
-import { Gfx, Size, calculateNormals } from "engine";
-import { Point3 } from "engine/math";
-import { CUBE_VERTS, ColorVertex, buildIcosahedron, Icosahedron, SimpleMesh, TextureVertex } from "engine/mesh";
-import { TreePipeline } from "./pipelines/tree";
+import { Gfx, calculateNormals } from 'engine';
+import { Point3 } from 'engine/math';
+import { CUBE_VERTS, ColorVertex, buildIcosahedron, SimpleMesh } from 'engine/mesh';
+import { TreePipeline } from './pipelines/tree';
 
 export class TreeMesh extends SimpleMesh {
 	private pipeline: TreePipeline;
@@ -31,7 +31,7 @@ export class TreeMesh extends SimpleMesh {
 			this.density,
 			this.seed,
 		);
-		console.log("Created %i instances", count);
+		console.log('Created %i instances', count);
 		this.instanceBuffer = buffer;
 		this.instanceCount = count;
 	}

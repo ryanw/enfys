@@ -1,4 +1,4 @@
-import { generateChunks, subdivideChunk } from "./chunker";
+import { generateChunks, subdivideChunk } from './chunker';
 
 describe('Chunker', () => {
 	test('it finds the correct chunks for 0 level', () => {

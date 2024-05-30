@@ -3,8 +3,8 @@ import { QuadMesh } from 'engine/mesh';
 import { Pipeline } from 'engine/pipelines';
 import shaderSource from './terrain.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
-import { Point2, Point3 } from 'engine/math';
-import { Color, hsl } from 'engine/color';
+import { Point3 } from 'engine/math';
+import { Color } from 'engine/color';
 
 /**
  * Compute Shader that takes a subdivided {@link QuadMesh}, updates the Y of every vertex, and recalculates every triangle's normal

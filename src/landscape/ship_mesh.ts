@@ -1,6 +1,6 @@
-import { Color, Gfx, calculateNormals } from "engine";
-import { PHI, Point3 } from "engine/math";
-import { ColorVertex, SimpleMesh } from "engine/mesh";
+import { Color, Gfx, calculateNormals } from 'engine';
+import { PHI, Point3 } from 'engine/math';
+import { ColorVertex, SimpleMesh } from 'engine/mesh';
 
 const { cos, sin } = Math;
 

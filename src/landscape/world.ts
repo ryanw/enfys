@@ -1,10 +1,10 @@
-import { Gfx } from "engine";
-import { Camera } from "engine/camera";
-import { Matrix4, Point3, Vector3 } from "engine/math";
-import { TerrainHeightQueryPipeline } from "./pipelines/terrain_height_query";
-import { CameraController, FreeCameraController, OrbitCameraController, PlayerController } from "engine/input";
-import { add, scale } from "engine/math/vectors";
-import { rotation } from "engine/math/transform";
+import { Gfx } from 'engine';
+import { Camera } from 'engine/camera';
+import { Matrix4, Point3, Vector3 } from 'engine/math';
+import { TerrainHeightQueryPipeline } from './pipelines/terrain_height_query';
+import { CameraController, FreeCameraController, OrbitCameraController, PlayerController } from 'engine/input';
+import { add, scale } from 'engine/math/vectors';
+import { rotation } from 'engine/math/transform';
 
 export class World {
 	player = new Player();
@@ -24,10 +24,10 @@ export class World {
 
 		window.addEventListener('keydown', e => {
 			if (e.key === 'Tab') {
-				this.currentCameraId = (this.currentCameraId + 1) % this.cameras.length
+				this.currentCameraId = (this.currentCameraId + 1) % this.cameras.length;
 				this.updateCameras();
 			}
-		})
+		});
 		this.updateCameras();
 		this.init();
 	}
@@ -99,7 +99,7 @@ export class Player {
 	update(dt: number) {
 		// Add gravity -- approx Earth gravity
 		this.velocity[1] -= 10.0 * dt;
-		this.position = add(this.position, scale(this.velocity, dt))
+		this.position = add(this.position, scale(this.velocity, dt));
 		if (this.position[1] < this.surfaceHeight + this.hoverGap) {
 			this.velocity[1] = 0.0;
 
@@ -116,7 +116,7 @@ export class Player {
 		// Dampening
 		const vt = 1.0 - (1.0 * dt);
 		const scaled = scale(this.velocity, vt);;
-		this.velocity[0] = scaled[0]
-		this.velocity[2] = scaled[2]
+		this.velocity[0] = scaled[0];
+		this.velocity[2] = scaled[2];
 	}
 }
