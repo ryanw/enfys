@@ -3,7 +3,7 @@ import { Icosahedron } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, translation } from 'engine/math/transform';
-import { FreeCameraController } from 'engine/input';
+import { FreeCameraController } from 'engine/input/free_camera';
 
 /**
  * Start the demo

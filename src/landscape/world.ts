@@ -2,9 +2,13 @@ import { Gfx } from 'engine';
 import { Camera } from 'engine/camera';
 import { Matrix4, Point3, Vector3 } from 'engine/math';
 import { TerrainHeightQueryPipeline } from './pipelines/terrain_height_query';
-import { CameraController, FreeCameraController, OrbitCameraController, PlayerController } from 'engine/input';
 import { add, scale } from 'engine/math/vectors';
 import { rotation } from 'engine/math/transform';
+import { OrbitCameraController } from 'engine/input/orbit_camera';
+import { PlayerController } from 'engine/input/player';
+import { FreeCameraController } from 'engine/input/free_camera';
+
+type CameraController = OrbitCameraController | FreeCameraController;
 
 export class World {
 	player = new Player();
