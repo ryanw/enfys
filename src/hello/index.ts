@@ -1,3 +1,9 @@
+/**
+ * A very simple demo
+ *
+ * @module
+ */
+
 import { Gfx } from 'engine';
 import { Icosahedron } from 'engine/mesh';
 import { Camera } from 'engine/camera';

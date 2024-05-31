@@ -11,8 +11,8 @@ import { Camera } from 'engine/camera';
  */
 export class ComposePipeline extends Pipeline {
 	config: Config = {
-		ditherSize: 2,
-		ditherDepth: 2,
+		ditherSize: 1,
+		ditherDepth: 4,
 		drawEdges: false,
 		renderMode: 0,
 		fog: 1.0,

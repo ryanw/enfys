@@ -2,14 +2,22 @@ import { Gfx } from 'engine';
 import html from './ui.html';
 
 
+/**
+ * Construct the HTML user interface and insert it into the DOM
+ *
+ * @param wrapper Element to insert the UI into
+ * @param gfx Graphics context
+ * @param seed World seed
+ *
+ */
 export function ui(wrapper: HTMLElement, gfx: Gfx, seed: number) {
 	const el = document.createElement('div');
 	el.innerHTML = html;
 
 	const fps = el.querySelector('#fps span')!;
 	const permalink = el.querySelector('#perma-link')!;
-	permalink.setAttribute('href', '?seed=' + seed);
-	permalink.innerHTML = seed.toString();
+	permalink.setAttribute('href', '?seed=' + seed.toString(36));
+	permalink.innerHTML = seed.toString(36);
 	setInterval(() => {
 		fps.innerHTML = gfx.fps.toFixed(0);
 	}, 1000 / 30);

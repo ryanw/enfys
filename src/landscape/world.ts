@@ -18,20 +18,14 @@ export class World {
 	queryTerrain: TerrainHeightQueryPipeline;
 	currentCameraId = 0;
 
-	constructor(public gfx: Gfx, el: HTMLElement, public seed: number) {
+	constructor(public gfx: Gfx, public seed: number) {
 		this.queryTerrain = new TerrainHeightQueryPipeline(gfx);
-		this.playerController = new PlayerController(el);
+		this.playerController = new PlayerController(gfx.canvas);
 		this.cameras = [
-			new OrbitCameraController(el, new Camera(gfx)),
-			new FreeCameraController(el, new Camera(gfx)),
+			new OrbitCameraController(gfx.canvas, new Camera(gfx)),
+			new FreeCameraController(gfx.canvas, new Camera(gfx)),
 		];
 
-		window.addEventListener('keydown', e => {
-			if (e.key === 'Tab') {
-				this.currentCameraId = (this.currentCameraId + 1) % this.cameras.length;
-				this.updateCameras();
-			}
-		});
 		this.updateCameras();
 		this.init();
 	}

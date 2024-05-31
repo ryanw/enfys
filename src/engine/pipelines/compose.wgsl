@@ -85,27 +85,27 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 
 		if EDGE_MODE == 0 {
-			var norms = array(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
+			var metas = array(vec3(0.0), vec3(0.0), vec3(0.0), vec3(0.0));
 			for (var y = 0u; y < 2u; y++) {
 				for (var x = 0u; x < 2u; x++) {
 					let i = x + y * 2u;
 					let offset = vec2(i32(x), i32(y)) - 1;
 					let coord = vec2i(normalSize * in.uv) + offset;
 					let n = textureLoad(normalTex, coord, 0).xyz;
-					norms[i] = n;
+					metas[i] = n;
 				}
 			}
 
-			if length(norms[0] - norms[1]) > et {
+			if length(metas[0] - metas[1]) > et {
 				//isEdge = true;
 			}
-			if length(norms[2] - norms[3]) > et {
+			if length(metas[2] - metas[3]) > et {
 				isEdge = true;
 			}
-			if length(norms[0] - norms[2]) > et {
+			if length(metas[0] - metas[2]) > et {
 				//isEdge = true;
 			}
-			if length(norms[1] - norms[3]) > et {
+			if length(metas[1] - metas[3]) > et {
 				isEdge = true;
 			}
 

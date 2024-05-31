@@ -9,6 +9,7 @@ export class Material {
 	readonly uniform: UniformBuffer;
 	private _color: Color;
 	private _receiveShadows = false;
+	private _emissive: boolean = false;
 
 	constructor(
 		readonly gfx: Gfx,
@@ -43,6 +44,15 @@ export class Material {
 		this.updateUniform();
 	}
 
+	get emissive(): boolean {
+		return this._emissive;
+	}
+
+	set emissive(emissive: boolean) {
+		this._emissive = emissive;
+		this.updateUniform();
+	}
+
 	bindingResource(): GPUBindingResource {
 		return this.uniform.bindingResource();
 	}
@@ -50,5 +60,6 @@ export class Material {
 	updateUniform() {
 		this.uniform.set('receiveShadows', this._receiveShadows);
 		this.uniform.set('color', this._color.map(v => v/255));
+		this.uniform.set('emissive', this._emissive);
 	}
 }

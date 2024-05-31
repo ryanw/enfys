@@ -8,6 +8,9 @@ declare module '*.html' {
 	export default source;
 }
 
+declare const PRODUCTION: boolean;
+declare const DEBUG: boolean;
+
 interface Element {
     requestPointerLock(options: { unadjustMovement?: bool }): void;
 }

@@ -13,7 +13,7 @@ const enginePath = path.resolve(projectRootDir, './src/engine/');
 const production = !process.env.ROLLUP_WATCH;
 
 export default entries.map(entry => ({
-	input: `src/${entry}/main.ts`,
+	input: `src/${entry}/index.ts`,
 	output: {
 		file: `public/${entry}.bundle.js`,
 		format: 'module',
@@ -40,8 +40,8 @@ export default entries.map(entry => ({
 		}),
 		replace({
 			preventAssignment: true,
-			'process.env.PRODUCTION': JSON.stringify(production),
-			'process.env.DEBUG': JSON.stringify(!production),
+			'PRODUCTION': JSON.stringify(production),
+			'DEBUG': JSON.stringify(!production),
 		}),
 		production && terser(),
 	],
