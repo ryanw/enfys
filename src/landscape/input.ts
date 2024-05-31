@@ -1,9 +1,9 @@
 import { Camera } from 'engine/camera';
-import { DEADZONE, Key, XboxAxis, XboxButton } from '.';
-import { Player } from '../../landscape/world';
+import { Player } from './world';
 import { Point3, Vector3 } from 'engine/math';
 import { multiply, multiplyVector } from 'engine/math/transform';
 import { add, scale } from 'engine/math/vectors';
+import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
 
 export class PlayerController {
 	disabled = false;

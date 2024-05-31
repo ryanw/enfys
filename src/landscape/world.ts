@@ -5,8 +5,8 @@ import { TerrainHeightQueryPipeline } from './pipelines/terrain_height_query';
 import { add, scale } from 'engine/math/vectors';
 import { rotation } from 'engine/math/transform';
 import { OrbitCameraController } from 'engine/input/orbit_camera';
-import { PlayerController } from 'engine/input/player';
 import { FreeCameraController } from 'engine/input/free_camera';
+import { PlayerController } from './input';
 
 type CameraController = OrbitCameraController | FreeCameraController;
 
