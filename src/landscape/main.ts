@@ -10,6 +10,8 @@ import { ShipMesh } from './ship_mesh';
 import { add } from 'engine/math/vectors';
 import { hsl } from 'engine/color';
 import { ui } from '../ui';
+import { pcg3d } from 'engine/noise';
+
 
 /**
  * Procedurally generated alien worlds
@@ -17,14 +19,23 @@ import { ui } from '../ui';
 export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	const gfx: Gfx = await Gfx.attachNotified(el);
 	const seedParam = window.location.search.match(/(?:\?|&)seed=([-0-9]+)/)?.[1];
-	const seed = Math.abs(seedParam ? parseFloat(seedParam) : Math.random() * 0xffffffff | 0);
+	const seed = Math.abs(seedParam ? parseFloat(seedParam) : Math.random() * 0x7fffffff | 0);
 	const world = new World(gfx, el, seed);
+	let rndIdx = 100;
+	const rnd = (l: number, r: number, t: number = 321) => pcg3d([t * 10, seed/10000, rndIdx++ * 10])[0] * (r - l) + l;
 
 	ui(el.parentElement!, gfx, seed);
 
+	const water = rnd(0.0, 1.0);
+	const sand  = rnd(0.0, 1.0);
+	const grass = rnd(0.0, 1.0);
+	const soil  = ((grass - rnd(0.1, 0.2)) + 1) % 1;
+	const rock  = rnd(0.0, 1.0);
+	const snow  = rnd(0.0, 1.0);
+
 	const scene = new Scene(gfx);
 
-	const water = scene.addMesh(
+	const waterMesh = scene.addMesh(
 		new QuadMesh(
 			gfx,
 			[32, 32],
@@ -32,7 +43,7 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 		),
 		translation(0, 0, 0),
 	);
-	water.material = new Material(gfx, [90, 160, 250, 255]);
+	waterMesh.material = new Material(gfx, hsl(water, 0.5, 0.5));
 
 	// FIXME maybe should be in World?
 	scene.addMesh(new TreeMesh(
@@ -51,34 +62,27 @@ export async function main(el: HTMLCanvasElement): Promise<[Gfx, number]> {
 	thruster.material.uniform.set('emissive', true);
 
 
-	const rnd = (l: number, r: number) => Math.random() * (r - l) + l;
-	const sand = Math.random();
-	const grass = sand + rnd(0.3, 0.7);
-	const soil = grass - rnd(0.1, 0.2);
-	const rock = Math.random();
-	const snow = Math.random();
 
 	const colorScheme = [
 		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.7)),
-		hsl(sand, rnd(0.3, 0.6), rnd(0.3, 0.6)),
-		hsl(grass, rnd(0.3, 0.6), rnd(0.3, 0.6)),
-		hsl(grass, rnd(0.3, 0.6), rnd(0.3, 0.6)),
-		hsl(grass, rnd(0.3, 0.6), rnd(0.2, 0.7)),
-		hsl(soil, rnd(0.3, 0.6), rnd(0.2, 0.6)),
-		hsl(soil, rnd(0.3, 0.6), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.2, 0.6)),
+		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
+		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
+		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
+		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.5)),
+		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.5)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(snow, rnd(0.1, 0.2), rnd(0.6, 1.0)),
 		hsl(snow, rnd(0.1, 0.2), rnd(0.6, 1.0)),
 	];

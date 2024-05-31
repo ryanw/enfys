@@ -177,7 +177,7 @@ function toVertex(position: Point3): ColorVertex {
 	return {
 		position: [...position],
 		normal: [0, 1, 0],
-		color: [1.0, 0.0, 1.0, 1.0]
+		color: [1.0, 1.0, 1.0, 1.0]
 	};
 }
 
