@@ -2,7 +2,8 @@ import { Vector4 } from './math';
 
 export type Color = Vector4;
 
-export function hsl(h: number, s: number, l: number): Color {
+export function hsl(h: number, s: number, ll: number): Color {
+	const l = Math.max(0, Math.min(1, ll));
 	if (s === 0) {
 		return [l * 255, l * 255, l * 255, 255];
 	}

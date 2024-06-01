@@ -84,7 +84,7 @@ function buildColorScheme(seed: number): Array<Color> {
  * Build the GPU objects we'll be rendering
  */
 function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
-	const rnd = randomizer(seed);
+	const rnd = randomizer(seed + 12345);
 	const waterColor = rnd(0.0, 1.0);
 
 	const scene = new Scene(gfx);
