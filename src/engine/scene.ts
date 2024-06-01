@@ -1,4 +1,4 @@
-import { Matrix4 } from './math';
+import { Matrix4, Point3 } from './math';
 import { Material } from './material';
 import { Color, Gfx } from 'engine';
 import { SimpleMesh } from './mesh';
@@ -72,6 +72,7 @@ export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
 	entities: Entity<unknown>[] = [];
 	shadowBuffer: ShadowBuffer;
+	lightPosition: Point3 = [0, 0, 0];
 
 	constructor(readonly gfx: Gfx) {
 		this.shadowBuffer = new ShadowBuffer(gfx, 32);

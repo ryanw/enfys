@@ -16,6 +16,7 @@ import { ShipMesh } from './ship_mesh';
 import { Color, hsl } from 'engine/color';
 import { randomizer } from 'engine/noise';
 import { ui } from './ui';
+import { add } from 'engine/math/vectors';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -73,9 +74,10 @@ function buildColorScheme(seed: number): Array<Color> {
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
-		hsl(snow, rnd(0.1, 0.2), rnd(0.6, 1.0)),
-		hsl(snow, rnd(0.1, 0.2), rnd(0.6, 1.0)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.8, 0.7)),
+		hsl(snow, rnd(0.1, 0.2), rnd(0.7, 1.0)),
+		hsl(snow, rnd(0.1, 0.2), rnd(0.8, 1.0)),
+		hsl(snow, rnd(0.1, 0.2), rnd(0.9, 1.0)),
 	];
 }
 
@@ -134,6 +136,9 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 		// Move shadow under player
 		scene.shadowBuffer.moveShadow(0, world.player.position);
+
+		// Move light to above player
+		scene.lightPosition = add(world.player.position, [0, 5, 0]);
 
 		// Sync terrain with camera view
 		const [x, _, z] = world.activeCamera.camera.position;

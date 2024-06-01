@@ -8,6 +8,7 @@ struct VertexOut {
 
 struct Uniforms {
 	invMvp: mat4x4f,
+	lightPosition: vec3f,
 	ditherSize: i32,
 	ditherDepth: i32,
 	drawEdges: i32,
@@ -145,7 +146,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	var brightness = 1.0;
 
 	if length(normal) > 0.0 {
-		let lightPos = vec3(cos(u.t/2.0) * 64.0, 64.0, 64.0 + sin(u.t/-2.0) * 64.0);
+		let lightPos = u.lightPosition;//vec3(cos(u.t/2.0) * 64.0, 64.0, 64.0 + sin(u.t/-2.0) * 64.0);
 		let lightDir = normalize(pos - lightPos);
 		let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 

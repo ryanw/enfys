@@ -5,6 +5,7 @@ import { GBuffer } from 'engine/gbuffer';
 import { UniformBuffer } from 'engine/uniform_buffer';
 import { identity, inverse, multiply } from 'engine/math/transform';
 import { Camera } from 'engine/camera';
+import { Point3 } from 'engine/math';
 
 /**
  * Composes a {@link GBuffer} onto a single {@link GPUTexture}
@@ -95,6 +96,7 @@ export class ComposePipeline extends Pipeline {
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['invMvp', 'mat4x4f'],
+			['lightPosition', 'vec3f'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
 			['drawEdges', 'i32'],
@@ -115,20 +117,29 @@ export class ComposePipeline extends Pipeline {
 		});
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, target: GPUTexture, clear: Color = [0, 0, 0, 0]) {
+	compose(
+		encoder: GPUCommandEncoder,
+		src: GBuffer,
+		camera: Camera,
+		lightPosition: Point3,
+		target: GPUTexture,
+		clear: Color = [0, 0, 0, 0],
+	) {
 		const { device } = this.gfx;
 
 		const targetView = target.createView();
 
 		const cameraInvMvp = inverse(multiply(camera.projection, camera.view));
-		// FIXME combine these into 1 write
-		this.uniformBuffer.set('invMvp', cameraInvMvp || identity());
-		this.uniformBuffer.set('ditherSize', this.config.ditherSize);
-		this.uniformBuffer.set('ditherDepth', this.config.ditherDepth);
-		this.uniformBuffer.set('drawEdges', this.config.drawEdges);
-		this.uniformBuffer.set('renderMode', this.config.renderMode);
-		this.uniformBuffer.set('fog', this.config.fog);
-		this.uniformBuffer.set('t', performance.now() / 1000.0);
+		this.uniformBuffer.replace({
+			invMvp: cameraInvMvp || identity(),
+			lightPosition,
+			ditherSize: this.config.ditherSize,
+			ditherDepth: this.config.ditherDepth,
+			drawEdges: this.config.drawEdges,
+			renderMode: this.config.renderMode,
+			fog: this.config.fog,
+			t: performance.now() / 1000.0,
+		});
 
 		const clearValue = clear.map(v => v / 255);
 		const passDescriptor: GPURenderPassDescriptor = {

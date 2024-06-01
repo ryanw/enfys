@@ -171,7 +171,14 @@ export class Gfx {
 		this.gbuffer.size = this.framebufferSize;
 		await this.encode(async (encoder) => {
 			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
-			this.renderer.compose(encoder, this.gbuffer, camera, this.currentTexture, scene.clearColor);
+			this.renderer.compose(
+				encoder,
+				this.gbuffer,
+				camera,
+				scene.lightPosition,
+				this.currentTexture,
+				scene.clearColor,
+			);
 		});
 	}
 

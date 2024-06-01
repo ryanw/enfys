@@ -5,6 +5,7 @@ import { RenderMeshPipeline } from './pipelines/render_mesh';
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { SimpleMesh } from './mesh';
+import { Point3 } from './math';
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -38,8 +39,8 @@ export class Renderer {
 		}
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, target: GPUTexture, clear?: Color) {
-		this.pipelines.compose.compose(encoder, src, camera, target, clear);
+	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, light: Point3, target: GPUTexture, clear?: Color) {
+		this.pipelines.compose.compose(encoder, src, camera, light, target, clear);
 	}
 
 	clear(encoder: GPUCommandEncoder, target: GBuffer) {
