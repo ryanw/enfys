@@ -176,7 +176,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	var fogFactor = 0.0;
 	if u.fog > 0.02 {
 		let density = 1.0;
-		let dd = smoothstep(1.0 / 5000.0 / u.fog, 1.0 / 10000.0 / u.fog, 1.0-depth);
+		let dd = smoothstep(1.0 / 8000.0 / u.fog, 1.0 / 10000.0 / u.fog, 1.0-depth);
 		fogFactor = dd;// exp(density * dd);
 	}
 	let fogColor = vec4(0.0);

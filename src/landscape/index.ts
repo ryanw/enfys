@@ -57,12 +57,16 @@ function buildColorScheme(seed: number): Array<Color> {
 	const rock = rnd(0.0, 1.0);
 	const snow = rnd(0.0, 1.0);
 	return [
-		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.7)),
+		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.6)),
+		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.6)),
 		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
 		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
 		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
+		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
+		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
 		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.5)),
-		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.5)),
+		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.4)),
+		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.4)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
@@ -71,6 +75,10 @@ function buildColorScheme(seed: number): Array<Color> {
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
+		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
@@ -119,8 +127,10 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 
 	const colorScheme = buildColorScheme(seed);
-	const chunker = new Chunker(gfx, seed, 4, [0, 0], colorScheme);
-	//debugChunker(gfx.canvas.parentElement!, chunker);
+	const chunker = new Chunker(gfx, seed, 5, [0, 0], colorScheme);
+	if (DEBUG && getParam('debug')) {
+		debugChunker(gfx.canvas.parentElement!, chunker);
+	}
 
 	function syncGraphics(world: World) {
 		// Update player model
@@ -154,6 +164,10 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 }
 
 function getSeed(): number {
-	const seedParam = window.location.search.match(/(?:\?|&)seed=([^&]+)/)?.[1];
+	const seedParam = getParam('seed');
 	return Math.abs(seedParam ? parseInt(seedParam, 36) : Math.random() * 0x7fffffff | 0);
+}
+
+function getParam(name: string): string | undefined {
+	return window.location.search.match(new RegExp(`(?:\\?|&)${name}=([^&]+)`))?.[1];
 }
