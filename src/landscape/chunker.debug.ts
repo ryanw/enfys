@@ -28,6 +28,8 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 
 			cel.style.position = 'absolute';
 			//cel.style.background = '#000000bb';
+			cel.style.boxShadow = '0px 0px 4px #fff';
+			cel.style.borderRadius = '4px';
 			cel.style.left = s * chunk.position[0] + 300 + 'px';
 			cel.style.bottom = s * chunk.position[1] + 300 + 'px';
 			cel.style.width = (s * scale) + 'px';
@@ -59,6 +61,6 @@ export function debugChunker(parent: HTMLElement, chunker: Chunker) {
 	});
 	el.addEventListener('click', onMouse);
 
-	setInterval(rebuildCells, 1000);
+	setInterval(rebuildCells, 400);
 }
 

@@ -3,7 +3,7 @@ import { Entity, Scene } from 'engine/scene';
 import { TerrainMesh } from './terrain_mesh';
 import { Color, Gfx, Size } from 'engine';
 import { translation } from 'engine/math/transform';
-import { add } from 'engine/math/vectors';
+import { add, magnitude, subtract } from 'engine/math/vectors';
 import { TerrainPipeline } from './pipelines/terrain';
 
 export type Chunk = {
@@ -11,22 +11,57 @@ export type Chunk = {
 	position: Point2,
 };
 
+function cleanChunks(chunks: Array<Chunk>): Array<Chunk> {
+	return removeOverlaps(removeDuplicateChunks(chunks));
+}
+
 export function generateChunks(x: number, y: number, minLod: number = 0, maxLod: number = 6) {
 	const point = [x, y] as Point2;
-	const range = 1;
+	const range = 2;
+	const baseScale = 1 << maxLod;
+	// Create base chunks to subdivide
 	let chunks: Array<Chunk> = [];
-	for (let lod = minLod; lod < maxLod; lod++) {
-		const scale = 1 << lod;
-		for (let y = -range; y <= range; y++) {
-			for (let x = -range; x <= range; x++) {
-				chunks = [
-					...chunks,
-					...recursiveSubdivide(add(point, [x * scale, y * scale]), maxLod, lod),
-				];
-			}
+
+	for (let y = -range; y <= range; y++) {
+		for (let x = -range; x <= range; x++) {
+			chunks = [
+				...chunks,
+				...subdivideChunk(add(point, [x * baseScale, y * baseScale]), maxLod).map(position => ({
+					lod: maxLod,
+					position
+				})),
+			];
 		}
 	}
-	return removeOverlaps(removeDuplicateChunks(chunks));
+
+
+	for (let lod = maxLod - 1; lod >= minLod; lod--) {
+		const scale = 1 << lod;
+		let nextChunks: Array<Chunk> = [];
+		for (const chunk of chunks) {
+			if (chunk.lod !== lod + 1) {
+				continue;
+			}
+			const p = add(chunk.position, [scale, scale]);
+			const dist = magnitude(subtract(p, point));
+			if (dist < 2 * scale) {
+				const lodChunks = subdivideChunk(chunk.position, lod).map(position => ({
+					lod: lod,
+					position
+				}));
+				// If distance from chunk to player is close, then subdivide
+				nextChunks = cleanChunks([
+					...nextChunks,
+					...lodChunks
+				]);
+			}
+		}
+		chunks = cleanChunks([
+			...chunks,
+			...nextChunks,
+		]);
+	}
+	return chunks;
 }
 
 function equalChunks(c0: Chunk, c1: Chunk): boolean {
@@ -78,7 +113,7 @@ export class Chunker {
 	queuedChunks: Map<ChunkKey, Chunk> = new Map();
 	activeChunks: Map<ChunkKey, Chunk> = new Map();
 	entities: Map<ChunkKey, Entity<TerrainMesh>> = new Map();
-	chunkSize: Size = [128, 128];
+	chunkSize: Size = [256, 256];
 	private terrainPipeline: TerrainPipeline;
 
 	constructor(
@@ -89,13 +124,18 @@ export class Chunker {
 		colorScheme: Array<Color>,
 	) {
 		this.terrainPipeline = new TerrainPipeline(this.gfx, colorScheme);
-		this.move(...point);
+		//this.move(point[0], point[1]);
 	}
 
 	move(x: number, y: number, minLod: number = 0) {
 		this.point = [x, y];
 		this.activeChunks = new Map();
-		const chunks = generateChunks(x / this.chunkSize[0], y / this.chunkSize[1], minLod, this.maxLod);
+		const chunks = generateChunks(
+			x / this.chunkSize[0],
+			y / this.chunkSize[1],
+			minLod,
+			this.maxLod,
+		);
 		for (const chunk of chunks) {
 			this.activeChunks.set(toChunkHash(chunk), chunk);
 		}

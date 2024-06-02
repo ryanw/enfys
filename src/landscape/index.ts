@@ -17,6 +17,7 @@ import { Color, hsl } from 'engine/color';
 import { randomizer } from 'engine/noise';
 import { ui } from './ui';
 import { add } from 'engine/math/vectors';
+import { debugChunker } from './chunker.debug';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -118,7 +119,9 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 
 	const colorScheme = buildColorScheme(seed);
-	const chunker = new Chunker(gfx, seed, 5, [0, 0], colorScheme);
+	const chunker = new Chunker(gfx, seed, 4, [0, 0], colorScheme);
+	//debugChunker(gfx.canvas.parentElement!, chunker);
+
 	function syncGraphics(world: World) {
 		// Update player model
 		player.transform = multiply(
