@@ -26,7 +26,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 
 	if n < 1.0 / 10.0 {
 		var n0 = (rnd3(id + vec3(123.0)) - 0.5);
-		var n1 = 0.001 + abs(rnd3(id + vec3(323.0)) - 0.5);
+		var n1 = (rnd3(id + vec3(323.0)) - 0.5);
 		var n2 = (rnd3(id + vec3(555.0)) - 0.5);
 		var p = normalize(vec3(n0, n1, n2)) * 50000.0;
 		var instance: Instance;

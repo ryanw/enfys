@@ -9,6 +9,7 @@ struct VertexOut {
 struct Uniforms {
 	invMvp: mat4x4f,
 	lightPosition: vec3f,
+	playerPosition: vec3f,
 	ditherSize: i32,
 	ditherDepth: i32,
 	drawEdges: i32,
@@ -144,6 +145,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	var brightness = 1.0;
+	var fogFactor = 0.0;
 
 	if length(normal) > 0.0 {
 		let lightPos = u.lightPosition;//vec3(cos(u.t/2.0) * 64.0, 64.0, 64.0 + sin(u.t/-2.0) * 64.0);
@@ -162,8 +164,15 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		else {
 			brightness = shade;
 		}
-	}
 
+		// Calculate fog for later
+		if u.fog > 0.02 {
+			let density = 1.0;
+			let fogDepth = 1.0 - (length(pos - u.playerPosition) / 15000.0);
+			let dd = smoothstep(1.0 / 8.0 / u.fog, 1.0 / 16.0 / u.fog, fogDepth);
+			fogFactor = dd;// exp(density * dd);
+		}
+	}
 	var color = vec4(0.0);
 	if BLEND_TO_ALPHA {
 		color = albedo * pow(brightness, 2.2);
@@ -171,16 +180,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	else {
 		color = vec4(albedo.rgb * pow(brightness, 2.2), 1.0) * albedo.a;
 	}
-
-	// Calculate fog for later
-	var fogFactor = 0.0;
-	if u.fog > 0.02 {
-		let density = 1.0;
-		let dd = smoothstep(1.0 / 8000.0 / u.fog, 1.0 / 10000.0 / u.fog, 1.0-depth);
-		fogFactor = dd;// exp(density * dd);
-	}
-	let fogColor = vec4(0.0);
-
 
 	var renderMode = u.renderMode;
 	if renderMode == 1 {
@@ -243,6 +242,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
+	let fogColor = vec4(0.0);
 	return mix(color, fogColor, fogFactor);
 }
 

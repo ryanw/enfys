@@ -97,6 +97,7 @@ export class ComposePipeline extends Pipeline {
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['invMvp', 'mat4x4f'],
 			['lightPosition', 'vec3f'],
+			['playerPosition', 'vec3f'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
 			['drawEdges', 'i32'],
@@ -133,6 +134,7 @@ export class ComposePipeline extends Pipeline {
 		this.uniformBuffer.replace({
 			invMvp: cameraInvMvp || identity(),
 			lightPosition,
+			playerPosition: camera.position,
 			ditherSize: this.config.ditherSize,
 			ditherDepth: this.config.ditherDepth,
 			drawEdges: this.config.drawEdges,
