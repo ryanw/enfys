@@ -1,22 +1,41 @@
 import { Color, Gfx } from 'engine';
-import { Scene, isEntityOf } from './scene';
+import { Scene } from './scene';
 import { ComposePipeline } from './pipelines/compose';
 import { RenderMeshPipeline } from './pipelines/render_mesh';
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { SimpleMesh } from './mesh';
 import { Point3 } from './math';
+import { isEntityOf } from './entity';
+import { DotMaterial, Material, SimpleMaterial } from './material';
+import { MaterialPipeline } from './pipelines/material';
+import { RenderDotPipeline } from './pipelines/render_dot';
+
+type Constructor<T> = new (...args: Array<any>) => T;
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
-	mesh: RenderMeshPipeline,
+	materials: Map<Constructor<Material>, MaterialPipeline>,
 }
 
 export class Renderer {
 	pipelines: RenderPipelines;
 
 	constructor(readonly gfx: Gfx) {
-		this.pipelines = createRenderPipelines(gfx);
+		this.pipelines = {
+			compose: new ComposePipeline(gfx),
+			materials: new Map()
+		};
+		this.registerMaterial(SimpleMaterial, new RenderMeshPipeline(gfx));
+		this.registerMaterial(DotMaterial, new RenderDotPipeline(gfx));
+	}
+
+	registerMaterial<M extends Material, P extends MaterialPipeline>(material: Constructor<M>, pipeline: P) {
+		this.pipelines.materials.set(material, pipeline);
+	}
+
+	getMaterialPipeline<M extends Material>(material: M): MaterialPipeline | undefined {
+		return this.pipelines.materials.get(material.constructor as Constructor<SimpleMaterial>);
 	}
 
 	drawScene(encoder: GPUCommandEncoder, scene: Scene, camera: Camera, target: GBuffer) {
@@ -25,15 +44,26 @@ export class Renderer {
 		this.clear(encoder, target);
 		for (const entity of scene.entities) {
 			if (isEntityOf(entity, SimpleMesh)) {
+				const pipeline = this.getMaterialPipeline(entity.material);
+
+				if (!pipeline) {
+					console.log("Material has now Pipeline", entity);
+					continue;
+				}
 				if (entity.material.writeDepth) {
-					this.pipelines.mesh.draw(encoder, entity, camera, scene.shadowBuffer, target);
+					pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
 				}
 			}
 		}
 		for (const entity of scene.entities) {
 			if (isEntityOf(entity, SimpleMesh)) {
+				const pipeline = this.getMaterialPipeline(entity.material);
+				if (!pipeline) {
+					console.log("Material has now Pipeline", entity);
+					continue;
+				}
 				if (!entity.material.writeDepth) {
-					this.pipelines.mesh.draw(encoder, entity, camera, scene.shadowBuffer, target);
+					pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
 				}
 			}
 		}
@@ -79,12 +109,4 @@ export class Renderer {
 			}
 		}).end();
 	}
-
 }
-function createRenderPipelines(gfx: Gfx): RenderPipelines {
-	return {
-		compose: new ComposePipeline(gfx),
-		mesh: new RenderMeshPipeline(gfx),
-	};
-}
-

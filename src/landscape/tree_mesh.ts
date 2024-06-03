@@ -31,7 +31,7 @@ export class TreeMesh extends SimpleMesh {
 			this.density,
 			this.seed,
 		);
-		console.log('Created %i instances', count);
+		console.debug('Created %i Tree instances', count);
 		this.instanceBuffer = buffer;
 		this.instanceCount = count;
 	}

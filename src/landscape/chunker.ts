@@ -1,10 +1,12 @@
 import { Point2, Point3 } from 'engine/math';
-import { Entity, Scene } from 'engine/scene';
+import { Scene } from 'engine/scene';
 import { TerrainMesh } from './terrain_mesh';
 import { Color, Gfx, Size } from 'engine';
 import { translation } from 'engine/math/transform';
 import { add, magnitude, subtract } from 'engine/math/vectors';
 import { TerrainPipeline } from './pipelines/terrain';
+import { Entity } from 'engine/entity';
+import { SimpleMaterial } from 'engine/material';
 
 export type Chunk = {
 	lod: number,
@@ -189,7 +191,9 @@ export class Chunker {
 			),
 			translation(...position),
 		);
-		terrain.material.receiveShadows = true;
+		if (terrain.material instanceof SimpleMaterial) {
+			terrain.material.receiveShadows = true;
+		}
 		//terrain.material = new Material(scene.gfx, hsl(chunkId[2] / 7, 0.5, 0.5));
 		this.entities.set(toChunkHash(chunk), terrain);
 	}

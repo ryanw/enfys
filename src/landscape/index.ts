@@ -8,7 +8,7 @@ import { Gfx } from 'engine';
 import { Icosahedron, QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { multiply, scaling, translation } from 'engine/math/transform';
-import { Material } from 'engine/material';
+import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { TreeMesh } from './tree_mesh';
 import { Chunker } from './chunker';
 import { World } from './world';
@@ -18,6 +18,8 @@ import { randomizer } from 'engine/noise';
 import { ui } from './ui';
 import { add } from 'engine/math/vectors';
 import { debugChunker } from './chunker.debug';
+import { SkyDome } from './sky';
+import { StarMesh } from './star_mesh';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -100,6 +102,16 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 	const scene = new Scene(gfx);
 
+	// Sky dome
+	const stars = scene.addMesh(new StarMesh(
+		gfx,
+		[0, 0, 0],
+		1000.0,
+		1.0,
+		seed
+	));
+	stars.material = new DotMaterial(gfx);
+
 	// Add water plane
 	const waterMesh = scene.addMesh(
 		new QuadMesh(
@@ -109,7 +121,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		),
 		translation(0, 0, 0),
 	);
-	waterMesh.material = new Material(gfx, hsl(waterColor, 0.5, 0.5));
+	waterMesh.material = new SimpleMaterial(gfx, hsl(waterColor, 0.5, 0.5));
 
 	// Add a forest of trees
 	scene.addMesh(new TreeMesh(
@@ -122,8 +134,10 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 	const player = scene.addMesh(new ShipMesh(gfx));
 	const thruster = scene.addMesh(new Icosahedron(gfx));
-	thruster.material.color = [255, 200, 10, 255];
-	thruster.material.emissive = true;
+	if (thruster.material instanceof SimpleMaterial) {
+		thruster.material.color = [255, 200, 10, 255];
+		thruster.material.emissive = true;
+	}
 
 
 	const colorScheme = buildColorScheme(seed);

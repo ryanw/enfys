@@ -2,10 +2,39 @@ import { Color, Gfx } from 'engine';
 import { UniformBuffer } from './uniform_buffer';
 
 /**
- * Material stored in a {@link GPUBuffer}
+ * Material defines the properties of the rendered mesh
  */
-export class Material {
+export abstract class Material {
 	writeDepth = true;
+	abstract bindingResource(): GPUBindingResource;
+}
+
+/**
+ * Simple color {@link Material} stored in a {@link GPUBuffer}
+ */
+export class DotMaterial extends Material {
+	readonly uniform: UniformBuffer;
+
+	constructor(
+		readonly gfx: Gfx,
+		private color: Color = [255, 255, 255, 255],
+	) {
+		super();
+		this.uniform = new UniformBuffer(gfx, [
+			['color', 'vec4f'],
+		]);
+		this.uniform.set('color', this.color.map(v => v/255));
+	}
+
+	bindingResource(): GPUBindingResource {
+		return this.uniform.bindingResource();
+	}
+}
+
+/**
+ * Simple color {@link Material} stored in a {@link GPUBuffer}
+ */
+export class SimpleMaterial extends Material {
 	readonly uniform: UniformBuffer;
 	private _color: Color;
 	private _receiveShadows = false;
@@ -16,6 +45,7 @@ export class Material {
 		color: Color = [255, 255, 255, 255],
 		public dither: boolean = false,
 	) {
+		super();
 		this._color = color;
 		this.uniform = new UniformBuffer(gfx, [
 			['color', 'vec4f'],

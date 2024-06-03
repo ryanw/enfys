@@ -1,6 +1,5 @@
 import { Gfx } from 'engine';
-import { Pipeline } from './';
-import shaderSource from './render_mesh.wgsl';
+import shaderSource from './render_dot.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
@@ -9,20 +8,18 @@ import { Entity } from 'engine/entity';
 import { MaterialPipeline } from './material';
 
 /**
- * Render Pipeline to draw {@link SimpleMesh} instances to a {@link GBuffer}
+ * Render Pipeline to draw {@link SimpleMesh} instances using the {@link DotMaterial} to a {@link GBuffer}
  */
-export class RenderMeshPipeline extends MaterialPipeline {
+export class RenderDotPipeline extends MaterialPipeline {
 	private pipeline: GPURenderPipeline;
 	private pipelineNoDepth: GPURenderPipeline;
-	private emptyShadows: ShadowBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
 
 		const { device } = gfx;
-		this.emptyShadows = new ShadowBuffer(gfx, 1);
 
-		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'RenderDotPipeline Shader', code: shaderSource });
 
 		const cameraBindGroupLayout = device.createBindGroupLayout({
 			entries: [
@@ -44,12 +41,6 @@ export class RenderMeshPipeline extends MaterialPipeline {
 					visibility: GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
-				// Shadows
-				{
-					binding: 3,
-					visibility: GPUShaderStage.FRAGMENT,
-					buffer: { type: 'read-only-storage' }
-				},
 			]
 		});
 		const pipelineLayout = device.createPipelineLayout({
@@ -57,7 +48,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		});
 
 		const pipelineDescriptor: GPURenderPipelineDescriptor = {
-			label: 'RenderMeshPipeline',
+			label: 'RenderDotPipeline',
 			layout: pipelineLayout,
 			vertex: { module: shader, entryPoint: 'vs_main', buffers: [pointVertexLayout, offsetInstanceLayout] },
 			fragment: {
@@ -119,13 +110,12 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		};
 
 		const bindGroup = device.createBindGroup({
-			label: 'RenderMeshPipeline Pass 1 Bind Group',
+			label: 'RenderDotPipeline Pass 1 Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				{ binding: 0, resource: camera.uniform.bindingResource() },
 				{ binding: 1, resource: src.bindingResource() },
 				{ binding: 2, resource: src.material.bindingResource() },
-				{ binding: 3, resource: shadows.bindingResource() },
 			],
 		});
 
