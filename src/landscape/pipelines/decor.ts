@@ -1,10 +1,10 @@
 import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
-import shaderSource from './tree.wgsl';
+import shaderSource from './decor.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point3 } from 'engine/math';
 
-export class TreePipeline extends Pipeline {
+export class DecorPipeline extends Pipeline {
 	private pipeline: GPUComputePipeline;
 	private uniformBuffer: UniformBuffer;
 	private counter: GPUBuffer;
@@ -19,13 +19,14 @@ export class TreePipeline extends Pipeline {
 			['position', 'vec3f'],
 			['radius', 'f32'],
 			['density', 'f32'],
-			['seed', 'f32'],
+			['terrainSeed', 'f32'],
+			['decorSeed', 'f32'],
 		]);
 
 		this.counter = device.createBuffer({ size: 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
 		this.counterRead = device.createBuffer({ size: 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
 
-		const shader = device.createShaderModule({ label: 'TreePipeline Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'DecorPipeline Shader', code: shaderSource });
 		const bindGroupLayout = device.createBindGroupLayout({
 			entries: [
 				{
@@ -57,32 +58,32 @@ export class TreePipeline extends Pipeline {
 		});
 
 		this.pipeline = gfx.device.createComputePipeline({
-			label: 'TreePipeline',
+			label: 'DecorPipeline',
 			layout: pipelineLayout,
 			compute: { module: shader, entryPoint: 'main' },
 		});
 	}
 
-	async createInstanceBuffer(position: Point3, radius: number, density: number, seed: number): Promise<[GPUBuffer, number]> {
+	async createInstanceBuffer(position: Point3, radius: number, density: number, terrainSeed: number, decorSeed: number): Promise<[GPUBuffer, number]> {
 		const { device } = this.gfx;
 
 		const maxInstances = 512000;
-		this.uniformBuffer.replace({ seed, position, radius, density });
+		this.uniformBuffer.replace({ decorSeed, terrainSeed, position, radius, density });
 		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
 		const instanceByteSize = 3 * 4;// FIXME vec3f derive from type? OffsetInstance
 		const buffer = device.createBuffer({
-			label: 'TreeMesh Attribute Buffer',
+			label: 'DecorMesh Attribute Buffer',
 			size: maxInstances * instanceByteSize,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 
 
-		const enc = device.createCommandEncoder({ label: 'TreePipeline Command Encoder' });
-		const pass = enc.beginComputePass({ label: 'TreePipeline Compute Pass' });
+		const enc = device.createCommandEncoder({ label: 'DecorPipeline Command Encoder' });
+		const pass = enc.beginComputePass({ label: 'DecorPipeline Compute Pass' });
 
 		const bindGroup = device.createBindGroup({
-			label: 'TreePipeline Bind Group',
+			label: 'DecorPipeline Bind Group',
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				// Uniforms

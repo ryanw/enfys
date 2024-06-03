@@ -4,12 +4,12 @@
  * @module
  */
 
-import { Gfx } from 'engine';
-import { Icosahedron, QuadMesh } from 'engine/mesh';
+import { Gfx, calculateNormals } from 'engine';
+import { CUBE_VERTS, ColorVertex, buildIcosahedron, Icosahedron, QuadMesh } from 'engine/mesh';
+import { buildTreeMesh } from './tree_mesh';
 import { Scene } from 'engine/scene';
 import { multiply, scaling, translation } from 'engine/math/transform';
 import { DotMaterial, SimpleMaterial } from 'engine/material';
-import { TreeMesh } from './tree_mesh';
 import { Chunker } from './chunker';
 import { World } from './world';
 import { ShipMesh } from './ship_mesh';
@@ -20,6 +20,7 @@ import { add } from 'engine/math/vectors';
 import { debugChunker } from './chunker.debug';
 import { SkyDome } from './sky';
 import { StarMesh } from './star_mesh';
+import { DecorMesh } from './decor_mesh';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -124,13 +125,8 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	waterMesh.material = new SimpleMaterial(gfx, hsl(waterColor, 0.5, 0.5));
 
 	// Add a forest of trees
-	scene.addMesh(new TreeMesh(
-		gfx,
-		[0, 0, 0],
-		1000.0,
-		1.0,
-		seed
-	), scaling(0.333));
+	addRocks(scene, seed, seed + 1111);
+	addTrees(scene, seed, seed + 2222);
 
 	const player = scene.addMesh(new ShipMesh(gfx));
 	const thruster = scene.addMesh(new Icosahedron(gfx));
@@ -185,3 +181,58 @@ function getSeed(): number {
 function getParam(name: string): string | undefined {
 	return window.location.search.match(new RegExp(`(?:\\?|&)${name}=([^&]+)`))?.[1];
 }
+function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
+
+	const icos: Array<ColorVertex> = buildIcosahedron(p => ({
+		position: [...p],
+		normal: [0, 0, 0],
+		color: [1.0, 1.0, 1.0, 1.0]
+	}));
+	calculateNormals(icos);
+
+	const icosMesh = scene.addMesh(new DecorMesh(
+		scene.gfx,
+		icos,
+		[0, 0, 0],
+		1000.0,
+		1.0 / 10.0,
+		terrainSeed,
+		decorSeed,
+	));
+
+	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
+		position: [p[0] / 2, p[1] * 2 + 1.0, p[2] / 2],
+		normal: [0, 0, 0],
+		color: [1.0, 1.0, 1.0, 1.0]
+	}));
+	calculateNormals(cube);
+
+	scene.addMesh(new DecorMesh(
+		scene.gfx,
+		cube,
+		[0, 0, 0],
+		1000.0,
+		1.0 / 10.0,
+		terrainSeed,
+		decorSeed + 5555,
+	));
+}
+
+function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
+	const vertices: Array<ColorVertex> = buildTreeMesh(p => ({
+		position: [...p],
+		normal: [0, 0, 0],
+		color: [1.0, 1.0, 1.0, 1.0]
+	}));
+	calculateNormals(vertices);
+	scene.addMesh(new DecorMesh(
+		scene.gfx,
+		vertices,
+		[0, 0, 0],
+		1000.0,
+		1.0 / 100.0,
+		terrainSeed,
+		decorSeed,
+	));
+}
+
