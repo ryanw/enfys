@@ -1,4 +1,4 @@
-import { Color, Gfx } from 'engine';
+import { Color, Constructor, Gfx } from 'engine';
 import { Scene } from './scene';
 import { ComposePipeline } from './pipelines/compose';
 import { RenderMeshPipeline } from './pipelines/render_mesh';
@@ -11,7 +11,6 @@ import { DotMaterial, Material, SimpleMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
 
-type Constructor<T> = new (...args: Array<any>) => T;
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -35,7 +34,15 @@ export class Renderer {
 	}
 
 	getMaterialPipeline<M extends Material>(material: M): MaterialPipeline | undefined {
-		return this.pipelines.materials.get(material.constructor as Constructor<SimpleMaterial>);
+		let constructor = material.constructor;
+		while (constructor != null) {
+			const pipeline = this.pipelines.materials.get(constructor as Constructor<SimpleMaterial>);
+			if (pipeline) {
+				return pipeline;
+			}
+			constructor = Object.getPrototypeOf(constructor);
+		}
+		console.error("Failed to find pipeline for", material);
 	}
 
 	drawScene(encoder: GPUCommandEncoder, scene: Scene, camera: Camera, target: GBuffer) {
@@ -47,7 +54,6 @@ export class Renderer {
 				const pipeline = this.getMaterialPipeline(entity.material);
 
 				if (!pipeline) {
-					console.log("Material has now Pipeline", entity);
 					continue;
 				}
 				if (entity.material.writeDepth) {
@@ -59,7 +65,6 @@ export class Renderer {
 			if (isEntityOf(entity, SimpleMesh)) {
 				const pipeline = this.getMaterialPipeline(entity.material);
 				if (!pipeline) {
-					console.log("Material has now Pipeline", entity);
 					continue;
 				}
 				if (!entity.material.writeDepth) {

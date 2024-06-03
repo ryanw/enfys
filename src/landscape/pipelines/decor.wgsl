@@ -1,6 +1,7 @@
 struct Instance {
 	// array instead of vec to avoid alignment issues
 	offset: array<f32, 3>,
+	color: u32,
 }
 
 struct Uniforms {
@@ -42,6 +43,9 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 			return;
 		}
 		instance.offset = array(p.x, p.y, p.z);
+
+		let hue = rnd3(dp + vec3(43.0));
+		instance.color = colorToUint(hsl(hue, 0.6, 0.5));
 		let count = atomicAdd(&counter, 1u);
 		if (count < 512000) {
 			instances[count] = instance;
@@ -50,3 +54,4 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 }
 
 @import "./terrain_height.wgsl";
+@import "engine/shaders/color.wgsl";

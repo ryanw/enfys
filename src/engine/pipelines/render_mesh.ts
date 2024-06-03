@@ -1,6 +1,5 @@
 import { Gfx } from 'engine';
-import { Pipeline } from './';
-import shaderSource from './render_mesh.wgsl';
+import defaultSource from './render_mesh.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
@@ -14,15 +13,13 @@ import { MaterialPipeline } from './material';
 export class RenderMeshPipeline extends MaterialPipeline {
 	private pipeline: GPURenderPipeline;
 	private pipelineNoDepth: GPURenderPipeline;
-	private emptyShadows: ShadowBuffer;
 
-	constructor(gfx: Gfx) {
+	constructor(gfx: Gfx, source?: string) {
 		super(gfx);
 
 		const { device } = gfx;
-		this.emptyShadows = new ShadowBuffer(gfx, 1);
 
-		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: source || defaultSource });
 
 		const cameraBindGroupLayout = device.createBindGroupLayout({
 			entries: [
@@ -41,7 +38,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				// Material
 				{
 					binding: 2,
-					visibility: GPUShaderStage.FRAGMENT,
+					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
 				// Shadows
@@ -163,11 +160,19 @@ const pointVertexLayout: GPUVertexBufferLayout = {
 
 const offsetInstanceLayout: GPUVertexBufferLayout = {
 	stepMode: 'instance',
-	attributes: [{
-		// Offset
-		shaderLocation: 3,
-		offset: 0,
-		format: 'float32x3'
-	}],
-	arrayStride: 12,
+	attributes: [
+		{
+			// Offset
+			shaderLocation: 3,
+			offset: 0,
+			format: 'float32x3',
+		},
+		{
+			// Instance Color
+			shaderLocation: 4,
+			offset: 12,
+			format: 'uint32'
+		},
+	],
+	arrayStride: 16,
 };

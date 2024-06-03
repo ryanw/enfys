@@ -7,6 +7,7 @@ struct VertexIn {
 	@location(2) color: vec4f,
 	// Instance
 	@location(3) offset: vec3f,
+	@location(4) instanceColor: u32,
 }
 
 struct VertexOut {
@@ -77,13 +78,19 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 
 	let triangleId = in.id / 3;
-	out.normal = (entity.model * vec4(normalize(in.normal), 0.0)).xyz;
+	if material.emissive > 0 {
+		out.normal = vec3(0.0);
+	}
+	else {
+		out.normal = (entity.model * vec4(normalize(in.normal), 0.0)).xyz;
+	}
 
 	let modelPosition = offsetModel * vec4(in.position, 1.0);
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
 
-	out.color = in.color;
+	let instanceColor = uintToColor(in.instanceColor);
+	out.color = in.color * instanceColor * material.color;
 	out.triangleId = (rnd3uu(vec3(triangleId + entity.id))) % 0xff;
 
 	return out;
@@ -93,7 +100,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 @fragment
 fn fs_main(in: VertexOut) -> FragmentOut {
 	var out: FragmentOut;
-	var color = material.color * in.color;
+	var color = in.color;
 
 	var shade = 0.0;
 	var shadowCount = 8u;
@@ -128,11 +135,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	out.albedo =  vec4(color.rgb * (1.0-shade), color.a);
 
-	if material.emissive > 0 {
-		out.normal = vec4(0.0);
-	} else {
-		out.normal = vec4(in.normal, 0.0);
-	}
+	out.normal = vec4(in.normal, 0.0);
 	out.metaOutput = in.triangleId;
 	return out;
 }
@@ -149,3 +152,4 @@ fn sdPentagon(q: vec2f, r: f32) -> f32 {
 }
 
 @import "engine/shaders/helpers.wgsl";
+@import "engine/shaders/color.wgsl";

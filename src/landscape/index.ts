@@ -18,7 +18,6 @@ import { randomizer } from 'engine/noise';
 import { ui } from './ui';
 import { add } from 'engine/math/vectors';
 import { debugChunker } from './chunker.debug';
-import { SkyDome } from './sky';
 import { StarMesh } from './star_mesh';
 import { DecorMesh } from './decor_mesh';
 
@@ -129,9 +128,13 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	addTrees(scene, seed, seed + 2222);
 
 	const player = scene.addMesh(new ShipMesh(gfx));
+	if (player.material instanceof SimpleMaterial) {
+		player.material.receiveShadows = false;
+	}
 	const thruster = scene.addMesh(new Icosahedron(gfx));
 	if (thruster.material instanceof SimpleMaterial) {
 		thruster.material.color = [255, 200, 10, 255];
+		thruster.material.receiveShadows = false;
 		thruster.material.emissive = true;
 	}
 
@@ -195,7 +198,7 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 		icos,
 		[0, 0, 0],
 		1000.0,
-		1.0 / 10.0,
+		1.0 / 4.0,
 		terrainSeed,
 		decorSeed,
 	));
@@ -225,7 +228,7 @@ function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
 		color: [1.0, 1.0, 1.0, 1.0]
 	}));
 	calculateNormals(vertices);
-	scene.addMesh(new DecorMesh(
+	const trees = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		vertices,
 		[0, 0, 0],

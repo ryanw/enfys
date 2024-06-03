@@ -1,13 +1,16 @@
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
+import { Material } from './material';
 import { Vector2 } from './math';
 import { cross, normalize, subtract } from './math/vectors';
 import { NormalVertex } from './mesh';
+import { MaterialPipeline } from './pipelines/material';
 import { Renderer } from './renderer';
 import { Scene } from './scene';
 
 export { Color } from './color';
 export type Size = Vector2;
+export type Constructor<T> = new (...args: Array<any>) => T;
 
 export interface Config {
 	ditherSize: number;
@@ -149,6 +152,10 @@ export class Gfx {
 			this.renderer.pipelines.compose.config,
 			config,
 		);
+	}
+
+	registerMaterial<M extends Material, P extends MaterialPipeline>(material: Constructor<M>, pipeline: P) {
+		this.renderer.registerMaterial(material, pipeline);
 	}
 
 	/**

@@ -6,7 +6,7 @@ import { add, normalize } from './math/vectors';
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
  */
 export type Vertex<T> = {
-	[K in keyof T]: T[K] extends (Array<number> | number) ? T[K] : never;
+	[K in keyof T]: T[K] extends (Array<number | bigint> | number | bigint) ? T[K] : never;
 }
 
 /**
@@ -42,6 +42,11 @@ export interface ColorVertex extends NormalVertex {
  */
 export interface OffsetInstance {
 	offset: Point3,
+}
+
+export interface ColorInstance extends OffsetInstance {
+	// 32bit rgba color
+	instanceColor: number | bigint;
 }
 
 
@@ -108,17 +113,17 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 /**
  * Instanced Mesh made of {@link ColorVertex} vertices
  */
-export class SimpleMesh extends Mesh<ColorVertex, OffsetInstance> {
+export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color'];
-	instanceOrder: Array<keyof OffsetInstance> = ['offset'];
-	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<OffsetInstance>) {
+	instanceOrder: Array<keyof ColorInstance> = ['offset', 'instanceColor'];
+	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<ColorInstance>) {
 		super(gfx);
 		this.uploadVertices(vertices);
 		if (instances) {
 			this.uploadInstances(instances);
 		}
 		else {
-			this.uploadInstances([{ offset: [0, 0, 0] }]);
+			this.uploadInstances([{ offset: [0, 0, 0], instanceColor: BigInt(0xffffffff) }]);
 		}
 	}
 }
@@ -128,9 +133,9 @@ export class SimpleMesh extends Mesh<ColorVertex, OffsetInstance> {
 /**
  * Convert the Mesh into a single `ArrayBuffer`, each vertex attribute is interleaved.
  * Assumes all numbers are floats
- * @return Float32Array containing the ArrayBuffer Vertex attribute data
+ * @return ArrayBuffer The Vertex/Instance attribute data
  */
-function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Array<keyof V>): Float32Array {
+function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Array<keyof V>): ArrayBuffer {
 	if (vertices.length === 0) return new Float32Array();
 
 	let vertexSize = 0;
@@ -145,7 +150,9 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 		}
 	}
 	const size = vertexSize * vertices.length;
-	const data = new Float32Array(size);
+	const bytes = new ArrayBuffer(size * 4);
+	const floatData = new Float32Array(bytes);
+	const intData = new Uint32Array(bytes);
 
 	// Copy data into array
 	let offset = 0;
@@ -160,17 +167,21 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 
 			if (Array.isArray(prop)) {
 				// FIXME tsc is ignoring `isArray`
-				data.set(prop as Array<number>, offset);
+				floatData.set(prop as Array<number>, offset);
 				offset += (prop as Array<number>).length;
 			} else if (typeof prop === 'number') {
-				data.set([prop], offset);
+				floatData.set([prop], offset);
+				offset += 1;
+			} else if (typeof prop === 'bigint') {
+				// Forced to 32bit
+				intData.set([Number(prop)], offset);
 				offset += 1;
 			}
 
 		}
 	}
 
-	return data;
+	return bytes;
 }
 
 function toVertex(position: Point3): ColorVertex {
@@ -246,7 +257,7 @@ export class Cube extends SimpleMesh {
  * Mesh shaped like an Icosahedron
  */
 export class Icosahedron extends SimpleMesh {
-	constructor(gfx: Gfx, instances?: Array<OffsetInstance>) {
+	constructor(gfx: Gfx, instances?: Array<ColorInstance>) {
 		const vertices = buildIcosahedron(position => ({
 			position: [...position],
 			normal: [0, 0, 0],

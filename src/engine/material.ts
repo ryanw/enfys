@@ -37,7 +37,7 @@ export class DotMaterial extends Material {
 export class SimpleMaterial extends Material {
 	readonly uniform: UniformBuffer;
 	private _color: Color;
-	private _receiveShadows = false;
+	private _receiveShadows = true;
 	private _emissive: boolean = false;
 
 	constructor(
