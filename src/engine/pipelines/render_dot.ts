@@ -82,16 +82,19 @@ export class RenderDotPipeline extends MaterialPipeline {
 		});
 	}
 
-	override draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
-		if (src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+	override drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
+		if (entities.length === 0) {
 			return;
 		}
+
 		const { device } = this.gfx;
 
 		const albedoView = target.albedo.createView();
 		const normalView = target.normal.createView();
 		const metaView = target.meta.createView();
 		const depthView = target.depth.createView();
+		// FIXME assumes all entities use same material
+		const material = entities[0].material;
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
 			clearValue: [0, 0, 0, 0],
@@ -104,29 +107,35 @@ export class RenderDotPipeline extends MaterialPipeline {
 				{ view: normalView, ...baseAttachment },
 				{ view: metaView, ...baseAttachment },
 			],
-			depthStencilAttachment: src.material.writeDepth
+			depthStencilAttachment: material.writeDepth
 				? { view: depthView, depthLoadOp: 'load', depthStoreOp: 'store' }
 				: { view: depthView, depthReadOnly: true }
 		};
 
-		const bindGroup = device.createBindGroup({
-			label: 'RenderDotPipeline Pass 1 Bind Group',
-			layout: this.pipeline.getBindGroupLayout(0),
-			entries: [
-				{ binding: 0, resource: camera.uniform.bindingResource() },
-				{ binding: 1, resource: src.bindingResource() },
-				{ binding: 2, resource: src.material.bindingResource() },
-			],
-		});
+		for (const src of entities) {
+			if (src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+				return;
+			}
+
+			const bindGroup = device.createBindGroup({
+				label: 'RenderDotPipeline Pass 1 Bind Group',
+				layout: this.pipeline.getBindGroupLayout(0),
+				entries: [
+					{ binding: 0, resource: camera.uniform.bindingResource() },
+					{ binding: 1, resource: src.bindingResource() },
+					{ binding: 2, resource: src.material.bindingResource() },
+				],
+			});
 
 
-		const pass = encoder.beginRenderPass(passDescriptor);
-		pass.setPipeline(src.material.writeDepth ? this.pipeline : this.pipelineNoDepth);
-		pass.setVertexBuffer(0, src.object.vertexBuffer);
-		pass.setVertexBuffer(1, src.object.instanceBuffer);
-		pass.setBindGroup(0, bindGroup);
-		pass.draw(src.object.vertexCount, src.object.instanceCount);
-		pass.end();
+			const pass = encoder.beginRenderPass(passDescriptor);
+			pass.setPipeline(src.material.writeDepth ? this.pipeline : this.pipelineNoDepth);
+			pass.setVertexBuffer(0, src.object.vertexBuffer);
+			pass.setVertexBuffer(1, src.object.instanceBuffer);
+			pass.setBindGroup(0, bindGroup);
+			pass.draw(src.object.vertexCount, src.object.instanceCount);
+			pass.end();
+		}
 	}
 }
 
@@ -146,9 +155,9 @@ const pointVertexLayout: GPUVertexBufferLayout = {
 		// Color
 		shaderLocation: 2,
 		offset: 24,
-		format: 'float32x4'
+		format: 'uint32'
 	}],
-	arrayStride: 40,
+	arrayStride: 28,
 };
 
 const offsetInstanceLayout: GPUVertexBufferLayout = {

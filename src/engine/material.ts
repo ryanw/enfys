@@ -36,19 +36,19 @@ export class DotMaterial extends Material {
  */
 export class SimpleMaterial extends Material {
 	readonly uniform: UniformBuffer;
-	private _color: Color;
+	private _color: bigint;
 	private _receiveShadows = true;
 	private _emissive: boolean = false;
 
 	constructor(
 		readonly gfx: Gfx,
-		color: Color = [255, 255, 255, 255],
+		color: number | bigint,
 		public dither: boolean = false,
 	) {
 		super();
-		this._color = color;
+		this._color = BigInt(color);
 		this.uniform = new UniformBuffer(gfx, [
-			['color', 'vec4f'],
+			['color', 'u32'],
 			['dither', 'u32'],
 			['emissive', 'u32'],
 			['receiveShadows', 'u32'],
@@ -65,12 +65,12 @@ export class SimpleMaterial extends Material {
 		this.updateUniform();
 	}
 
-	get color(): Color {
-		return [...this._color];
+	get color(): bigint {
+		return this._color;
 	}
 
-	set color(color: Color) {
-		this._color = color;
+	set color(color: number | bigint) {
+		this._color = BigInt(color);
 		this.updateUniform();
 	}
 
@@ -89,7 +89,7 @@ export class SimpleMaterial extends Material {
 
 	updateUniform() {
 		this.uniform.set('receiveShadows', this._receiveShadows);
-		this.uniform.set('color', this._color.map(v => v/255));
+		this.uniform.set('color', this._color);
 		this.uniform.set('emissive', this._emissive);
 	}
 }

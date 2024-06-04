@@ -88,8 +88,8 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		});
 	}
 
-	override draw(encoder: GPUCommandEncoder, src: Entity<SimpleMesh>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
-		if (src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+	drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
+		if (entities.length === 0) {
 			return;
 		}
 		const { device } = this.gfx;
@@ -98,42 +98,51 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const normalView = target.normal.createView();
 		const metaView = target.meta.createView();
 		const depthView = target.depth.createView();
+		// FIXME assumes all entities use same material
+		const material = entities[0].material;
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
 			clearValue: [0, 0, 0, 0],
 			loadOp: 'load',
 			storeOp: 'store',
 		};
+
 		const passDescriptor: GPURenderPassDescriptor = {
 			colorAttachments: [
 				{ view: albedoView, ...baseAttachment },
 				{ view: normalView, ...baseAttachment },
 				{ view: metaView, ...baseAttachment },
 			],
-			depthStencilAttachment: src.material.writeDepth
+			depthStencilAttachment: material.writeDepth
 				? { view: depthView, depthLoadOp: 'load', depthStoreOp: 'store' }
 				: { view: depthView, depthReadOnly: true }
 		};
 
-		const bindGroup = device.createBindGroup({
-			label: 'RenderMeshPipeline Pass 1 Bind Group',
-			layout: this.pipeline.getBindGroupLayout(0),
-			entries: [
-				{ binding: 0, resource: camera.uniform.bindingResource() },
-				{ binding: 1, resource: src.bindingResource() },
-				{ binding: 2, resource: src.material.bindingResource() },
-				{ binding: 3, resource: shadows.bindingResource() },
-			],
-		});
+		for (const src of entities) {
+			if (src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+				return;
+			}
+
+			const pass = encoder.beginRenderPass(passDescriptor);
+			pass.setPipeline(material.writeDepth ? this.pipeline : this.pipelineNoDepth);
+			const bindGroup = device.createBindGroup({
+				label: 'RenderMeshPipeline Pass Bind Group',
+				layout: this.pipeline.getBindGroupLayout(0),
+				entries: [
+					{ binding: 0, resource: camera.uniform.bindingResource() },
+					{ binding: 1, resource: src.bindingResource() },
+					{ binding: 2, resource: material.bindingResource() },
+					{ binding: 3, resource: shadows.bindingResource() },
+				],
+			});
+			pass.setBindGroup(0, bindGroup);
 
 
-		const pass = encoder.beginRenderPass(passDescriptor);
-		pass.setPipeline(src.material.writeDepth ? this.pipeline : this.pipelineNoDepth);
-		pass.setVertexBuffer(0, src.object.vertexBuffer);
-		pass.setVertexBuffer(1, src.object.instanceBuffer);
-		pass.setBindGroup(0, bindGroup);
-		pass.draw(src.object.vertexCount, src.object.instanceCount);
-		pass.end();
+			pass.setVertexBuffer(0, src.object.vertexBuffer);
+			pass.setVertexBuffer(1, src.object.instanceBuffer);
+			pass.draw(src.object.vertexCount, src.object.instanceCount);
+			pass.end();
+		}
 	}
 }
 
@@ -153,9 +162,9 @@ const pointVertexLayout: GPUVertexBufferLayout = {
 		// Color
 		shaderLocation: 2,
 		offset: 24,
-		format: 'float32x4'
+		format: 'uint32'
 	}],
-	arrayStride: 40,
+	arrayStride: 28,
 };
 
 const offsetInstanceLayout: GPUVertexBufferLayout = {

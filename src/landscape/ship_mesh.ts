@@ -7,23 +7,23 @@ const { cos, sin } = Math;
 export class ShipMesh extends SimpleMesh {
 	constructor(gfx: Gfx) {
 		const vertices: Array<ColorVertex> = buildShipMesh((position, i) => {
-			let color: Color = [1, 0, 0, 1];
+			let color = 0xff0000ff;
 			// Every even triangle is on the top
 			const isTop = (i / 3 | 0) % 2 == 0;
 			if (i < 3) {
 				// First tri is the window
-				color = [0, 0, 0, 1];
+				color = 0xff000000;
 			}
 			else if (isTop) {
-				color = [0.7, 0.4, 1.0, 1];
+				color = 0xffff66B2;
 			}
 			else {
-				color = [1.0, 0.7, 0.3, 1];
+				color = 0xff4dB2ff;
 			}
 			return {
 				position: [...position],
 				normal: [0, 0, 0],
-				color,
+				color: BigInt(color),
 			};
 		});
 		calculateNormals(vertices);
@@ -61,4 +61,3 @@ export function buildShipMesh<T>(callback: (position: Point3, index: number) => 
 	const hull = buildNGon(3 + Math.random() * 6 | 0);
 	return hull.map(callback);
 }
-

@@ -19,7 +19,7 @@ export function ui(wrapper: HTMLElement, gfx: Gfx, seed: number) {
 	permalink.setAttribute('href', '?seed=' + seed.toString(36));
 	permalink.innerHTML = seed.toString(36);
 	setInterval(() => {
-		fps.innerHTML = gfx.fps.toFixed(0);
+		fps.innerHTML = `${gfx.fps.toFixed(0)} (${gfx.uncappedFps.toFixed(0)})`;
 	}, 1000 / 30);
 
 	const form = el.querySelector('form')!;

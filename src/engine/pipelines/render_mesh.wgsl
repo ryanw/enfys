@@ -4,7 +4,7 @@ struct VertexIn {
 	@builtin(vertex_index) id: u32,
 	@location(0) position: vec3f,
 	@location(1) normal: vec3f,
-	@location(2) color: vec4f,
+	@location(2) color: u32,
 	// Instance
 	@location(3) offset: vec3f,
 	@location(4) instanceColor: u32,
@@ -39,7 +39,7 @@ struct Entity {
 }
 
 struct Material {
-	color: vec4f,
+	color: u32,
 	dither: u32,
 	emissive: u32,
 	receiveShadows: u32,
@@ -89,8 +89,10 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
 
+	let vertexColor = uintToColor(in.color);
 	let instanceColor = uintToColor(in.instanceColor);
-	out.color = in.color * instanceColor * material.color;
+	let materialColor = uintToColor(material.color);
+	out.color = vertexColor * instanceColor * materialColor;
 	out.triangleId = (rnd3uu(vec3(triangleId + entity.id))) % 0xff;
 
 	return out;

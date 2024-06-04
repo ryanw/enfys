@@ -44,6 +44,7 @@ export class Gfx {
 	private renderer: Renderer;
 	private frameSample: number = 128;
 	private frameTimes: Array<number> = [];
+	private uncappedFrameTimes: Array<number> = [];
 
 	/**
 	 * Initialise the WebGPU Context and return a new Gfx instance
@@ -143,6 +144,17 @@ export class Gfx {
 		return total / this.frameTimes.length;
 	}
 
+	/**
+	 * Potential framerate if vsync was disabled
+	 */
+	get uncappedFps(): number {
+		if (this.uncappedFrameTimes.length < this.frameSample) {
+			return 0;
+		}
+		const total = this.uncappedFrameTimes.reduce((a, dt) => a + 1 / dt, 0);
+		return total / this.uncappedFrameTimes.length;
+	}
+
 	configure(config: Partial<Config & { canvasPixelRatio: number }>) {
 		if (config.canvasPixelRatio && config.canvasPixelRatio !== this.canvasPixelRatio) {
 			this.canvasPixelRatio = config.canvasPixelRatio;
@@ -212,8 +224,11 @@ export class Gfx {
 		const draw = async () => {
 			dt = (performance.now() - now) / 1000;
 			now = performance.now();
-			this.sampleFrame(dt);
 			await callback(dt, this);
+
+			const ft = (performance.now() - now) / 1000;
+			this.sampleFrame(dt);
+			this.sampleUncappedFrame(ft);
 			requestAnimationFrame(draw);
 		};
 		draw();
@@ -224,6 +239,14 @@ export class Gfx {
 		this.frameTimes.push(dt);
 		while (this.frameTimes.length > this.frameSample) {
 			this.frameTimes.shift();
+		}
+	}
+
+	private sampleUncappedFrame(dt: number) {
+		if (dt <= 0) return;
+		this.uncappedFrameTimes.push(dt);
+		while (this.uncappedFrameTimes.length > this.frameSample) {
+			this.uncappedFrameTimes.shift();
 		}
 	}
 

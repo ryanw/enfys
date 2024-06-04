@@ -55,7 +55,7 @@ export class UniformBuffer {
 	 * Update a field on the struct on the GPU.
 	 * Only fields defined in the original {@link UniformMapping} can be set.
 	 */
-	set(field: string, value: boolean | number | Array<number>) {
+	set(field: string, value: boolean | number | bigint | Array<number | bigint>) {
 		if (!(field in this.offsets)) {
 			console.error('Uniform field not found', field);
 			return;
@@ -70,14 +70,16 @@ export class UniformBuffer {
 	}
 }
 
-function toArray(value: boolean | number | Array<number>): Array<number> {
-	if (Array.isArray(value)) return value;
+function toArray(value: BufferLike): Array<number> {
+	if (Array.isArray(value)) return value.map(Number);
 	if (typeof value === 'number') return [value];
+	if (typeof value === 'bigint') return [Number(value)];
 	if (value) return [1];
 	return [0];
 }
 
-function toArrayBuffer(typ: WgslType, value: boolean | number | Array<number>): ArrayBuffer {
+export type BufferLike = boolean | number | bigint | Array<number | bigint>;
+function toArrayBuffer(typ: WgslType, value: BufferLike): ArrayBuffer {
 	const data = toArray(value);
 	switch (typ) {
 	case 'f32':

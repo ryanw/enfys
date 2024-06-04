@@ -2,7 +2,7 @@ struct Vertex {
 	// array instead of vec to avoid alignment issues
 	position: array<f32, 3>,
 	normal: array<f32, 3>,
-	color: array<f32, 4>,
+	color: u32,
 }
 
 struct Triangle {
@@ -102,7 +102,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 		h = landHeight(trip, u.seed);
 		h = landHeight(tp, u.seed);
 		tri.vertices[i].position[1] += h;
-		tri.vertices[i].color = array(color.r, color.g, color.b, 1.0);
+		tri.vertices[i].color = colorToUint(color);
 	/*
 		// Right + Left
 		for (var j = 0; j < 2; j++) {
@@ -181,4 +181,4 @@ fn toVec(v: array<f32, 3>) -> vec3f {
 }
 
 @import "./terrain_height.wgsl";
-
+@import "engine/shaders/color.wgsl";

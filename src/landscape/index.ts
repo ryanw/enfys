@@ -13,7 +13,7 @@ import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { Chunker } from './chunker';
 import { World } from './world';
 import { ShipMesh } from './ship_mesh';
-import { Color, hsl } from 'engine/color';
+import { Color, colorToInt, hsl } from 'engine/color';
 import { randomizer } from 'engine/noise';
 import { ui } from './ui';
 import { add } from 'engine/math/vectors';
@@ -121,7 +121,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		),
 		translation(0, 0, 0),
 	);
-	waterMesh.material = new SimpleMaterial(gfx, hsl(waterColor, 0.5, 0.5));
+	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5)));
 
 	// Add a forest of trees
 	addRocks(scene, seed, seed + 1111);
@@ -133,7 +133,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	}
 	const thruster = scene.addMesh(new Icosahedron(gfx));
 	if (thruster.material instanceof SimpleMaterial) {
-		thruster.material.color = [255, 200, 10, 255];
+		thruster.material.color = 0xff08eeff;
 		thruster.material.receiveShadows = false;
 		thruster.material.emissive = true;
 	}
@@ -185,11 +185,10 @@ function getParam(name: string): string | undefined {
 	return window.location.search.match(new RegExp(`(?:\\?|&)${name}=([^&]+)`))?.[1];
 }
 function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
-
 	const icos: Array<ColorVertex> = buildIcosahedron(p => ({
 		position: [...p],
 		normal: [0, 0, 0],
-		color: [1.0, 1.0, 1.0, 1.0]
+		color: BigInt(0xffffffff),
 	}));
 	calculateNormals(icos);
 
@@ -206,7 +205,7 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
 		position: [p[0] / 2, p[1] * 2 + 1.0, p[2] / 2],
 		normal: [0, 0, 0],
-		color: [1.0, 1.0, 1.0, 1.0]
+		color: BigInt(0xffffffff),
 	}));
 	calculateNormals(cube);
 
@@ -225,7 +224,7 @@ function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
 	const vertices: Array<ColorVertex> = buildTreeMesh(p => ({
 		position: [...p],
 		normal: [0, 0, 0],
-		color: [1.0, 1.0, 1.0, 1.0]
+		color: BigInt(0xffffffff),
 	}));
 	calculateNormals(vertices);
 	const trees = scene.addMesh(new DecorMesh(

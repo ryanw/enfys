@@ -16,7 +16,7 @@ export class StarMesh extends SimpleMesh {
 		const vertices = buildIcosahedron(position => ({
 			position: [...position],
 			normal: [0, 0, 0],
-			color: [1.0, 1.0, 1.0, 1.0]
+			color: BigInt(0xffffffff),
 		} as ColorVertex));
 		calculateNormals(vertices);
 		super(gfx, vertices);

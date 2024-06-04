@@ -24,6 +24,11 @@ export function hsl(h: number, s: number, ll: number): Color {
 	return [r, g, b, 255];
 }
 
+export function colorToInt(color: Color): number {
+	const [r, g, b, a] = color;
+	return (a << 24) | (b << 16) | (g << 8) | r;
+}
+
 function hueToRGB(p: number, q: number, ot: number): number {
 	let t = ot;
 	if (t < 0) {

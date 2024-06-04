@@ -6,7 +6,7 @@ import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { SimpleMesh } from './mesh';
 import { Point3 } from './math';
-import { isEntityOf } from './entity';
+import { Entity, isEntityOf } from './entity';
 import { DotMaterial, Material, SimpleMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
@@ -49,27 +49,17 @@ export class Renderer {
 		const [w, h] = target.size;
 		camera.aspect = w / h;
 		this.clear(encoder, target);
-		for (const entity of scene.entities) {
-			if (isEntityOf(entity, SimpleMesh)) {
-				const pipeline = this.getMaterialPipeline(entity.material);
 
-				if (!pipeline) {
-					continue;
-				}
-				if (entity.material.writeDepth) {
-					pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
-				}
+
+		// Group entities by material, render them together if possible
+		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
+			function isSimpleMesh(entity: Entity<unknown>): entity is Entity<SimpleMesh> {
+				return isEntityOf(entity, SimpleMesh) && (entity.material instanceof Mat);
 			}
-		}
-		for (const entity of scene.entities) {
-			if (isEntityOf(entity, SimpleMesh)) {
-				const pipeline = this.getMaterialPipeline(entity.material);
-				if (!pipeline) {
-					continue;
-				}
-				if (!entity.material.writeDepth) {
-					pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
-				}
+
+			const entities = scene.entities.filter(isSimpleMesh);
+			for (const entity of entities) {
+				pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
 			}
 		}
 	}

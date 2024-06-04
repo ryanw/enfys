@@ -34,7 +34,7 @@ export interface TextureVertex extends NormalVertex {
  * Vertex that can be used to draw textured polygons
  */
 export interface ColorVertex extends NormalVertex {
-	color: Vector4,
+	color: number | bigint,
 }
 
 /**
@@ -188,7 +188,7 @@ function toVertex(position: Point3): ColorVertex {
 	return {
 		position: [...position],
 		normal: [0, 1, 0],
-		color: [1.0, 1.0, 1.0, 1.0]
+		color: BigInt(0xffffffff),
 	};
 }
 
@@ -261,7 +261,7 @@ export class Icosahedron extends SimpleMesh {
 		const vertices = buildIcosahedron(position => ({
 			position: [...position],
 			normal: [0, 0, 0],
-			color: [1.0, 1.0, 0.0, 1.0]
+			color: BigInt(0xff00ddff),
 		} as ColorVertex));
 		calculateNormals(vertices);
 		super(gfx, vertices, instances);

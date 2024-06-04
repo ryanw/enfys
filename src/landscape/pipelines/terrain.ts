@@ -86,10 +86,12 @@ export class TerrainPipeline extends Pipeline {
 
 		this.uniformBuffer.replace({ seed, size, chunkId, triangleCount });
 
-		const vertexByteSize = (3 + 3 + 4) * 4;// FIXME derive from type? ColorVertex
+		const vertexByteSize = (3 + 3 + 1) * 4;// FIXME derive from type? ColorVertex
+		const bufferSize = vertexCount * vertexByteSize;
+		console.log("Creating terrain vertex buffer", bufferSize);
 		const buffer = device.createBuffer({
 			label: 'TerrainMesh Attribute Buffer',
-			size: vertexCount * vertexByteSize,
+			size: bufferSize,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 

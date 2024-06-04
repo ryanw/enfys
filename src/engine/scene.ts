@@ -46,7 +46,7 @@ export class Scene {
 		return this.addEntity(new Entity(
 			this.gfx,
 			item,
-			new SimpleMaterial(this.gfx, [255, 255, 255, 255]),
+			new SimpleMaterial(this.gfx, 0xffffffff),
 			transform
 		));
 	}

@@ -4,7 +4,7 @@ struct VertexIn {
 	@builtin(vertex_index) id: u32,
 	@location(0) position: vec3f,
 	@location(1) normal: vec3f,
-	@location(2) color: vec4f,
+	@location(2) color: u32,
 	// Instance
 	@location(3) offset: vec3f,
 }
@@ -72,7 +72,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
 
-	out.color = in.color;
+	out.color = uintToColor(in.color);
 	out.triangleId = (rnd3uu(vec3(triangleId + entity.id))) % 0xff;
 
 	return out;
@@ -101,3 +101,4 @@ fn sdPentagon(q: vec2f, r: f32) -> f32 {
 }
 
 @import "engine/shaders/helpers.wgsl";
+@import "engine/shaders/color.wgsl";
