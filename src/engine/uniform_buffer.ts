@@ -17,7 +17,7 @@ export class UniformBuffer {
 	/**
 	 * Raw uniform buffer
 	 */
-	readonly buffer: GPUBuffer;
+	buffer!: GPUBuffer;
 	/**
 	 * Aligned byte offsets of each field in the struct
 	 */
@@ -30,9 +30,15 @@ export class UniformBuffer {
 		 */
 		readonly mapping: UniformMapping,
 	) {
-		const size = calculateBufferSize(mapping);
-		this.buffer = gfx.createBuffer(size, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST);
 		this.offsets = calculateOffsets(mapping);
+		const size = this.bufferSize();
+		if (size > 0) {
+			this.buffer = this.gfx.createBuffer(size, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST);
+		}
+	}
+
+	bufferSize() {
+		return calculateBufferSize(this.mapping);
 	}
 
 	replace(fields: Record<string, boolean | number | Array<number>>) {
@@ -79,7 +85,7 @@ function toArray(value: BufferLike): Array<number> {
 }
 
 export type BufferLike = boolean | number | bigint | Array<number | bigint>;
-function toArrayBuffer(typ: WgslType, value: BufferLike): ArrayBuffer {
+export function toArrayBuffer(typ: WgslType, value: BufferLike): ArrayBuffer {
 	const data = toArray(value);
 	switch (typ) {
 	case 'f32':

@@ -118,13 +118,13 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				: { view: depthView, depthReadOnly: true }
 		};
 
+		const pass = encoder.beginRenderPass(passDescriptor);
+		pass.setPipeline(material.writeDepth ? this.pipeline : this.pipelineNoDepth);
+
 		for (const src of entities) {
 			if (src.object.vertexCount === 0 || src.object.instanceCount === 0) {
-				return;
+				continue;
 			}
-
-			const pass = encoder.beginRenderPass(passDescriptor);
-			pass.setPipeline(material.writeDepth ? this.pipeline : this.pipelineNoDepth);
 			const bindGroup = device.createBindGroup({
 				label: 'RenderMeshPipeline Pass Bind Group',
 				layout: this.pipeline.getBindGroupLayout(0),
@@ -136,13 +136,11 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				],
 			});
 			pass.setBindGroup(0, bindGroup);
-
-
 			pass.setVertexBuffer(0, src.object.vertexBuffer);
 			pass.setVertexBuffer(1, src.object.instanceBuffer);
 			pass.draw(src.object.vertexCount, src.object.instanceCount);
-			pass.end();
 		}
+		pass.end();
 	}
 }
 

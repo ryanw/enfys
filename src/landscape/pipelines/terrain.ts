@@ -5,13 +5,14 @@ import shaderSource from './terrain.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point3 } from 'engine/math';
 import { Color } from 'engine/color';
+import { RingBuffer } from 'engine/ring_buffer';
 
 /**
  * Compute Shader that takes a subdivided {@link QuadMesh}, updates the Y of every vertex, and recalculates every triangle's normal
  */
 export class TerrainPipeline extends Pipeline {
 	private pipeline: GPUComputePipeline;
-	private uniformBuffer: UniformBuffer;
+	private chunkUniformBuffer: RingBuffer;
 	private terrainColors: GPUTexture;
 
 	constructor(gfx: Gfx, colors: Array<Color>) {
@@ -19,7 +20,7 @@ export class TerrainPipeline extends Pipeline {
 
 		const { device } = gfx;
 
-		this.uniformBuffer = new UniformBuffer(gfx, [
+		this.chunkUniformBuffer = new RingBuffer(gfx, 1024, [
 			['size', 'vec2u'],
 			['chunkId', 'vec3i'],
 			['triangleCount', 'u32'],
@@ -84,13 +85,13 @@ export class TerrainPipeline extends Pipeline {
 		const triangleCount = quadCount * 2;
 		const vertexCount = quadCount * 6;
 
-		this.uniformBuffer.replace({ seed, size, chunkId, triangleCount });
+		const uniformId = this.chunkUniformBuffer.push({ seed, size, chunkId, triangleCount });
 
 		const vertexByteSize = (3 + 3 + 1) * 4;// FIXME derive from type? ColorVertex
 		const bufferSize = vertexCount * vertexByteSize;
 		console.log("Creating terrain vertex buffer", bufferSize);
 		const buffer = device.createBuffer({
-			label: 'TerrainMesh Attribute Buffer',
+			label: 'TerrainMesh Attribute Buffer Create',
 			size: bufferSize,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
@@ -106,7 +107,7 @@ export class TerrainPipeline extends Pipeline {
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				// Uniforms
-				{ binding: 0, resource: this.uniformBuffer.bindingResource() },
+				{ binding: 0, resource: this.chunkUniformBuffer.itemBindingResource(uniformId) },
 				// Mesh output buffer
 				{ binding: 1, resource: { buffer: buffer } },
 				// Terrain colour
@@ -122,36 +123,5 @@ export class TerrainPipeline extends Pipeline {
 			device.queue.submit([enc.finish()]);
 		}
 		return buffer;
-	}
-
-	async compute(terrain: QuadMesh, t: number = 0, encoder?: GPUCommandEncoder) {
-		if (terrain.vertexCount === 0) {
-			console.warn('Terrain has no vertices');
-			return;
-		}
-		const { device } = this.gfx;
-		const workgroupSize = 256;
-		const triangleCount = terrain.vertexCount / 3;
-
-		const enc = encoder || device.createCommandEncoder({ label: 'TerrainPipeline Command Encoder' });
-		const pass = enc.beginComputePass({ label: 'TerrainPipeline Compute Pass' });
-		this.uniformBuffer.set('t', t || performance.now() / 1000);
-
-		const bindGroup = device.createBindGroup({
-			label: 'TerrainPipeline Bind Group',
-			layout: this.pipeline.getBindGroupLayout(0),
-			entries: [
-				{ binding: 0, resource: { buffer: this.uniformBuffer.buffer } },
-				{ binding: 1, resource: { buffer: terrain.vertexBuffer } },
-			],
-		});
-
-		pass.setPipeline(this.pipeline);
-		pass.setBindGroup(0, bindGroup);
-		pass.dispatchWorkgroups(Math.ceil(triangleCount / workgroupSize));
-		pass.end();
-		if (!encoder) {
-			device.queue.submit([enc.finish()]);
-		}
 	}
 }

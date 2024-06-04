@@ -115,7 +115,7 @@ export class Chunker {
 	queuedChunks: Map<ChunkKey, Chunk> = new Map();
 	activeChunks: Map<ChunkKey, Chunk> = new Map();
 	entities: Map<ChunkKey, Entity<TerrainMesh>> = new Map();
-	chunkSize: Size = [128, 128];
+	chunkSize: Size = [256, 256];
 	private terrainPipeline: TerrainPipeline;
 
 	constructor(
