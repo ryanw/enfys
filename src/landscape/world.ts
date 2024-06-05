@@ -7,6 +7,7 @@ import { FreeCameraController } from 'engine/input/free_camera';
 import { PlayerController } from './input';
 import { Player } from './player';
 
+type Timeout = ReturnType<typeof setTimeout>;
 type CameraController = OrbitCameraController | FreeCameraController;
 
 export class World {
@@ -16,6 +17,9 @@ export class World {
 	cameras: Array<CameraController> = [];
 	queryTerrain: TerrainHeightQueryPipeline;
 	currentCameraId = 0;
+	tickrate = 60;
+
+	private currentTimer: Timeout | null = null;
 
 	constructor(public gfx: Gfx, public seed: number) {
 		this.queryTerrain = new TerrainHeightQueryPipeline(gfx);
@@ -41,6 +45,26 @@ export class World {
 		}
 		this.spawnPosition[1] = 1.0 + h;
 		this.spawnPlayer();
+	}
+
+	run() {
+		const tick = async () => {
+			const now = performance.now();
+			const dt = (1000/this.tickrate);
+			await this.update(dt / 1000);
+
+			const ft = performance.now() - now;
+			const delay = Math.max(0, dt - ft);
+			this.currentTimer = setTimeout(tick, delay);
+		};
+		tick();
+	}
+
+	stop() {
+		if (this.currentTimer) {
+			clearTimeout(this.currentTimer);
+			this.currentTimer = null;
+		}
 	}
 
 	async update(dt: number) {

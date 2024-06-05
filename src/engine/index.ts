@@ -38,6 +38,7 @@ export interface Config {
 export class Gfx {
 	pixelRatio: number = 1;
 	canvasPixelRatio: number = window.devicePixelRatio || 1;
+	framecap: number = 0;
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
@@ -226,10 +227,15 @@ export class Gfx {
 			now = performance.now();
 			await callback(dt, this);
 
-			const ft = (performance.now() - now) / 1000;
+			if (this.framecap) {
+				setTimeout(draw, 1000/this.framecap);
+			} else {
+				requestAnimationFrame(draw);
+			}
+
 			this.sampleFrame(dt);
+			const ft = (performance.now() - now) / 1000;
 			this.sampleUncappedFrame(ft);
-			requestAnimationFrame(draw);
 		};
 		draw();
 	}

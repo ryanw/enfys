@@ -138,6 +138,7 @@ export class OrbitCameraController {
 		const y = e.movementY / 1000;
 
 		this.camera.rotate(y, x);
+		this.update(0);
 	};
 }
 

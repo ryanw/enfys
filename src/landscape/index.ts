@@ -42,9 +42,10 @@ export async function main(el: HTMLCanvasElement) {
 	const world = new World(gfx, seed);
 	const [scene, sync] = buildScene(gfx, seed);
 
+	world.run();
+
 	// Start main loop
 	gfx.run(async (dt) => {
-		await world.update(dt);
 		sync(world);
 		await gfx.draw(scene, world.activeCamera.camera);
 	});
