@@ -7,7 +7,7 @@ export class Player {
 	velocity: Vector3 = [0, 0, 0];
 	rotation: Vector3 = [0, 0, 0];
 	surfaceHeight = 0.0;
-	hoverGap = 1.0;
+	hoverGap = 0.2;
 
 	rotate(pitch: number, yaw: number) {
 		this.rotation[0] += Math.PI * pitch;
@@ -29,12 +29,13 @@ export class Player {
 
 		if (this.position[1] < targetHeight) {
 			// Hit the surface!
-			if (speed > 16.0) {
+			if (speed > 8.0) {
 				console.log("DEAD!", speed);
 			}
 
 			if (this.velocity[1] < 0) {
-				this.velocity[1] = -(this.velocity[1] * 0.5);
+				// Bounce
+				this.velocity[1] = -(this.velocity[1] * 0.25);
 			}
 
 			const diff = targetHeight - this.position[1];

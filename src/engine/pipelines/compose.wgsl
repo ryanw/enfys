@@ -168,9 +168,9 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		// Calculate fog for later
 		if u.fog > 0.02 {
 			let density = 1.0;
-			let fogDepth = 1.0 - (length(pos - u.playerPosition) / 15000.0);
+			let fogDepth = 1.0 - (length(pos - u.playerPosition) / 17000.0);
 			let dd = smoothstep(1.0 / 8.0 / u.fog, 1.0 / 16.0 / u.fog, fogDepth);
-			fogFactor = dd;// exp(density * dd);
+			fogFactor = dd;
 		}
 	}
 	var color = vec4(0.0);
