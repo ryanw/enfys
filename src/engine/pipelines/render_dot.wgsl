@@ -55,7 +55,12 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
 
 	let offsetModel = translate(in.offset) * entity.model;
-	let mv = camera.view * offsetModel;
+	var view = camera.view;
+	// Remove translation
+	view[3].x = 0.0;
+	view[3].y = 0.0;
+	view[3].z = 0.0;
+	let mv = view * offsetModel;
 	let mvp = camera.projection * mv;
 	let p = (mv * vec4(in.position, 1.0));
 	let scale = p.z / 1024.0;
