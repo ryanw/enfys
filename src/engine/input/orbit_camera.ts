@@ -21,12 +21,14 @@ export class OrbitCameraController {
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
 	readonly gfx: Gfx;
+	private previousTouch?: Touch;
 
 
 	constructor(private el: HTMLElement, public camera: Camera) {
 		this.gfx = camera.gfx;
 		document.addEventListener('pointerlockchange', this.onPointerLockChange);
 		el.addEventListener('mousedown', this.onMouseDown);
+		el.addEventListener('touchstart', this.onTouchStart);
 		el.addEventListener('wheel', this.onWheel);
 	}
 
@@ -109,6 +111,7 @@ export class OrbitCameraController {
 
 	onWheel = (e: WheelEvent) => {
 		if (this.disabled) return;
+		e.preventDefault();
 		this.distance *= 1.0 - (e.deltaY / -1000.0);
 		this.distance = Math.min(Math.max(this.distance, 5), 200);
 	};
@@ -139,6 +142,38 @@ export class OrbitCameraController {
 
 		this.camera.rotate(y, x);
 		this.update(0);
+	};
+
+	onTouchStart = (e: TouchEvent) => {
+		if (this.disabled) return;
+		e.preventDefault();
+		const [touch] = e.changedTouches;
+		this.previousTouch = touch;
+		document.addEventListener('touchend', this.onTouchEnd);
+		document.addEventListener('touchmove', this.onTouchMove);
+	};
+
+	onTouchMove = (e: TouchEvent) => {
+		if (this.disabled) return;
+		const [touch] = e.changedTouches;
+		if (!this.previousTouch) {
+			this.previousTouch = touch;
+			return;
+		}
+		const { clientX: x, clientY: y } = touch;
+		const { clientX: px, clientY: py } = this.previousTouch;
+		const dx = px - x;
+		const dy = py - y;
+
+		this.camera.rotate(dy / -1000, dx / -1000);
+		this.update(0);
+		this.previousTouch = touch;
+	};
+
+	onTouchEnd = (e: TouchEvent) => {
+		this.previousTouch = undefined;
+		document.removeEventListener('touchend', this.onTouchEnd);
+		document.removeEventListener('touchmove', this.onTouchMove);
 	};
 }
 
