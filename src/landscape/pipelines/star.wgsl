@@ -28,7 +28,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 		var n0 = (rnd3(id + vec3(123.0)) - 0.5);
 		var n1 = (rnd3(id + vec3(323.0)) - 0.5);
 		var n2 = (rnd3(id + vec3(555.0)) - 0.5);
-		var p = normalize(vec3(n0, n1, n2)) * 50000.0;
+		var p = normalize(vec3(n0, n1, n2)) * 17000.0;
 		var instance: Instance;
 		instance.offset = array(p.x, p.y, p.z);
 		let count = atomicAdd(&counter, 1u);

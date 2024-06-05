@@ -24,6 +24,7 @@ export class PlayerController {
 		[XboxButton[XboxButton.LeftBumper]]: Key.Boost,
 		[XboxButton[XboxButton.LeftTrigger]]: Key.Brake,
 		[XboxButton[XboxButton.RightTrigger]]: Key.Thrust,
+		[XboxButton[XboxButton.LeftStick]]: Key.Stable,
 		[XboxAxis[XboxAxis.LeftStickX]]: Key.Left,
 		[XboxAxis[XboxAxis.LeftStickY]]: Key.Forward,
 		[XboxAxis[XboxAxis.RightStickX]]: Key.CameraYaw,
@@ -41,35 +42,38 @@ export class PlayerController {
 		this.updateGamepads();
 
 		const speed = this.heldKeys.has(Key.Boost) ? 256 : 16;
-		const adjustment: Vector3 = [0, 0, 0];
+		const movement: Vector3 = [0, 0, 0];
+		let brake = 0.0;
 		let pitch = 0.0;
 		let yaw = 0.0;
 		this.thrust = 0;
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
-			case Key.Forward:
-				pitch = value;
-				break;
-			case Key.Backward:
-				pitch = -value;
-				break;
-			case Key.Left:
-				yaw = -value;
-				break;
-			case Key.Right:
-				yaw = value;
-				break;
-			case Key.Up:
-			case Key.Thrust:
-				if (Math.abs(value) > DEADZONE) {
-					this.thrust = value;
-					adjustment[1] = value;
-				}
-				break;
-			case Key.Down:
-			case Key.Brake:
-				adjustment[1] = -value;
-				break;
+				case Key.Forward:
+					pitch = value;
+					break;
+				case Key.Backward:
+					pitch = -value;
+					break;
+				case Key.Left:
+					yaw = -value;
+					break;
+				case Key.Right:
+					yaw = value;
+					break;
+				case Key.Thrust:
+					if (Math.abs(value) > DEADZONE) {
+						this.thrust = value;
+						movement[1] = value;
+					}
+					break;
+				case Key.Brake:
+					brake = value;
+					break;
+				case Key.Stable:
+					player.rotation[0] = 0;
+					player.rotation[2] = 0;
+					break;
 			}
 		}
 		for (const [key, value] of this.axis.entries()) {
@@ -77,31 +81,35 @@ export class PlayerController {
 				continue;
 			}
 			switch (key) {
-			case XboxAxis.LeftStickX:
-				yaw = value;
-				break;
-			case XboxAxis.LeftStickY:
-				pitch -= value;
-				break;
+				case XboxAxis.LeftStickX:
+					yaw = value;
+					break;
+				case XboxAxis.LeftStickY:
+					pitch -= value;
+					break;
 			}
 		}
 
 		if (pitch !== 0 || yaw !== 0) {
 			player.rotate(pitch * dt, yaw * dt);
 		}
-		if (adjustment[0] === 0 && adjustment[1] === 0 && adjustment[2] === 0) {
-			return;
+		if (movement[0] !== 0 || movement[1] !== 0 || movement[2] !== 0) {
+
+			const direction = multiplyVector(
+				multiply(
+					player.rotationMatrix(),
+				),
+				[...movement, 0]
+			);
+			const velocity = scale(direction.slice(0, 3) as Point3, speed * dt);
+			player.velocity = add(player.velocity, velocity);
 		}
 
-		const direction = multiplyVector(
-			multiply(
-				player.rotationMatrix(),
-			),
-			[...adjustment, 0]
-		);
-
-		const velocity = scale(direction.slice(0, 3) as Point3, speed * dt);
-		player.velocity = add(player.velocity, velocity);
+		if (brake > 0) {
+			const stopTime = 1.0;
+			const vt = 1.0 - ((1.0/stopTime) * brake * dt);
+			player.velocity = scale(player.velocity, vt);
+		}
 	}
 
 	updateGamepads() {
@@ -125,13 +133,13 @@ export class PlayerController {
 					continue;
 				}
 				this.previousButtons[i] = button.value;
+				const key = this.bindings[XboxButton[i]];
 				if (button.value > 0.001) {
-					const key = this.bindings[XboxButton[i]];
 					if (key) {
 						this.heldKeys.set(key, button.value);
 					}
 				} else {
-					this.heldKeys.delete(i);
+					this.heldKeys.delete(key);
 				}
 			}
 		}

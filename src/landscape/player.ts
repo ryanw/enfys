@@ -19,8 +19,7 @@ export class Player {
 	}
 
 	update(dt: number) {
-		// Add gravity -- approx Earth gravity
-		this.velocity[1] -= 10.0 * dt;
+		this.velocity[1] -= 8.0 * dt;
 		this.position = add(this.position, scale(this.velocity, dt));
 
 		const speed = magnitude(this.velocity);
@@ -31,6 +30,7 @@ export class Player {
 			// Hit the surface!
 			if (speed > 8.0) {
 				console.log("DEAD!", speed);
+				this.velocity = [0, 0, 0];
 			}
 
 			if (this.velocity[1] < 0) {
@@ -40,7 +40,7 @@ export class Player {
 
 			const diff = targetHeight - this.position[1];
 			// Speed to adjust ship height
-			const collideSpeed = Math.max(32.0, speed); 
+			const collideSpeed = Math.max(32.0, speed);
 			const step = collideSpeed * dt;
 			if (diff < step) {
 				this.position[1] = targetHeight;

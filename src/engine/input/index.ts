@@ -31,6 +31,7 @@ export enum Key {
 	Down,
 	Boost,
 	Thrust,
+	Stable,
 	Brake,
 	CameraYaw,
 	CameraPitch,
