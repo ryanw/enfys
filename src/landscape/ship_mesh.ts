@@ -1,4 +1,4 @@
-import { Color, Gfx, calculateNormals } from 'engine';
+import { Gfx, calculateNormals } from 'engine';
 import { PHI, Point3 } from 'engine/math';
 import { ColorVertex, SimpleMesh } from 'engine/mesh';
 
@@ -31,13 +31,13 @@ export class ShipMesh extends SimpleMesh {
 	}
 }
 
-function buildNGon(sides: number): Array<Point3> {
+function buildNGon(sides: number, size: number = 1): Array<Point3> {
 	const vertices: Point3[] = [];
 	for (let i = 0; i < sides; i++) {
 		const a = 2 * (Math.PI / sides) * i - Math.PI / sides;
 		const x = sin(a);
 		const y = cos(a);
-		vertices.push([x, 0, y]);
+		vertices.push([x * size, 0, y * size]);
 	}
 
 	const hull: Point3[] = [];
@@ -46,11 +46,11 @@ function buildNGon(sides: number): Array<Point3> {
 		hull.push(
 			vertices[i],
 			vertices[(i + 1) % vertices.length],
-			[0, 1.0 / PHI, 0],
+			[0, (1.0 / PHI) * size, 0],
 		);
 		hull.push(
 			vertices[i],
-			[0, -0.5 / PHI, 0],
+			[0, (-0.5 / PHI) * size, 0],
 			vertices[(i + 1) % vertices.length],
 		);
 	}
@@ -58,6 +58,6 @@ function buildNGon(sides: number): Array<Point3> {
 }
 
 export function buildShipMesh<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	const hull = buildNGon(3 + Math.random() * 6 | 0);
+	const hull = buildNGon(3 + Math.random() * 6 | 0, 0.5);
 	return hull.map(callback);
 }

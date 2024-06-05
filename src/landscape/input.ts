@@ -40,7 +40,7 @@ export class PlayerController {
 
 		this.updateGamepads();
 
-		const speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
+		const speed = this.heldKeys.has(Key.Boost) ? 256 : 16;
 		const adjustment: Vector3 = [0, 0, 0];
 		let pitch = 0.0;
 		let yaw = 0.0;
@@ -145,7 +145,6 @@ export class PlayerController {
 	};
 
 	onKeyUp = (e: KeyboardEvent) => {
-		if (this.disabled) return;
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
 		this.heldKeys.delete(key);

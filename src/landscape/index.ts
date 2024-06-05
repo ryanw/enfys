@@ -157,7 +157,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		const thrust = world.playerController.thrust;
 		thruster.transform = multiply(
 			player.transform,
-			scaling(0.3, 1.0 * thrust, 0.3),
+			scaling(0.2, 0.5 * thrust, 0.2),
 			translation(0, -1, 0),
 		);
 
@@ -198,7 +198,7 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 		icos,
 		[0, 0, 0],
 		1000.0,
-		1.0 / 4.0,
+		1.0 / 1.0,
 		terrainSeed,
 		decorSeed,
 	));
@@ -215,7 +215,7 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 		cube,
 		[0, 0, 0],
 		1000.0,
-		1.0 / 10.0,
+		1.0 / 4.0,
 		terrainSeed,
 		decorSeed + 5555,
 	));
@@ -233,7 +233,7 @@ function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
 		vertices,
 		[0, 0, 0],
 		1000.0,
-		1.0 / 100.0,
+		1.0 / 10.0,
 		terrainSeed,
 		decorSeed,
 	));

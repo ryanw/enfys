@@ -16,7 +16,7 @@ export class OrbitCameraController {
 		'shift': Key.Boost,
 	};
 	target: Point3 = [0, 0, 0];
-	distance: number = 24;
+	distance: number = 12;
 	readonly heldKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};

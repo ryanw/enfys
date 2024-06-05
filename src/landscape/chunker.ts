@@ -19,7 +19,7 @@ function cleanChunks(chunks: Array<Chunk>): Array<Chunk> {
 
 export function generateChunks(x: number, y: number, minLod: number = 0, maxLod: number = 6) {
 	const point = [x, y] as Point2;
-	const range = 2;
+	const range = 1;
 	const baseScale = 1 << maxLod;
 	// Create base chunks to subdivide
 	let chunks: Array<Chunk> = [];
@@ -46,7 +46,7 @@ export function generateChunks(x: number, y: number, minLod: number = 0, maxLod:
 			}
 			const p = add(chunk.position, [scale, scale]);
 			const dist = magnitude(subtract(p, point));
-			if (dist < 2 * scale) {
+			if (dist <= 2 * scale) {
 				const lodChunks = subdivideChunk(chunk.position, lod).map(position => ({
 					lod: lod,
 					position
