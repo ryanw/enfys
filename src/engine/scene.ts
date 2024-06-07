@@ -1,7 +1,7 @@
 import { Matrix4, Point3 } from './math';
 import { SimpleMaterial } from './material';
 import { Color, Gfx } from 'engine';
-import { SimpleMesh } from './mesh';
+import { Mesh, SimpleMesh } from './mesh';
 import { ShadowBuffer } from './shadow_buffer';
 import { Entity } from './entity';
 
@@ -42,7 +42,7 @@ export class Scene {
 		return entity;
 	}
 
-	addMesh<T extends SimpleMesh>(item: T, transform?: Matrix4): Entity<T> {
+	addMesh<T extends Mesh<any, any>>(item: T, transform?: Matrix4): Entity<T> {
 		return this.addEntity(new Entity(
 			this.gfx,
 			item,

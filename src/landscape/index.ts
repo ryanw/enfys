@@ -127,12 +127,25 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	if (player.material instanceof SimpleMaterial) {
 		player.material.receiveShadows = false;
 	}
-	const thruster = scene.addMesh(new Icosahedron(gfx));
-	if (thruster.material instanceof SimpleMaterial) {
-		thruster.material.color = 0xff08eeff;
-		thruster.material.receiveShadows = false;
-		thruster.material.emissive = true;
+	//const thruster = scene.addMesh(new Icosahedron(gfx));
+	//if (thruster.material instanceof SimpleMaterial) {
+	//	thruster.material.color = 0xff08eeff;
+	//	thruster.material.receiveShadows = false;
+	//	thruster.material.emissive = true;
+	//}
+
+	const cube: Array<ColorVertex> = CUBE_VERTS.map(position => ({
+		position: position.map(v => v/64.0) as Point3,
+		normal: [0, 0, 0],
+		color: BigInt(0xffffffff),
+	}));
+	const particles = scene.addMesh(new Particles(gfx, cube, [0, 0, 0], 100, 320, seed));
+	if (particles.material instanceof SimpleMaterial) {
+		particles.material.receiveShadows = false;
+		particles.material.emissive = true;
 	}
+
+
 
 
 	const colorScheme = buildColorScheme(seed);
@@ -142,6 +155,10 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	}
 
 	function syncGraphics(world: World) {
+		particles.object.origin = add(world.player.position, [0, -0.1, 0]);
+		//particles.transform = translation(...world.player.position);
+		particles.object.update(performance.now() / 1000.0);
+
 		// Update player model
 		player.transform = multiply(
 			translation(...world.player.position),
@@ -150,11 +167,11 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 		// Enlarge flames to match thrust
 		const thrust = world.playerController.thrust;
-		thruster.transform = multiply(
-			player.transform,
-			scaling(0.2, 0.5 * thrust, 0.2),
-			translation(0, -1, 0),
-		);
+		//thruster.transform = multiply(
+		//	player.transform,
+		//	scaling(0.2, 0.5 * thrust, 0.2),
+		//	translation(0, -1, 0),
+		//);
 
 		// Move shadow under player
 		scene.shadowBuffer.moveShadow(0, world.player.position);

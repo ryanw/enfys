@@ -64,7 +64,7 @@ export class OrbitCameraController {
 		let transform = translation(...this.target);
 		transform = multiply(transform, this.camera.rotationMatrix());
 		transform = multiply(transform, translation(0, 0, -this.distance));
-		this.camera.position = transformPoint(transform, [0, 1, 0]);
+		this.camera.position = transformPoint(transform, [0, 0, 0]);
 	}
 
 	updateGamepads() {
@@ -113,7 +113,7 @@ export class OrbitCameraController {
 		if (this.disabled) return;
 		e.preventDefault();
 		this.distance *= 1.0 - (e.deltaY / -1000.0);
-		this.distance = Math.min(Math.max(this.distance, 5), 200);
+		this.distance = Math.min(Math.max(this.distance, 3), 200);
 	};
 
 	onMouseDown = (e: MouseEvent) => {

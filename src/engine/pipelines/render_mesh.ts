@@ -62,9 +62,19 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				entryPoint: 'fs_main',
 				targets: [
 					// Albedo output
-					{ format: 'rgba8unorm' },
+					{
+						format: 'rgba8unorm', blend: {
+							alpha: { operation: 'add', srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+							color: { operation: 'add', srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+						}
+					},
 					// Normal output
-					{ format: 'rgba16float' },
+					{
+						format: 'rgba16float', blend: {
+							alpha: { operation: 'add', srcFactor: 'one', dstFactor: 'zero' },
+							color: { operation: 'add', srcFactor: 'one', dstFactor: 'zero' },
+						}
+					},
 					// Meta output
 					{ format: 'r8uint' },
 				]

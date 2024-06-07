@@ -53,6 +53,13 @@ struct Shadow {
 	color: u32,
 }
 
+const ditherMatrix = mat4x4(
+	0.0000, 0.5000, 0.1250, 0.6250,
+	0.7500, 0.2500, 0.8750, 0.3750,
+	0.1875, 0.6875, 0.0625, 0.5625,
+	0.9375, 0.4375, 0.8125, 0.3125
+);
+
 
 @group(0) @binding(0)
 var<uniform> camera: Camera;
@@ -92,7 +99,12 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let vertexColor = uintToColor(in.color);
 	let instanceColor = uintToColor(in.instanceColor);
 	let materialColor = uintToColor(material.color);
-	out.color = vertexColor * instanceColor * materialColor;
+	if vertexColor.r == 1.0 && vertexColor.g == 1.0 && vertexColor.b == 1.0 && vertexColor.a == 1.0 {
+		out.color = instanceColor * materialColor;
+	}
+	else {
+		out.color = vertexColor * materialColor;
+	}
 	out.triangleId = (rnd3uu(vec3(triangleId + entity.id))) % 0xff;
 
 	return out;
@@ -135,10 +147,22 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		}
 	}
 
-	out.albedo =  vec4(color.rgb * (1.0-shade), color.a);
+	let opacity = color.a;
 
-	out.normal = vec4(in.normal, 0.0);
-	out.metaOutput = in.triangleId;
+
+	if color.a >= 0.99 {
+		out.normal = vec4(in.normal, 0.0);
+		out.metaOutput = in.triangleId;
+	}
+	else {
+		color.a = 1.0;
+		let ditherCoord = vec2(i32(in.position.x) % 4, i32(in.position.y) % 4);
+		let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
+		if opacity < ditherVal {
+			discard;
+		}
+	}
+	out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
 	return out;
 }
 

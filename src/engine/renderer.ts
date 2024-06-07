@@ -10,6 +10,7 @@ import { Entity, isEntityOf } from './entity';
 import { DotMaterial, Material, SimpleMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
+import { Particles } from './particles';
 
 
 export interface RenderPipelines {
@@ -52,14 +53,22 @@ export class Renderer {
 
 
 		// Group entities by material, render them together if possible
-		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
-			function isSimpleMesh(entity: Entity<unknown>): entity is Entity<SimpleMesh> {
-				return isEntityOf(entity, SimpleMesh) && (entity.material instanceof Mat);
-			}
+		for (const alphaLayer of [false, true]) {
+			for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
+				function isSimpleMesh(entity: Entity<unknown>): entity is Entity<SimpleMesh> {
+					return isEntityOf(entity, SimpleMesh) && (entity.material instanceof Mat);
+				}
 
-			const entities = scene.entities.filter(isSimpleMesh);
-			for (const entity of entities) {
-				pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
+				function isAlphaEntity(entity: Entity<unknown>): boolean {
+					return entity.object instanceof Particles;
+				}
+
+				const entities = scene.entities.filter(isSimpleMesh);
+				for (const entity of entities) {
+					if (alphaLayer === isAlphaEntity(entity)) {
+						pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
+					}
+				}
 			}
 		}
 	}
