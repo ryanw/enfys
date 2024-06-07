@@ -228,7 +228,15 @@ export class Gfx {
 			await callback(dt, this);
 
 			if (this.framecap) {
-				setTimeout(draw, 1000/this.framecap);
+				// How long the draw took
+				const ft = performance.now() - now;
+				const delay = (1000/this.framecap) - ft;
+				if (delay > 0) {
+					setTimeout(draw, delay);
+				}
+				else {
+					requestAnimationFrame(draw);
+				}
 			} else {
 				requestAnimationFrame(draw);
 			}
