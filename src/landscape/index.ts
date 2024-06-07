@@ -8,7 +8,7 @@ import { Gfx, calculateNormals } from 'engine';
 import { CUBE_VERTS, ColorVertex, buildIcosahedron, Icosahedron, QuadMesh } from 'engine/mesh';
 import { buildTreeMesh } from './tree_mesh';
 import { Scene } from 'engine/scene';
-import { multiply, scaling, translation } from 'engine/math/transform';
+import { multiply, rotation, scaling, transformPoint, translation } from 'engine/math/transform';
 import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { Chunker } from './chunker';
 import { World } from './world';
@@ -16,10 +16,12 @@ import { ShipMesh } from './ship_mesh';
 import { Color, colorToInt, hsl } from 'engine/color';
 import { randomizer } from 'engine/noise';
 import { ui } from './ui';
-import { add } from 'engine/math/vectors';
+import { add, normalize, scale } from 'engine/math/vectors';
 import { debugChunker } from './chunker.debug';
 import { StarMesh } from './star_mesh';
 import { DecorMesh } from './decor_mesh';
+import { Point3, Vector3 } from 'engine/math';
+import { Particles } from 'engine/particles';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -61,10 +63,8 @@ function buildColorScheme(seed: number): Array<Color> {
 	const snow = rnd(0.0, 1.0);
 	return [
 		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.6)),
-		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.6)),
 		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
 		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
-		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
 		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
 		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
 		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.5)),
@@ -79,15 +79,10 @@ function buildColorScheme(seed: number): Array<Color> {
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
 		hsl(rock, rnd(0.2, 0.3), rnd(0.8, 0.7)),
-		hsl(snow, rnd(0.1, 0.2), rnd(0.7, 1.0)),
 		hsl(snow, rnd(0.1, 0.2), rnd(0.8, 1.0)),
 		hsl(snow, rnd(0.1, 0.2), rnd(0.9, 1.0)),
 	];
@@ -189,7 +184,7 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 	const icos: Array<ColorVertex> = buildIcosahedron(p => ({
 		position: [...p],
 		normal: [0, 0, 0],
-		color: BigInt(0xffffffff),
+		color: BigInt(0xff445566),
 	}));
 	calculateNormals(icos);
 
@@ -204,11 +199,11 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 	));
 
 	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
-		position: [p[0] / 2, p[1] * 2 + 1.0, p[2] / 2],
+		position: [p[0] / 3, p[1] / 3 + 0.3, p[2] / 3],
 		normal: [0, 0, 0],
 		color: BigInt(0xffffffff),
 	}));
-	calculateNormals(cube);
+	//calculateNormals(cube);
 
 	scene.addMesh(new DecorMesh(
 		scene.gfx,
@@ -222,11 +217,47 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 }
 
 function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
-	const vertices: Array<ColorVertex> = buildTreeMesh(p => ({
-		position: [...p],
-		normal: [0, 0, 0],
-		color: BigInt(0xffffffff),
-	}));
+	const trunk = CUBE_VERTS.map(p => {
+		const position = [p[0] / 2.0, p[1] * 8.0, p[2] / 2.0];
+		return {
+			position,
+			normal: [0, 0, 0],
+			color: BigInt(0xff005599),
+		} as ColorVertex;
+	});
+
+	function buildBush(size: number, offset: Vector3): Array<ColorVertex> {
+		const rot = rotation(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+		return buildIcosahedron(p => {
+			const q = transformPoint(rot, p);;
+			const position = [
+				offset[0] + q[0] * size,
+				offset[1] + q[1] * size + 7.0,
+				offset[2] + q[2] * size,
+			];
+
+			return {
+				position,
+				normal: [0, 0, 0],
+				color: BigInt(0xff00aa00),
+			} as ColorVertex;
+		})
+	}
+
+	function rndPoint(radius: number): Point3 {
+		return scale(normalize([
+			(Math.random() * 2.0 - 1.0),
+			(Math.random() * 2.0 - 1.0),
+			(Math.random() * 2.0 - 1.0),
+		] as Point3), Math.random() * radius);
+	}
+
+	let vertices = trunk;
+	for (let i = 0; i < 9; i++) {
+		const p = rndPoint(3);
+		vertices = [...vertices, ...buildBush(1.0 + 2 * Math.random(), p)];
+	}
+
 	calculateNormals(vertices);
 	const trees = scene.addMesh(new DecorMesh(
 		scene.gfx,
