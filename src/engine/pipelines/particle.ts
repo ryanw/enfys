@@ -4,6 +4,9 @@ import shaderSource from './particle.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point3 } from 'engine/math';
 
+export const INSTANCE_SIZE = 3 * 4;// FIXME vec3f derive from type? OffsetInstance
+export const PARTICLE_SIZE = 4 * 4;// FIXME derive from type ParticleInstance
+
 export class ParticlePipeline extends Pipeline {
 	private pipeline: GPUComputePipeline;
 	private uniformBuffer: UniformBuffer;
@@ -19,7 +22,6 @@ export class ParticlePipeline extends Pipeline {
 			['origin', 'vec3f'],
 			['time', 'f32'],
 			['dt', 'f32'],
-			['radius', 'f32'],
 			['count', 'u32'],
 			['seed', 'f32'],
 		]);
@@ -73,26 +75,24 @@ export class ParticlePipeline extends Pipeline {
 		});
 	}
 
-	async createInstanceBuffer(position: Point3, radius: number, count: number, seed: number): Promise<[GPUBuffer, GPUBuffer]> {
+	async createInstanceBuffer(position: Point3, capacity: number, seed: number): Promise<[GPUBuffer, GPUBuffer]> {
 		const { device } = this.gfx;
 
-		const maxInstances = 512000;
+		const maxInstances = 1024;
 
-		const instanceByteSize = 3 * 4;// FIXME vec3f derive from type? OffsetInstance
 		const instances = device.createBuffer({
 			label: 'ParticleMesh Instance Buffer',
-			size: maxInstances * instanceByteSize,
+			size: maxInstances * INSTANCE_SIZE,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 
-		const particleByteSize = 4 * 4;// FIXME derive from type ParticleInstance
 		const particles = device.createBuffer({
 			label: 'ParticleMesh Particle Buffer',
-			size: maxInstances * particleByteSize,
+			size: maxInstances * PARTICLE_SIZE,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 
-		this.updateParticles(instances, particles, 0, 0, position, radius, count, seed);
+		//this.updateParticles(instances, particles, 0, 0, position, capacity, seed);
 
 		return [instances, particles];
 	}
@@ -103,13 +103,13 @@ export class ParticlePipeline extends Pipeline {
 		time: number,
 		dt: number,
 		origin: Point3,
-		radius: number,
 		count: number,
+		instanceCount: number,
 		seed: number,
 	) {
 		const { device } = this.gfx;
 
-		this.uniformBuffer.replace({ seed, time, dt, origin, radius, count });
+		this.uniformBuffer.replace({ seed, time, dt, origin, count });
 		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
 		const enc = device.createCommandEncoder({ label: 'ParticlePipeline Command Encoder' });
@@ -132,7 +132,7 @@ export class ParticlePipeline extends Pipeline {
 
 		pass.setPipeline(this.pipeline);
 		pass.setBindGroup(0, bindGroup);
-		pass.dispatchWorkgroups(Math.ceil(count / 256));
+		pass.dispatchWorkgroups(Math.ceil(instanceCount / 256));
 		pass.end();
 
 		// Copy vec3f to the read buffer

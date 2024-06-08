@@ -7,7 +7,7 @@ export class Player {
 	velocity: Vector3 = [0, 0, 0];
 	rotation: Vector3 = [0, 0, 0];
 	surfaceHeight = 0.0;
-	hoverGap = 1.0;
+	hoverGap = 0.5;
 
 	rotate(pitch: number, yaw: number) {
 		this.rotation[0] += Math.PI * pitch;
