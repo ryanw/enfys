@@ -14,6 +14,7 @@ export type Chunk = {
 };
 
 function cleanChunks(chunks: Array<Chunk>): Array<Chunk> {
+	// FIXME the performance here is bad
 	return removeOverlaps(removeDuplicateChunks(chunks));
 }
 
@@ -117,24 +118,29 @@ export class Chunker {
 	entities: Map<ChunkKey, Entity<TerrainMesh>> = new Map();
 	chunkSize: Size = [256, 256];
 	private terrainPipeline: TerrainPipeline;
+	private currentChunk: Point2 = [-1, -1];
 
 	constructor(
 		readonly gfx: Gfx,
 		public seed: number,
 		public maxLod: number = 5,
-		public point: Point2 = [0, 0],
 		colorScheme: Array<Color>,
 	) {
 		this.terrainPipeline = new TerrainPipeline(this.gfx, colorScheme);
-		//this.move(point[0], point[1]);
+		this.move(0, 0);
 	}
 
 	move(x: number, y: number, minLod: number = 0) {
-		this.point = [x, y];
+		const cx = x / this.chunkSize[0] | 0;
+		const cy = y / this.chunkSize[1] | 0;
+		if (cx === this.currentChunk[0] && cy === this.currentChunk[1]) {
+			return;
+		}
+		this.currentChunk = [x, y];
 		this.activeChunks = new Map();
 		const chunks = generateChunks(
-			x / this.chunkSize[0],
-			y / this.chunkSize[1],
+			cx,
+			cy,
 			minLod,
 			this.maxLod,
 		);

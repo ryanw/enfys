@@ -140,7 +140,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 
 	const colorScheme = buildColorScheme(seed);
-	const chunker = new Chunker(gfx, seed, 5, [0, 0], colorScheme);
+	const chunker = new Chunker(gfx, seed, 5, colorScheme);
 	if (DEBUG && getParam('debug')) {
 		debugChunker(gfx.canvas.parentElement!, chunker);
 	}
