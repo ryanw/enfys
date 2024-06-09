@@ -115,6 +115,9 @@ fn vs_main(in: VertexIn) -> VertexOut {
 fn fs_main(in: VertexOut) -> FragmentOut {
 	var out: FragmentOut;
 	var color = in.color;
+	if color.a == 0.0 {
+		discard;
+	}
 
 	var shade = 0.0;
 	var shadowCount = 8u;

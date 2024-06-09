@@ -127,12 +127,12 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		player.material.receiveShadows = false;
 	}
 
-	const cube: Array<ColorVertex> = CUBE_VERTS.map(position => ({
-		position: [position[0]/32.0, position[1]/32.0, position[2]/32.0],
+	const flameParticle: Array<ColorVertex> = CROSS_CUBE.map(position => ({
+		position: [position[0] / 32.0, position[1] / 32.0, position[2] / 32.0],
 		normal: [0, 0, 0],
 		color: BigInt(0xffffffff),
 	}));
-	const particles = scene.addMesh(new Particles(gfx, cube, [0, 0, 0], 256, seed));
+	const particles = scene.addMesh(new Particles(gfx, flameParticle, 256));
 	if (particles.material instanceof SimpleMaterial) {
 		particles.material.receiveShadows = false;
 		particles.material.emissive = true;
@@ -272,3 +272,53 @@ function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
 	));
 }
 
+
+const CROSS_CUBE: Array<Point3> = [
+	[-1, -1, 0],
+	[1, -1, 0],
+	[1, 1, 0],
+
+	[-1, -1, 0],
+	[1, 1, 0],
+	[-1, 1, 0],
+
+	[0, -1, 1],
+	[0, -1, -1],
+	[0, 1, -1],
+
+	[0, -1, 1],
+	[0, 1, -1],
+	[0, 1, 1],
+
+	[1, -1, 0],
+	[-1, -1, 0],
+	[-1, 1, 0],
+
+	[1, -1, 0],
+	[-1, 1, 0],
+	[1, 1, 0],
+
+	[0, -1, -1],
+	[0, -1, 1],
+	[0, 1, 1],
+
+	[0, -1, -1],
+	[0, 1, 1],
+	[0, 1, -1],
+
+	[-1, 0, 1],
+	[1, 0, 1],
+	[1, 0, -1],
+
+	[-1, 0, 1],
+	[1, 0, -1],
+	[-1, 0, -1],
+
+	[1, 0, 1],
+	[-1, 0, -1],
+	[1, 0, -1],
+
+	[1, 0, 1],
+	[-1, 0, 1],
+	[-1, 0, -1]
+];

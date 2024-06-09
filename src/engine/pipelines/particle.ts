@@ -4,7 +4,7 @@ import shaderSource from './particle.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point3 } from 'engine/math';
 
-export const INSTANCE_SIZE = 3 * 4;// FIXME vec3f derive from type? OffsetInstance
+export const INSTANCE_SIZE = 4 * 4;// FIXME vec3f derive from type? ColorInstance
 export const PARTICLE_SIZE = 4 * 4;// FIXME derive from type ParticleInstance
 
 export class ParticlePipeline extends Pipeline {
@@ -78,17 +78,15 @@ export class ParticlePipeline extends Pipeline {
 	async createInstanceBuffer(position: Point3, capacity: number, seed: number): Promise<[GPUBuffer, GPUBuffer]> {
 		const { device } = this.gfx;
 
-		const maxInstances = 1024;
-
 		const instances = device.createBuffer({
 			label: 'ParticleMesh Instance Buffer',
-			size: maxInstances * INSTANCE_SIZE,
+			size: capacity * INSTANCE_SIZE,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 
 		const particles = device.createBuffer({
 			label: 'ParticleMesh Particle Buffer',
-			size: maxInstances * PARTICLE_SIZE,
+			size: capacity * PARTICLE_SIZE,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 

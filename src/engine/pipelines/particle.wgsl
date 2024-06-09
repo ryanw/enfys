@@ -30,13 +30,19 @@ var<storage, read_write> particles: array<Particle>;
 
 @compute @workgroup_size(256)
 fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
-	let particleCount = f32(u.count);
-	let maxAge = 0.5;
+	let particleCount = 256.0; // FIXME get total instance capacity
+	let maxAge = 1.0;
 	let spread = 6.0;
 	let idx = globalId.x;
 	let timeOffset = (f32(idx) / particleCount) * maxAge;
 	var instance: Instance = instances[idx];
 	var particle: Particle = particles[idx];
+
+	let age = u.time - particle.birth;
+	var isNew = particle.birth == 0.0;
+	var isExpired = age > maxAge + timeOffset;
+	var isPending = age < timeOffset;
+	var isLive = idx < u.count;
 
 	var p = vec3(instance.offset[0], instance.offset[1], instance.offset[2]);
 	var velocity = vec3(particle.velocity[0], particle.velocity[1], particle.velocity[2]);
@@ -46,44 +52,54 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	let n2 = rnd3(particle.birth + vec3(f32(idx + 20000))) - 0.5;
 	let n3 = rnd3(particle.birth + vec3(f32(idx + 30000))) - 0.5;
 
-	let age = u.time - particle.birth - timeOffset;
-	if particle.birth == 0.0 && idx < u.count {
-		particle.birth = u.time;
-	}
-	if age > maxAge {
-		if idx >= u.count {
-			particle.birth = 0.0;
-			instance.color = 0xff00ff00u;
-		} else {
-			particle.birth = u.time;
+	if isPending || isNew || isExpired {
+		if isLive {
+			// Respawn particle
+			if !isPending {
+				particle.birth = u.time;
+			}
 			p = u.origin;
 			velocity = vec3(n0 * 2.0, (n1 - 0.5)-1.0, n2 * 2.0);
-			instance.color = 0xff00ffffu;
+		} else {
+			// Destroy particle
+			particle.birth = 0.0;
+			velocity = vec3(0.0);
 		}
 	}
-	else {
+	else if !isPending {
+		// Update particle position
 		p += velocity * u.dt;
-		instance.color = 0xffff00ffu;
 	}
 
-	instance.offset = array(p.x, p.y, p.z);
-	particle.velocity = array(velocity.x, velocity.y, velocity.z);
-
-	let dur = (age + timeOffset + n3/8.0) / maxAge;
-	let hot = hsl(0.13, 1.0, 1.0);
-	let mid = hsl(0.13, 1.0, 0.5);
-	var cold = hsl(0.0, 1.0, 0.3);
-	let ct = 1.0 - clamp(dur * 1.5, 0.0, 1.4);
 	var color = vec4(0.0);
-	if (ct < 0.5) {
-		color = mix(cold, mid, ct * 2.0);
-	} else {
-		color = mix(mid, hot, (ct * 2.0 - 1.0));
-	}
-	let opacity = 1.0 - clamp(pow(dur, 4.0), 0.0, 0.5);
-	color.a = opacity;
-	instance.color = colorToUint(color);
 
+	var shouldDraw = !isPending;
+	shouldDraw = shouldDraw && particle.birth > 0.0;
+	shouldDraw = shouldDraw && particle.birth <= u.time;
+
+	if shouldDraw {
+		// Draw live particles
+		//let dur = (age - timeOffset) / (maxAge);
+		let dur = (age - timeOffset + n3/3.0) / maxAge;
+		let hot = hsl(0.13, 1.0, 1.0);
+		let mid = hsl(0.13, 1.0, 0.5);
+		var cold = hsl(0.0, 1.0, 0.3);
+		let ct = 1.0 - clamp(dur * 1.7, 0.0, 1.5);
+		if (ct < 0.5) {
+			color = mix(cold, mid, ct * 2.0);
+		} else {
+			color = mix(mid, hot, (ct * 2.0 - 1.0));
+		}
+		let opacity = 1.0 - clamp(pow(dur, 2.0), 0.0, 1.0);
+		color.a = opacity;
+	} else {
+		// Remove hidden particles
+		color = vec4(0.0);
+	}
+
+	instance.color = colorToUint(color);
+	particle.velocity = array(velocity.x, velocity.y, velocity.z);
+	instance.offset = array(p.x, p.y, p.z);
 	instances[idx] = instance;
 	particles[idx] = particle;
 }

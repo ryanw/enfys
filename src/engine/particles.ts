@@ -19,9 +19,9 @@ export class Particles extends SimpleMesh {
 		/**
 		 * Where particles spawn from
 		 */
-		public origin: Point3,
 		capacity: number,
-		readonly seed: number,
+		public origin: Point3 = [0,0,0],
+		public seed: number = 123456,
 	) {
 		super(gfx, vertices);
 		this._capacity = capacity;
