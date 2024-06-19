@@ -43,6 +43,7 @@ struct Material {
 	dither: u32,
 	emissive: u32,
 	receiveShadows: u32,
+	fadeout: f32,
 }
 
 struct Shadow {
@@ -150,11 +151,16 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		}
 	}
 
+	if material.fadeout > 0.0 {
+		let depth = smoothstep(0.0, 1.0, pow(((in.position.z / in.position.w) / material.fadeout), 4.0));
+		color *= 1.0 - depth;
+	}
+
 	let opacity = color.a;
 
 
+	out.normal = vec4(in.normal, 0.0);
 	if color.a >= 0.99 {
-		out.normal = vec4(in.normal, 0.0);
 		out.metaOutput = in.triangleId;
 	}
 	else {
@@ -166,6 +172,8 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		}
 	}
 	out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
+
+
 	return out;
 }
 

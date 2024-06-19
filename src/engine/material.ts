@@ -38,6 +38,7 @@ export class SimpleMaterial extends Material {
 	readonly uniform: UniformBuffer;
 	private _color: bigint;
 	private _receiveShadows = true;
+	private _fadeout = 0.0;
 	private _emissive: boolean = false;
 
 	constructor(
@@ -52,7 +53,17 @@ export class SimpleMaterial extends Material {
 			['dither', 'u32'],
 			['emissive', 'u32'],
 			['receiveShadows', 'u32'],
+			['fadeout', 'f32'],
 		]);
+		this.updateUniform();
+	}
+
+	get fadeout(): number {
+		return this._fadeout;
+	}
+
+	set fadeout(distance: number) {
+		this._fadeout = distance;
 		this.updateUniform();
 	}
 
@@ -88,6 +99,7 @@ export class SimpleMaterial extends Material {
 	}
 
 	updateUniform() {
+		this.uniform.set('fadeout', this._fadeout);
 		this.uniform.set('receiveShadows', this._receiveShadows);
 		this.uniform.set('color', this._color);
 		this.uniform.set('emissive', this._emissive);

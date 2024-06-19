@@ -29,7 +29,6 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 		n = mix(cn + n * 0.2, n, d);
 	}
 
-
 	return n;
 }
 

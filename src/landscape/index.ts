@@ -21,6 +21,7 @@ import { StarMesh } from './star_mesh';
 import { DecorMesh } from './decor_mesh';
 import { Point3, Vector3 } from 'engine/math';
 import { Particles } from 'engine/particles';
+import { Entity } from 'engine/entity';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -119,8 +120,14 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5)));
 
 	// Add a forest of trees
-	addRocks(scene, seed, seed + 1111);
-	addTrees(scene, seed, seed + 2222);
+	const decors = [
+		addRocks(scene, 16.0, seed, seed + 1111),
+		addRocks(scene, 32.0, seed, seed + 1112),
+		addCubes(scene, 16.0, seed, seed + 3333),
+		addCubes(scene, 32.0, seed, seed + 3334),
+		addTrees(scene, 32.0, seed, seed + 2222),
+		addTrees(scene, 64.0, seed, seed + 2223),
+	];
 
 	const player = scene.addMesh(new ShipMesh(gfx));
 	if (player.material instanceof SimpleMaterial) {
@@ -132,12 +139,12 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		normal: [0, 0, 0],
 		color: BigInt(0xffffffff),
 	}));
+	calculateNormals(flameParticle);
 	const particles = scene.addMesh(new Particles(gfx, flameParticle, 256));
 	if (particles.material instanceof SimpleMaterial) {
 		particles.material.receiveShadows = false;
 		particles.material.emissive = true;
 	}
-
 
 	const colorScheme = buildColorScheme(seed);
 	const chunker = new Chunker(gfx, seed, 5, colorScheme);
@@ -166,11 +173,15 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		scene.lightPosition = add(world.player.position, [0, 5, 0]);
 
 		// Sync terrain with camera view
-		const [x, _, z] = world.activeCamera.camera.position;
-		chunker.move(x, z);
+		const [cx, _cy, cz] = world.activeCamera.camera.position;
+		chunker.move(cx, cz);
 		chunker.processQueue(scene);
-	}
 
+		const [px, _py, pz] = world.player.position;
+		for (const dec of decors) {
+			dec.object.move(px, pz);
+		}
+	}
 
 	return [scene, syncGraphics];
 }
@@ -183,7 +194,33 @@ function getSeed(): number {
 function getParam(name: string): string | undefined {
 	return window.location.search.match(new RegExp(`(?:\\?|&)${name}=([^&]+)`))?.[1];
 }
-function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
+
+function addCubes(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
+		position: [p[0] / 3, p[1] / 3 + 0.3, p[2] / 3],
+		normal: [0, 0, 0],
+		color: BigInt(0xffffffff),
+	}));
+
+	const radius = 3;
+	const entity = scene.addMesh(new DecorMesh(
+		scene.gfx,
+		cube,
+		[0, 0],
+		4.0,
+		spread,
+		terrainSeed,
+		decorSeed + 5555,
+		radius,
+	));
+
+	if (entity.material instanceof SimpleMaterial) {
+		entity.material.fadeout = 8 * radius * spread;
+	}
+
+	return entity;
+}
+function addRocks(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const icos: Array<ColorVertex> = buildIcosahedron(p => ({
 		position: [...p],
 		normal: [0, 0, 0],
@@ -191,34 +228,26 @@ function addRocks(scene: Scene, terrainSeed: number, decorSeed: number) {
 	}));
 	calculateNormals(icos);
 
-	const icosMesh = scene.addMesh(new DecorMesh(
+	const radius = 3;
+	const entity = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		icos,
-		[0, 0, 0],
-		1000.0,
-		1.0 / 1.0,
-		terrainSeed,
-		decorSeed,
-	));
-
-	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
-		position: [p[0] / 3, p[1] / 3 + 0.3, p[2] / 3],
-		normal: [0, 0, 0],
-		color: BigInt(0xffffffff),
-	}));
-
-	scene.addMesh(new DecorMesh(
-		scene.gfx,
-		cube,
-		[0, 0, 0],
-		1000.0,
-		1.0 / 4.0,
+		[0, 0],
+		4.0,
+		spread,
 		terrainSeed,
 		decorSeed + 5555,
+		radius
 	));
+
+	if (entity.material instanceof SimpleMaterial) {
+		entity.material.fadeout = 8 * radius * spread;
+	}
+
+	return entity;
 }
 
-function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
+function addTrees(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const trunk = CUBE_VERTS.map(p => {
 		const position = [p[0] / 2.0, p[1] * 8.0, p[2] / 2.0];
 		return {
@@ -261,15 +290,24 @@ function addTrees(scene: Scene, terrainSeed: number, decorSeed: number) {
 	}
 
 	calculateNormals(vertices);
-	const trees = scene.addMesh(new DecorMesh(
+
+	const radius = 3;
+	const entity = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		vertices,
-		[0, 0, 0],
-		1000.0,
-		1.0 / 10.0,
+		[0, 0],
+		1.0,
+		spread,
 		terrainSeed,
 		decorSeed,
+		radius,
 	));
+
+	if (entity.material instanceof SimpleMaterial) {
+		entity.material.fadeout = 8 * radius * spread;
+	}
+
+	return entity;
 }
 
 

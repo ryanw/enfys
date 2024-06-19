@@ -2,11 +2,30 @@ import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
 import shaderSource from './decor.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
-import { Point3 } from 'engine/math';
+import { Point2, Point3 } from 'engine/math';
+
+const WorkgroupSize = [16, 16];
+const WorkgroupCount = [16, 16];
+const MaxInstances = WorkgroupSize[0] * WorkgroupSize[1] * WorkgroupCount[0] * WorkgroupCount[1];
+const InstanceByteSize = 4 * 4;// FIXME vec3f + u32 derive from type? OffsetInstance
+if (DEBUG) {
+	console.debug("Decor buffer size:", InstanceByteSize * MaxInstances);
+}
+
+export class DecorUniform extends UniformBuffer {
+	constructor(gfx: Gfx) {
+		super(gfx, [
+			['position', 'vec2f'],
+			['spacing', 'vec2f'],
+			['density', 'f32'],
+			['terrainSeed', 'f32'],
+			['decorSeed', 'f32'],
+		]);
+	}
+}
 
 export class DecorPipeline extends Pipeline {
 	private pipeline: GPUComputePipeline;
-	private uniformBuffer: UniformBuffer;
 	private counter: GPUBuffer;
 	private counterRead: GPUBuffer;
 
@@ -14,14 +33,6 @@ export class DecorPipeline extends Pipeline {
 		super(gfx);
 
 		const { device } = gfx;
-
-		this.uniformBuffer = new UniformBuffer(gfx, [
-			['position', 'vec3f'],
-			['radius', 'f32'],
-			['density', 'f32'],
-			['terrainSeed', 'f32'],
-			['decorSeed', 'f32'],
-		]);
 
 		this.counter = device.createBuffer({ size: 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
 		this.counterRead = device.createBuffer({ size: 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
@@ -64,19 +75,31 @@ export class DecorPipeline extends Pipeline {
 		});
 	}
 
-	async createInstanceBuffer(position: Point3, radius: number, density: number, terrainSeed: number, decorSeed: number): Promise<[GPUBuffer, number]> {
+	async createInstanceBuffer(uniform: DecorUniform, radius: number = 5): Promise<[GPUBuffer, number]> {
 		const { device } = this.gfx;
 
-		const maxInstances = 512000;
-		this.uniformBuffer.replace({ decorSeed, terrainSeed, position, radius, density });
-		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
-		const instanceByteSize = 3 * 4;// FIXME vec3f derive from type? OffsetInstance
 		const buffer = device.createBuffer({
 			label: 'DecorMesh Attribute Buffer',
-			size: maxInstances * instanceByteSize,
+			size: MaxInstances * InstanceByteSize,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
+
+		const count = await this.updateInstanceBuffer(buffer, uniform, radius);
+		return [buffer, count];
+	}
+
+	async updateInstanceBuffer(buffer: GPUBuffer, uniform: DecorUniform, radius: number = 5): Promise<number> {
+		const { device } = this.gfx;
+		if (radius > WorkgroupCount[0]) {
+			throw new Error(`Radius is too large, maximum is: ${WorkgroupCount[0]}`);
+		}
+		if (this.counterRead.mapState !== 'unmapped') {
+			// FIXME
+			return -1;
+		}
+
+		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
 
 		const enc = device.createCommandEncoder({ label: 'DecorPipeline Command Encoder' });
@@ -87,7 +110,7 @@ export class DecorPipeline extends Pipeline {
 			layout: this.pipeline.getBindGroupLayout(0),
 			entries: [
 				// Uniforms
-				{ binding: 0, resource: this.uniformBuffer.bindingResource() },
+				{ binding: 0, resource: uniform.bindingResource() },
 				// Atomic counter
 				{ binding: 1, resource: { buffer: this.counter } },
 				// Mesh output buffer
@@ -97,7 +120,7 @@ export class DecorPipeline extends Pipeline {
 
 		pass.setPipeline(this.pipeline);
 		pass.setBindGroup(0, bindGroup);
-		pass.dispatchWorkgroups(16, 16);
+		pass.dispatchWorkgroups(radius, radius);
 		pass.end();
 
 
@@ -112,6 +135,6 @@ export class DecorPipeline extends Pipeline {
 		this.counterRead.unmap();
 
 
-		return [buffer, instanceCount];
+		return instanceCount;
 	}
 }
