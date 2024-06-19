@@ -44,7 +44,7 @@ export class DecorMesh extends SimpleMesh {
 		const [buffer, count] = await this.pipeline.createInstanceBuffer(this.uniform, this.radius);
 		console.debug('Created %i Decor instances', count);
 		this.instanceBuffer = buffer;
-		this.instanceCount = 3072;// FIXME flicker //count;
+		this.instanceCount = count;
 	}
 
 	move(x: number, y: number) {
@@ -54,10 +54,13 @@ export class DecorMesh extends SimpleMesh {
 			// Haven't moved enough
 			return;
 		}
+		if (DEBUG) {
+			console.debug("Moving decor", x, y);
+		}
 		this.position = [x, y];
 		this.updateUniform();
 		this.pipeline.updateInstanceBuffer(this.instanceBuffer, this.uniform, this.radius).then(count => {
-			// FIXME flicker when updating instance count
+			// FIXME flicker when reducing instance count
 			if (count > this.instanceCount) {
 				this.instanceCount = count;
 			}

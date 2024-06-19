@@ -153,6 +153,9 @@ export class Chunker {
 	processQueue(scene: Scene) {
 		const chunkies = this.queuedChunks.keys();
 		for (const key of chunkies) {
+			if (DEBUG) {
+				console.debug("Processing chunk", key);
+			}
 			const chunk = this.queuedChunks.get(key);
 			if (!chunk) continue;
 			this.queuedChunks.delete(key);
