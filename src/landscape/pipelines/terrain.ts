@@ -89,7 +89,7 @@ export class TerrainPipeline extends Pipeline {
 
 		const vertexByteSize = (3 + 3 + 1) * 4;// FIXME derive from type? ColorVertex
 		const bufferSize = vertexCount * vertexByteSize;
-		console.log("Creating terrain vertex buffer", bufferSize);
+		console.log("Creating terrain vertex buffer: %i vertices = %f MB", vertexCount, bufferSize / 1024 /1024);
 		const buffer = device.createBuffer({
 			label: 'TerrainMesh Attribute Buffer Create',
 			size: bufferSize,

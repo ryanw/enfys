@@ -116,7 +116,7 @@ export class Chunker {
 	queuedChunks: Map<ChunkKey, Chunk> = new Map();
 	activeChunks: Map<ChunkKey, Chunk> = new Map();
 	entities: Map<ChunkKey, Entity<TerrainMesh>> = new Map();
-	chunkSize: Size = [256, 256];
+	chunkSize: Size = [128, 128];
 	private terrainPipeline: TerrainPipeline;
 	private currentChunk: Point2 = [-1, -1];
 
@@ -151,6 +151,7 @@ export class Chunker {
 	}
 
 	processQueue(scene: Scene) {
+		if (this.queuedChunks.size === 0) return;
 		const chunkies = this.queuedChunks.keys();
 		for (const key of chunkies) {
 			if (DEBUG) {
@@ -173,6 +174,19 @@ export class Chunker {
 			if (!entity) continue;
 			scene.removeEntity(entity);
 			this.liveChunks.delete(key);
+		}
+
+		if (DEBUG && this.entities.size > 0) {
+			const vertexSize = (3 + 3 + 1) * 4; // Size of ColorVertex
+			const vertexCount = (this.entities.values().next().value.object as TerrainMesh).vertexCount;
+			const chunkSize = vertexSize * vertexCount;
+			const memorySize = chunkSize * this.activeChunks.size;
+			console.debug(
+				"Terrain memory size: %f MB per chunk * %d chunks = total size: %f MB",
+				(chunkSize / 1024 / 1024),
+				this.activeChunks.size,
+				(memorySize / 1024 / 1024),
+			);
 		}
 	}
 

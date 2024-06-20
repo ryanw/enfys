@@ -10,7 +10,6 @@ import { Entity, isEntityOf } from './entity';
 import { DotMaterial, Material, SimpleMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
-import { Particles } from './particles';
 
 
 export interface RenderPipelines {
