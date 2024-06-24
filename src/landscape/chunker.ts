@@ -47,7 +47,7 @@ export function generateChunks(x: number, y: number, minLod: number = 0, maxLod:
 			}
 			const p = add(chunk.position, [scale, scale]);
 			const dist = magnitude(subtract(p, point));
-			if (dist < 2 * scale) {
+			if (dist < 3 * scale) {
 				const lodChunks = subdivideChunk(chunk.position, lod).map(position => ({
 					lod: lod,
 					position

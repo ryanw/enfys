@@ -7,7 +7,6 @@ export class DecorMesh extends SimpleMesh {
 	private pipeline: DecorPipeline;
 	private uniform: DecorUniform;
 
-
 	constructor(
 		gfx: Gfx,
 		vertices: Array<ColorVertex> = [],

@@ -2,6 +2,8 @@ import { Matrix4, Point3, Vector3 } from "engine/math";
 import { rotation } from "engine/math/transform";
 import { add, magnitude, scale } from "engine/math/vectors";
 
+const UNITS_PER_METER = 1.0;
+
 export class Player {
 	position: Point3 = [0, 0, 0];
 	velocity: Vector3 = [0, 0, 0];
@@ -55,6 +57,14 @@ export class Player {
 		const scaled = scale(this.velocity, vt);;
 		this.velocity[0] = scaled[0];
 		this.velocity[2] = scaled[2];
+		if (DEBUG) {
+			// speed in units per second
+			const speedU = magnitude(this.velocity);
+			// speed in meters per hour
+			const speed = (speedU * UNITS_PER_METER) * 3600;
+			const kph = speed / 1000;
+			console.log("Current velocity: %f kph", kph.toPrecision(4));
+		}
 	}
 }
 

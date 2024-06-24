@@ -22,6 +22,7 @@ import { DecorMesh } from './decor_mesh';
 import { Point3, Vector3 } from 'engine/math';
 import { Particles } from 'engine/particles';
 import { Entity } from 'engine/entity';
+import { TreeDecorMesh } from './meshes/tree';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -126,10 +127,11 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	const decors = [
 		addRocks(scene, 16.0, seed, seed + 1111),
 		addRocks(scene, 32.0, seed, seed + 1112),
+		addTrees(scene, 48.0, seed, seed + 2222),
+		addTrees(scene, 96.0, seed, seed + 2223),
 		addCubes(scene, 16.0, seed, seed + 3333),
 		addCubes(scene, 32.0, seed, seed + 3334),
-		addTrees(scene, 32.0, seed, seed + 2222),
-		addTrees(scene, 64.0, seed, seed + 2223),
+		addTrufts(scene, 8.0, seed, seed + 4444),
 	];
 
 	const player = scene.addMesh(new ShipMesh(gfx));
@@ -177,12 +179,13 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 		// Sync terrain with camera view
 		const [cx, _cy, cz] = world.activeCamera.camera.position;
-		chunker.move(cx, cz);
+		const [px, _py, pz] = world.player.position;
+
+		chunker.move(px, pz);
 		chunker.processQueue(scene);
 
-		const [px, _py, pz] = world.player.position;
 		for (const dec of decors) {
-			dec.object.move(px, pz);
+			dec.object.move(cx, cz);
 		}
 	}
 
@@ -223,6 +226,54 @@ function addCubes(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 
 	return entity;
 }
+
+function addTrufts(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+	const rnd = randomizer(decorSeed + 531);
+	const bt = 32;
+	const brad = 1.5;
+	const count = 10;
+	const baseBlade: Array<ColorVertex> = CUBE_VERTS.map(p => ({
+		position: [p[0] / bt, p[1], p[2] / bt],
+		normal: [0, 0, 0],
+		color: BigInt(0xff99dd66),
+	}));
+	calculateNormals(baseBlade);
+
+	let vertices: Array<ColorVertex> = [];
+	for (let i = 0; i < count; i++) {
+		const x = rnd(-brad, brad);
+		const y = rnd(-2, -0.5);
+		const z = rnd(-brad, brad);
+		const blade = baseBlade.map(vertex => {
+			const p = [...vertex.position];
+			const position = [p[0] + x, p[1] + y, p[2] + z];
+			return {
+				...vertex,
+				position
+			} as ColorVertex;
+		});
+		vertices = [...vertices, ...blade];
+	}
+
+	const radius = 3;
+	const entity = scene.addMesh(new DecorMesh(
+		scene.gfx,
+		vertices,
+		[0, 0],
+		1.0,
+		spread,
+		terrainSeed,
+		decorSeed + 123412,
+		radius
+	));
+
+	if (entity.material instanceof SimpleMaterial) {
+		entity.material.fadeout = 8 * radius * spread;
+	}
+
+	return entity;
+}
+
 function addRocks(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const icos: Array<ColorVertex> = buildIcosahedron(p => ({
 		position: [...p],
@@ -295,9 +346,8 @@ function addTrees(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 	calculateNormals(vertices);
 
 	const radius = 3;
-	const entity = scene.addMesh(new DecorMesh(
+	const entity = scene.addMesh(new TreeDecorMesh(
 		scene.gfx,
-		vertices,
 		[0, 0],
 		1.0,
 		spread,

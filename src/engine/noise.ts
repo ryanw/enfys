@@ -1,4 +1,4 @@
-import { BigVector3, Vector3 } from "./math";
+import { BigVector3, Point3, Vector3 } from "./math";
 
 // http://www.jcgt.org/published/0009/03/02/
 export function pcg3d(v: Vector3): Vector3 {
@@ -20,14 +20,14 @@ export function pcg3d(v: Vector3): Vector3 {
 }
 
 export type Randomizer = (l: number, r: number, t?: number) => number;
-export function randomizer(seed: number): Randomizer {
+export function randomizer(seed: number, p: Point3 = [0, 0, 0]): Randomizer {
 	let rndIdx = 100;
 	return (l: number, r: number, t: number = 321) => {
 		const n = rndIdx++ * 1000;
 		const coord = [
-			n + t * 10,
-			n + seed / 10000,
-			n
+			p[0] + n + t * 10,
+			p[1] + n + seed / 10000,
+			p[2] + n
 		] as Vector3;
 		return pcg3d(coord)[0] * (r - l) + l;
 	};
