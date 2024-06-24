@@ -43,7 +43,13 @@ export default entries.map(entry => ({
 			'PRODUCTION': JSON.stringify(production),
 			'DEBUG': JSON.stringify(!production),
 		}),
-		production && terser(),
+		production && terser({
+			compress: {
+				drop_console: ['log', 'debug', 'info'],
+				ecma: 2015,
+				passes: 4
+			}
+		}),
 	],
 	onLog(level, log, handler) {
 		if (log.code === 'CIRCULAR_DEPENDENCY') {

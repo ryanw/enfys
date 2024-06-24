@@ -28,7 +28,6 @@ export function ui(wrapper: HTMLElement, gfx: Gfx, seed: number) {
 	});
 
 
-	const lockMouseBtn = el.querySelector('#lock-mouse') as HTMLButtonElement;
 	const canvasPixelInp = el.querySelector('#canvas-pixel') as HTMLInputElement;
 	const ditherSizeInp = el.querySelector('#dither-size') as HTMLInputElement;
 	const ditherDepthInp = el.querySelector('#dither-depth') as HTMLInputElement;
@@ -54,8 +53,6 @@ export function ui(wrapper: HTMLElement, gfx: Gfx, seed: number) {
 		input.addEventListener('change', updateSettings);
 	}
 	updateSettings();
-
-	lockMouseBtn.addEventListener('click', () => el.requestPointerLock());
 
 	wrapper.appendChild(el);
 }

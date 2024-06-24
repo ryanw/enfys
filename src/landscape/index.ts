@@ -35,6 +35,9 @@ export type SyncGraphics = (world: World) => void;
  */
 export async function main(el: HTMLCanvasElement) {
 	const gfx: Gfx = await Gfx.attachNotified(el);
+	if (DEBUG) {
+		gfx.framecap = 60;
+	}
 	const seed = getSeed();
 
 	// Add the HTML UI stuff
