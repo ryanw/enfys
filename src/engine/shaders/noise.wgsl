@@ -42,6 +42,11 @@ fn rnd3(seed: vec3<f32>) -> f32 {
 	return rnd3u(useed);
 }
 
+fn rnd2(seed: vec2<f32>) -> f32 {
+	var useed = bitcast<vec2<u32>>(seed);
+	return rnd3u(useed.xyy);
+}
+
 fn smoothNoise(v: vec3<f32>) -> f32 {
 	var lv = smoothVec(fract(v));
 	var id = floor(v);

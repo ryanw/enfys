@@ -38,6 +38,11 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 	var n = rnd3(dp);
 
 	if p.y > 0.01 && p.y < 64.0 && n < u.density {
+		let isBuildingCell = buildingCell(p.xz, u.terrainSeed) > 0.0;
+		if isBuildingCell {
+			return;
+		}
+
 		var n0 = (rnd3(dp + vec3(123.0)) - 0.5) * u.spacing.x;
 		var n1 = (rnd3(dp + vec3(323.0)) - 0.5) * u.spacing.y;
 		var instance: Instance;

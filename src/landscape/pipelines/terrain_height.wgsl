@@ -3,6 +3,18 @@ var<private> continents_spline: array<f32, 10> = array<f32, 10>(1.0, 0.1, 0.11, 
 var<private> erosion_spline: array<f32, 10>    = array<f32, 10>(1.0, 0.8, 0.6, 0.7, 0.3, 0.27, 0.5, 0.47, 0.2, 0.1);
 var<private> valleys_spline: array<f32, 10>    = array<f32, 10>(0.0, 0.2, 0.4, 0.5, 0.55, 0.6, 0.7, 0.8, 0.9, 0.85);
 
+const BUILDING_CELL_SIZE: f32 = 256.0;
+
+fn buildingCell(pp: vec2f, seed: f32) -> f32 {
+	var p = floor(pp / BUILDING_CELL_SIZE) * BUILDING_CELL_SIZE;
+	let isBuilding = rnd2(p + seed) < 1.0/100.0;
+	if !isBuilding {
+		return -1.0;
+	}
+	let centre = p + vec2(BUILDING_CELL_SIZE / 2.0);
+	return length(centre - pp) / BUILDING_CELL_SIZE * 2.0;
+}
+
 fn landscapeNoise(p: vec3f) -> f32 {
 	return lumpLandscapeNoise(p) / 1.5;
 }
@@ -11,7 +23,9 @@ fn lumpLandscapeNoise(p: vec3f) -> f32 {
 	var t0 = continents(p);
 	var t1 = erosion(p);
 	var t2 = valleys(p);
-	return 0.2 + (t0 * t1 * t2) * 512.0;
+	var t = 0.2 + (t0 * t1 * t2) * 512.0;
+
+	return t;
 }
 
 fn landHeight(op: vec3f, t: f32) -> f32 {
@@ -39,6 +53,22 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 	} else {
 		n = mix(cn + n * 0.2, n, d);
 	}
+
+	let buildingDist = buildingCell(op.xz, t);
+	if buildingDist >= 0.0 {
+		// Flatten around building
+		let cell = (floor(op.xz / BUILDING_CELL_SIZE) * BUILDING_CELL_SIZE) / scale;
+
+		// Height at building center
+		let bn = landscapeNoise(vec3(cell.x, t, cell.y));
+		let diff = n - bn;
+		var t = smoothstep(0.0, 1.0, pow(1.0 - buildingDist, 1.0/2.0));
+		n = mix(n, bn, t);
+		if buildingDist < 0.01 {
+			//n = 40.0;
+		}
+	}
+
 
 	return n;
 }

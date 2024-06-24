@@ -1,11 +1,11 @@
 import { Gfx } from 'engine';
 import { Point2 } from 'engine/math';
 import { ColorVertex, SimpleMesh } from 'engine/mesh';
-import { DecorPipeline, DecorUniform } from './pipelines/decor';
+import { BuildingPipeline, DecorPipeline, DecorUniform } from './pipelines/decor';
 
 export class DecorMesh extends SimpleMesh {
-	private pipeline: DecorPipeline;
-	private uniform: DecorUniform;
+	protected pipeline: DecorPipeline;
+	protected uniform: DecorUniform;
 
 	constructor(
 		gfx: Gfx,
@@ -24,7 +24,7 @@ export class DecorMesh extends SimpleMesh {
 		this.createInstanceBuffer();
 	}
 
-	private updateUniform() {
+	protected updateUniform() {
 		const p: Point2 = [
 			(this.position[0] / this.spacing | 0) * this.spacing,
 			(this.position[1] / this.spacing | 0) * this.spacing,
@@ -39,7 +39,7 @@ export class DecorMesh extends SimpleMesh {
 		});
 	}
 
-	private async createInstanceBuffer() {
+	protected async createInstanceBuffer() {
 		const [buffer, count] = await this.pipeline.createInstanceBuffer(this.uniform, this.radius);
 		console.debug('Created %i Decor instances', count);
 		this.instanceBuffer = buffer;
@@ -64,5 +64,22 @@ export class DecorMesh extends SimpleMesh {
 				this.instanceCount = count;
 			}
 		});
+	}
+}
+
+export class BuildingMesh extends DecorMesh {
+	constructor(
+		gfx: Gfx,
+		vertices: Array<ColorVertex> = [],
+		position: Point2,
+		density: number,
+		spacing: number,
+		terrainSeed: number,
+		decorSeed: number,
+		radius: number = 5,
+	) {
+		super(gfx, vertices, position, density, spacing, terrainSeed, decorSeed, radius);
+		this.pipeline = new BuildingPipeline(gfx);
+		this.createInstanceBuffer();
 	}
 }

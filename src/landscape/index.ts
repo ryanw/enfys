@@ -18,7 +18,7 @@ import { ui } from './ui';
 import { add, normalize, scale } from 'engine/math/vectors';
 import { debugChunker } from './chunker.debug';
 import { StarMesh } from './star_mesh';
-import { DecorMesh } from './decor_mesh';
+import { BuildingMesh, DecorMesh } from './decor_mesh';
 import { Point3, Vector3 } from 'engine/math';
 import { Particles } from 'engine/particles';
 import { Entity } from 'engine/entity';
@@ -131,7 +131,8 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		addTrees(scene, 96.0, seed, seed + 2223),
 		addCubes(scene, 16.0, seed, seed + 3333),
 		addCubes(scene, 32.0, seed, seed + 3334),
-		addTrufts(scene, 8.0, seed, seed + 4444),
+		addTufts(scene, 8.0, seed, seed + 4444),
+		addBuildings(scene, 256.0, seed, seed + 6666),
 	];
 
 	const player = scene.addMesh(new ShipMesh(gfx));
@@ -227,7 +228,34 @@ function addCubes(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 	return entity;
 }
 
-function addTrufts(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addBuildings(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
+		position: [p[0] * 32, p[1] * 32, p[2] * 32],
+		normal: [0, 0, 0],
+		color: BigInt(0xffffffff),
+	}));
+	calculateNormals(cube);
+
+	const radius = 8;
+	const entity = scene.addMesh(new BuildingMesh(
+		scene.gfx,
+		cube,
+		[0, 0],
+		1.0,
+		spread,
+		terrainSeed,
+		decorSeed + 5555,
+		radius,
+	));
+
+	if (entity.material instanceof SimpleMaterial) {
+		entity.material.fadeout = 8 * radius * spread;
+	}
+
+	return entity;
+}
+
+function addTufts(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const rnd = randomizer(decorSeed + 531);
 	const bt = 32;
 	const brad = 1.5;

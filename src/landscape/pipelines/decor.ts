@@ -1,8 +1,8 @@
 import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
-import shaderSource from './decor.wgsl';
+import decorShaderSource from './decor.wgsl';
+import buildingShaderSource from './building.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
-import { Point2, Point3 } from 'engine/math';
 
 const WorkgroupSize = [16, 16];
 const WorkgroupCount = [8, 8];
@@ -25,9 +25,9 @@ export class DecorUniform extends UniformBuffer {
 }
 
 export class DecorPipeline extends Pipeline {
-	private pipeline: GPUComputePipeline;
-	private counter: GPUBuffer;
-	private counterRead: GPUBuffer;
+	protected pipeline: GPUComputePipeline;
+	protected counter: GPUBuffer;
+	protected counterRead: GPUBuffer;
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -37,7 +37,7 @@ export class DecorPipeline extends Pipeline {
 		this.counter = device.createBuffer({ size: 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
 		this.counterRead = device.createBuffer({ size: 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
 
-		const shader = device.createShaderModule({ label: 'DecorPipeline Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'DecorPipeline Shader', code: decorShaderSource });
 		const bindGroupLayout = device.createBindGroupLayout({
 			entries: [
 				{
@@ -139,5 +139,50 @@ export class DecorPipeline extends Pipeline {
 
 
 		return instanceCount;
+	}
+}
+
+export class BuildingPipeline extends DecorPipeline {
+	constructor(gfx: Gfx) {
+		super(gfx);
+
+		const { device } = gfx;
+
+		const shader = device.createShaderModule({ label: 'BuildingDecorPipeline Shader', code: buildingShaderSource });
+		const bindGroupLayout = device.createBindGroupLayout({
+			entries: [
+				{
+					binding: 0,
+					visibility: GPUShaderStage.COMPUTE,
+					buffer: {}
+				},
+				// Atomic counter
+				{
+					binding: 1,
+					visibility: GPUShaderStage.COMPUTE,
+					buffer: {
+						type: 'storage',
+					}
+				},
+				// Output
+				{
+					binding: 2,
+					visibility: GPUShaderStage.COMPUTE,
+					buffer: {
+						type: 'storage',
+					}
+				},
+			]
+		});
+
+		const pipelineLayout = device.createPipelineLayout({
+			bindGroupLayouts: [bindGroupLayout],
+		});
+
+		this.pipeline = gfx.device.createComputePipeline({
+			label: 'BuildingDecorPipeline',
+			layout: pipelineLayout,
+			compute: { module: shader, entryPoint: 'main' },
+		});
 	}
 }
