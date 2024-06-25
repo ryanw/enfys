@@ -108,6 +108,11 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		this.vertexCount = vertices.length;
 		this.vertexBuffer = vertexBuffer;
 	}
+
+	destroy() {
+		this.vertexBuffer.destroy();
+		this.instanceBuffer.destroy();
+	}
 }
 
 /**

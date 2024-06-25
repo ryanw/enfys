@@ -136,7 +136,7 @@ export class Chunker {
 		if (cx === this.currentChunk[0] && cy === this.currentChunk[1]) {
 			return;
 		}
-		this.currentChunk = [x, y];
+		this.currentChunk = [cx, cy];
 		this.activeChunks = new Map();
 		const chunks = generateChunks(
 			cx,

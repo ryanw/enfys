@@ -57,8 +57,7 @@ export class Entity<T> {
 
 	destroy() {
 		if (isEntityOf(this, SimpleMesh)) {
-			this.object.vertexBuffer.destroy();
-			this.object.instanceBuffer.destroy();
+			this.object.destroy();
 		}
 	}
 }

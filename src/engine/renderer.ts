@@ -11,7 +11,6 @@ import { DotMaterial, Material, SimpleMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
 
-
 export interface RenderPipelines {
 	compose: ComposePipeline,
 	materials: Map<Constructor<Material>, MaterialPipeline>,
