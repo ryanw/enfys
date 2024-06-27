@@ -1,10 +1,11 @@
 import { Gfx } from "engine";
-import { Point3 } from "./math";
+import { Point3, Vector3 } from "./math";
 import { ColorVertex, SimpleMesh } from "./mesh";
 import { INSTANCE_SIZE, PARTICLE_SIZE, ParticlePipeline } from "./pipelines/particle";
 
 export class Particles extends SimpleMesh {
 	public count = 0;
+	public direction: Vector3 = [0, 0, 0];
 	private pipeline: ParticlePipeline;
 	/**
 	 * Stores additional particle data needed for simulation, but not needed for rendering
@@ -20,7 +21,7 @@ export class Particles extends SimpleMesh {
 		 * Where particles spawn from
 		 */
 		capacity: number,
-		public origin: Point3 = [0,0,0],
+		public origin: Point3 = [0, 0, 0],
 		public seed: number = 123456,
 	) {
 		super(gfx, vertices);
@@ -81,6 +82,7 @@ export class Particles extends SimpleMesh {
 			time,
 			dt,
 			this.origin,
+			this.direction,
 			this.count,
 			this.capacity,
 			this.seed,

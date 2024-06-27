@@ -10,6 +10,7 @@ struct Particle {
 
 struct Uniforms {
 	origin: vec3f,
+	direction: vec3f,
 	time: f32,
 	dt: f32,
 	count: u32,
@@ -59,7 +60,12 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 				particle.birth = u.time;
 			}
 			p = u.origin;
-			velocity = vec3(n0 * 2.0, (n1 - 0.5)-1.0, n2 * 2.0);
+
+			let speed = 100.0;
+			let gravity = -33.0 * u.dt;
+			let spray = vec3(n0 * 2.0, 0.0, n2 * 2.0);
+			let thrust = (u.direction * speed) * u.dt;
+			velocity = thrust + spray;
 		} else {
 			// Destroy particle
 			particle.birth = 0.0;

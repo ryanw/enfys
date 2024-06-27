@@ -2,7 +2,8 @@ import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
 import shaderSource from './particle.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
-import { Point3 } from 'engine/math';
+import { Point3, Vector3 } from 'engine/math';
+import { normalize } from 'engine/math/vectors';
 
 export const INSTANCE_SIZE = 4 * 4;// FIXME vec3f derive from type? ColorInstance
 export const PARTICLE_SIZE = 4 * 4;// FIXME derive from type ParticleInstance
@@ -20,6 +21,7 @@ export class ParticlePipeline extends Pipeline {
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['origin', 'vec3f'],
+			['direction', 'vec3f'],
 			['time', 'f32'],
 			['dt', 'f32'],
 			['count', 'u32'],
@@ -101,13 +103,14 @@ export class ParticlePipeline extends Pipeline {
 		time: number,
 		dt: number,
 		origin: Point3,
+		direction: Vector3,
 		count: number,
 		instanceCount: number,
 		seed: number,
 	) {
 		const { device } = this.gfx;
 
-		this.uniformBuffer.replace({ seed, time, dt, origin, count });
+		this.uniformBuffer.replace({ seed, time, dt, origin, direction: normalize(direction), count });
 		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
 		const enc = device.createCommandEncoder({ label: 'ParticlePipeline Command Encoder' });

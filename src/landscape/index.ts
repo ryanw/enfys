@@ -7,7 +7,7 @@
 import { Gfx, calculateNormals } from 'engine';
 import { CUBE_VERTS, ColorVertex, buildIcosahedron, Icosahedron, QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
-import { multiply, rotation, scaling, transformPoint, translation } from 'engine/math/transform';
+import { multiply, multiplyVector, rotation, scaling, transformPoint, translation } from 'engine/math/transform';
 import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { Chunker } from './chunker';
 import { World } from './world';
@@ -121,7 +121,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		),
 		translation(0, 0, 0),
 	);
-	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5)));
+	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5, 0.9)));
 
 	// Add a forest of trees
 	const decors = [
@@ -162,7 +162,9 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		// Enlarge flames to match thrust
 		const thrust = world.playerController.thrust;
 
-		particles.object.origin = add(world.player.position, [0, -0.1, 0]);
+		const rot = world.player.rotationMatrix();
+		particles.object.origin = world.player.position;//add(world.player.position, multiplyVector(rot, [0, -0.3, 0, 0]).slice(0, 2) as Vector3);
+		particles.object.direction = multiplyVector(rot, [0, -1, 0, 0]).slice(0, 3) as Vector3;
 		particles.object.update(performance.now() / 1000.0);
 		particles.object.count = 256 * Math.pow(thrust, 4.0);
 

@@ -63,7 +63,7 @@ export class Player {
 			// speed in meters per hour
 			const speed = (speedU * UNITS_PER_METER) * 3600;
 			const kph = speed / 1000;
-			console.log("Current velocity: %f kph", kph.toPrecision(4));
+			//console.log("Current velocity: %f kph", kph.toPrecision(4));
 		}
 	}
 }
