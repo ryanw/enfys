@@ -42,7 +42,7 @@ export class Player {
 
 			const diff = targetHeight - this.position[1];
 			// Speed to adjust ship height
-			const collideSpeed = Math.max(32.0, speed);
+			const collideSpeed = Math.max(2.0, speed);
 			const step = collideSpeed * dt;
 			if (diff < step) {
 				this.position[1] = targetHeight;
