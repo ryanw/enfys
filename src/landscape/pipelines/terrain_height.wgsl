@@ -69,6 +69,9 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 		}
 	}
 
+	if (length(op.xz) < 50.0) {
+		//n = 100.0;
+	}
 
 	return n;
 }

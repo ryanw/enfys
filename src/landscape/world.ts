@@ -1,11 +1,14 @@
 import { Gfx } from 'engine';
 import { Camera } from 'engine/camera';
-import { Point3 } from 'engine/math';
+import { Point2, Point3 } from 'engine/math';
 import { TerrainHeightQueryPipeline } from './pipelines/terrain_height_query';
 import { OrbitCameraController } from 'engine/input/orbit_camera';
 import { FreeCameraController } from 'engine/input/free_camera';
 import { PlayerController } from './input';
 import { Player } from './player';
+import { TerrainExtractPipeline } from './pipelines/terrain_extract';
+import { hsl } from 'engine/color';
+import { TerrainCache } from './terrain_cache';
 
 type Timeout = ReturnType<typeof setTimeout>;
 type CameraController = OrbitCameraController | FreeCameraController;
@@ -16,12 +19,14 @@ export class World {
 	spawnPosition: Point3 = [0, 0, 0];
 	cameras: Array<CameraController> = [];
 	queryTerrain: TerrainHeightQueryPipeline;
+	terrainCache: TerrainCache;
 	currentCameraId = 0;
 	tickrate = 60;
 
 	private currentTimer: Timeout | null = null;
 
 	constructor(public gfx: Gfx, public seed: number) {
+		this.terrainCache = new TerrainCache(gfx, seed);
 		this.queryTerrain = new TerrainHeightQueryPipeline(gfx);
 		this.playerController = new PlayerController(gfx.canvas);
 		this.cameras = [
@@ -38,7 +43,7 @@ export class World {
 	}
 
 	async init() {
-		const h = await this.queryTerrain.queryWorldPoint(this.spawnPosition, this.seed);
+		const h = await this.terrainCache.heightAt(this.spawnPosition);
 		for (const camera of this.cameras) {
 			camera.camera.position = [0, 6.0 + h, -8];
 			camera.camera.rotate(0.1, 0);
@@ -47,10 +52,11 @@ export class World {
 		this.spawnPlayer();
 	}
 
+
 	run() {
 		const tick = async () => {
 			const now = performance.now();
-			const dt = (1000/this.tickrate);
+			const dt = (1000 / this.tickrate);
 			await this.update(dt / 1000);
 
 			const ft = performance.now() - now;
@@ -68,8 +74,7 @@ export class World {
 	}
 
 	async update(dt: number) {
-
-		this.player.surfaceHeight = await this.queryTerrain.queryWorldPoint(this.player.position, this.seed, true);
+		this.player.surfaceHeight = await this.terrainCache.heightAt(this.player.position);
 		this.playerController.update(this.player, this.activeCamera.camera, dt);
 		this.player.update(dt);
 

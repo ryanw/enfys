@@ -4,6 +4,9 @@ import { Gfx } from "engine";
 import { Camera } from "engine/camera";
 import { multiply, transformPoint, translation } from "engine/math/transform";
 
+const MIN_DISTANCE = 3;
+const MAX_DISTANCE = 20000;
+
 export class OrbitCameraController {
 	disabled = false;
 	bindings: Record<string, Key> = {
@@ -113,7 +116,7 @@ export class OrbitCameraController {
 		if (this.disabled) return;
 		e.preventDefault();
 		this.distance *= 1.0 - (e.deltaY / -1000.0);
-		this.distance = Math.min(Math.max(this.distance, 3), 200);
+		this.distance = Math.min(Math.max(this.distance, MIN_DISTANCE), MAX_DISTANCE);
 	};
 
 	onMouseDown = (e: MouseEvent) => {

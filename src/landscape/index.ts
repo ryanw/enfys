@@ -23,6 +23,7 @@ import { Point3, Vector3 } from 'engine/math';
 import { Particles } from 'engine/particles';
 import { Entity } from 'engine/entity';
 import { TreeDecorMesh } from './meshes/tree';
+import { getParam } from './helpers';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -154,7 +155,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 	const colorScheme = buildColorScheme(seed);
 	const chunker = new Chunker(gfx, seed, 6, colorScheme);
-	if (DEBUG && getParam('debug')) {
+	if (DEBUG && getParam('debug') == '1') {
 		debugChunker(gfx.canvas.parentElement!, chunker);
 	}
 
@@ -198,10 +199,6 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 function getSeed(): number {
 	const seedParam = getParam('seed');
 	return Math.abs(seedParam ? parseInt(seedParam, 36) : Math.random() * 0x7fffffff | 0);
-}
-
-function getParam(name: string): string | undefined {
-	return window.location.search.match(new RegExp(`(?:\\?|&)${name}=([^&]+)`))?.[1];
 }
 
 function addCubes(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
