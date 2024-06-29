@@ -6,9 +6,8 @@ import { OrbitCameraController } from 'engine/input/orbit_camera';
 import { FreeCameraController } from 'engine/input/free_camera';
 import { PlayerController } from './input';
 import { Player } from './player';
-import { TerrainExtractPipeline } from './pipelines/terrain_extract';
-import { hsl } from 'engine/color';
 import { TerrainCache } from './terrain_cache';
+import { add } from 'engine/math/vectors';
 
 type Timeout = ReturnType<typeof setTimeout>;
 type CameraController = OrbitCameraController | FreeCameraController;
@@ -74,7 +73,18 @@ export class World {
 	}
 
 	async update(dt: number) {
-		this.player.surfaceHeight = await this.terrainCache.heightAt(this.player.position);
+		const rad = 1.0;
+		const coords: Point3[] = [
+			[-rad, 0, -rad],
+			[-rad, 0, rad],
+			[rad, 0, rad],
+			[rad, 0, -rad],
+		];
+		let height = -10000.0;
+		for (const coord of coords) {
+			height = Math.max(height, await this.terrainCache.heightAt(add(this.player.position, coord)));
+		}
+		this.player.surfaceHeight = height;
 		this.playerController.update(this.player, this.activeCamera.camera, dt);
 		this.player.update(dt);
 
