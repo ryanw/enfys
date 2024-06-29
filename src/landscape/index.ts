@@ -229,7 +229,7 @@ function addCubes(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 
 function addBuildings(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
-		position: [p[0] * 32, p[1] * 32, p[2] * 32],
+		position: [p[0] * 32, p[1] * 320, p[2] * 32],
 		normal: [0, 0, 0],
 		color: BigInt(0xffffffff),
 	}));

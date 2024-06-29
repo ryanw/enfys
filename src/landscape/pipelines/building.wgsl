@@ -26,9 +26,9 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 	let cellSize = 256.0;
 	let rp = round(u.position);
 	var p = vec3f(
-		rp.x + (f32(globalId.x) - 8.0) * cellSize,
+		rp.x + (f32(globalId.x) - (cellSize/4.0)) * cellSize,
 		0.0,
-		rp.y + (f32(globalId.y) - 8.0) * cellSize,
+		rp.y + (f32(globalId.y) - (cellSize/4.0)) * cellSize,
 	);
 	let isBuildingCell = buildingCell(p.xz, u.terrainSeed) > 0.0;
 	if !isBuildingCell {
