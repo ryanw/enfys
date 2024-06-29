@@ -150,9 +150,10 @@ export class Chunker {
 		this.updateQueue();
 	}
 
-	processQueue(scene: Scene) {
+	processQueue(scene: Scene, batchSize: number = 4) {
 		if (this.queuedChunks.size === 0) return;
 		const chunkies = this.queuedChunks.keys();
+		let i = 0;
 		for (const key of chunkies) {
 			if (DEBUG) {
 				console.debug("Processing chunk", key);
@@ -161,9 +162,12 @@ export class Chunker {
 			if (!chunk) continue;
 			this.queuedChunks.delete(key);
 			this.generateChunk(scene, chunk);
+			if (++i >= batchSize) break;
 		}
-		// Timeout to avoid flicker
-		setTimeout(() => this.removeExpiredChunks(scene), 10);
+		if (this.queuedChunks.size === 0) {
+			// Timeout to avoid flicker
+			setTimeout(() => this.removeExpiredChunks(scene), 10);
+		}
 	}
 
 	private removeExpiredChunks(scene: Scene) {
