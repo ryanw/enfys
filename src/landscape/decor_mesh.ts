@@ -65,11 +65,10 @@ export class DecorMesh extends SimpleMesh {
 	async updateInstanceBuffer(): Promise<void> {
 		return this.pipeline.updateInstanceBuffer(this.instanceBackBuffer, this.uniform, this.radius)
 			.then(count => {
-				// FIXME flicker when reducing instance count
 				if (count > 0) {
 					this.instanceCount = count;
+					this.swapBuffers();
 				}
-				this.swapBuffers();
 			});
 	}
 

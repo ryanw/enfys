@@ -145,14 +145,14 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 	// Add a forest of trees
 	const decors = [
-		addRocks(scene, 16.0, seed, seed + 1111),
-		addRocks(scene, 32.0, seed, seed + 1112),
-		addTrees(scene, 48.0, seed, seed + 2222),
-		addTrees(scene, 96.0, seed, seed + 2223),
-		addCubes(scene, 16.0, seed, seed + 3333),
-		addCubes(scene, 32.0, seed, seed + 3334),
-		addTufts(scene, 8.0, seed, seed + 4444),
-		addBuildings(scene, 256.0, seed, seed + 6666),
+		addRocks(scene, 12.0, 3, seed, seed + 1111),
+		addRocks(scene, 24.0, 4, seed, seed + 1112),
+		addTrees(scene, 48.0, 4, seed, seed + 2222),
+		addTrees(scene, 96.0, 4, seed, seed + 2223),
+		addCubes(scene, 12.0, 3, seed, seed + 3333),
+		addCubes(scene, 24.0, 5, seed, seed + 3334),
+		addTufts(scene, 6.0, 6, seed, seed + 4444),
+		addBuildings(scene, 256.0, 8, seed, seed + 6666),
 	];
 
 	const player = scene.addMesh(new ShipMesh(gfx));
@@ -233,14 +233,13 @@ function getSeed(): number {
 	return Math.abs(seedParam ? parseInt(seedParam, 36) : Math.random() * 0x7fffffff | 0);
 }
 
-function addCubes(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addCubes(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
 		position: [p[0] / 3, p[1] / 3 + 0.3, p[2] / 3],
 		normal: [0, 0, 0],
 		color: BigInt(0xffffffff),
 	}));
 
-	const radius = 2;
 	const entity = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		cube,
@@ -259,7 +258,7 @@ function addCubes(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 	return entity;
 }
 
-function addBuildings(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addBuildings(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
 		position: [p[0] * 32, p[1] * 320, p[2] * 32],
 		normal: [0, 0, 0],
@@ -267,7 +266,6 @@ function addBuildings(scene: Scene, spread: number, terrainSeed: number, decorSe
 	}));
 	calculateNormals(cube);
 
-	const radius = 8;
 	const entity = scene.addMesh(new BuildingMesh(
 		scene.gfx,
 		cube,
@@ -286,7 +284,7 @@ function addBuildings(scene: Scene, spread: number, terrainSeed: number, decorSe
 	return entity;
 }
 
-function addTufts(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addTufts(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const rnd = randomizer(decorSeed + 531);
 	const bt = 32;
 	const brad = 1.5;
@@ -314,7 +312,6 @@ function addTufts(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 		vertices = [...vertices, ...blade];
 	}
 
-	const radius = 3;
 	const entity = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		vertices,
@@ -333,7 +330,7 @@ function addTufts(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 	return entity;
 }
 
-function addRocks(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addRocks(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const icos: Array<ColorVertex> = buildIcosahedron(p => ({
 		position: [...p],
 		normal: [0, 0, 0],
@@ -341,12 +338,11 @@ function addRocks(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 	}));
 	calculateNormals(icos);
 
-	const radius = 2;
 	const entity = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		icos,
 		[0, 0],
-		4.0,
+		1.0,
 		spread,
 		terrainSeed,
 		decorSeed + 5555,
@@ -360,7 +356,7 @@ function addRocks(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 	return entity;
 }
 
-function addTrees(scene: Scene, spread: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addTrees(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
 	const trunk = CUBE_VERTS.map(p => {
 		const position = [p[0] / 2.0, p[1] * 8.0, p[2] / 2.0];
 		return {
@@ -404,7 +400,6 @@ function addTrees(scene: Scene, spread: number, terrainSeed: number, decorSeed: 
 
 	calculateNormals(vertices);
 
-	const radius = 3;
 	const entity = scene.addMesh(new TreeDecorMesh(
 		scene.gfx,
 		[0, 0],

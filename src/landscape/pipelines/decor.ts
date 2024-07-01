@@ -5,12 +5,10 @@ import buildingShaderSource from './building.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 
 const WorkgroupSize = [16, 16];
-const WorkgroupCount = [8, 8];
+const WorkgroupCount = [64, 64];
 const MaxInstances = WorkgroupSize[0] * WorkgroupSize[1] * WorkgroupCount[0] * WorkgroupCount[1];
 const InstanceByteSize = 4 * 4;// FIXME vec3f + u32 derive from type? OffsetInstance
-if (DEBUG) {
-	console.debug("Decor buffer size:", InstanceByteSize * MaxInstances);
-}
+console.debug("Decor buffer size:", InstanceByteSize * MaxInstances);
 
 export class DecorUniform extends UniformBuffer {
 	constructor(gfx: Gfx) {
@@ -117,9 +115,6 @@ export class DecorPipeline extends Pipeline {
 			return -1;
 		}
 
-		if (DEBUG) {
-			console.debug("Updating decor instance buffer", radius);
-		}
 		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
 
