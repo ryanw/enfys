@@ -4,12 +4,18 @@ struct Instance {
 	color: u32,
 }
 
+struct Plane {
+	origin: vec3f,
+	normal: vec3f,
+}
+
 struct Uniforms {
 	position: vec2f,
 	spacing: vec2f,
 	density: f32,
 	terrainSeed: f32,
 	decorSeed: f32,
+	clipping: array<Plane, 6>,
 }
 
 @group(0) @binding(0)
@@ -40,7 +46,8 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 	if p.y > 0.01 && p.y < 64.0 && n < u.density {
 		let isBuildingCell = buildingCell(p.xz, u.terrainSeed) > 0.0;
 		if isBuildingCell {
-			return;
+			// No decor on building cells
+			//return;
 		}
 
 		var n0 = (rnd3(dp + vec3(123.0)) - 0.5) * u.spacing.x;
@@ -49,6 +56,18 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		p.x += n0;
 		p.z += n1;
 		p.y = landHeight(p, u.terrainSeed);
+
+		// Test for clipping
+		for (var i = 0; i < 6; i++) {
+			let n = u.clipping[i].normal;
+			let o = u.clipping[i].origin + n * (length(u.spacing) / 2.0);
+			let vp = normalize(p - o);
+			let vd = dot(vp, n);
+			if vd >= 0.0 {
+				return;
+			}
+		}
+
 		// Gap around player start
 		if length(p.xz) < 3.0 {
 			//return;

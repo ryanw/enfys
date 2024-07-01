@@ -1,7 +1,8 @@
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { Material } from './material';
-import { Vector2 } from './math';
+import { Matrix4, Point3, Vector2, Vector3 } from './math';
+import { transformPoint } from './math/transform';
 import { cross, normalize, subtract } from './math/vectors';
 import { NormalVertex } from './mesh';
 import { MaterialPipeline } from './pipelines/material';
@@ -11,6 +12,7 @@ import { Scene } from './scene';
 export { Color } from './color';
 export type Size = Vector2;
 export type Constructor<T> = new (...args: Array<any>) => T;
+export type Triangle = [Point3, Point3, Point3];
 
 export interface Config {
 	ditherSize: number;
@@ -230,7 +232,7 @@ export class Gfx {
 			if (this.framecap) {
 				// How long the draw took
 				const ft = performance.now() - now;
-				const delay = (1000/this.framecap) - ft;
+				const delay = (1000 / this.framecap) - ft;
 				if (delay > 0) {
 					setTimeout(draw, delay);
 				}
@@ -304,17 +306,33 @@ export class UnsupportedError extends Error {
 }
 
 /**
+ * Get the normal of a triangle
+ */
+export function calculateNormal(triangle: Triangle, transform?: Matrix4): Vector3 {
+	let [p0, p1, p2] = triangle;
+	if (transform) {
+		p0 = transformPoint(transform, p0);
+		p1 = transformPoint(transform, p1);
+		p2 = transformPoint(transform, p2);
+	}
+
+	const v0 = subtract(p1, p0);
+	const v1 = subtract(p2, p0);
+	return normalize(cross(v0, v1));
+}
+
+/**
  * Update the normals in a collection of {@link NormalVertex} so they're perpendicular to the triangle's surface
  */
-export function calculateNormals(vertices: Array<NormalVertex>) {
+export function calculateNormals(vertices: Array<NormalVertex>, transform?: Matrix4) {
 	for (let i = 0; i < vertices.length; i += 3) {
-		const p0 = vertices[i + 0].position;
-		const p1 = vertices[i + 1].position;
-		const p2 = vertices[i + 2].position;
+		const triangle: Triangle = [
+			vertices[i + 0].position,
+			vertices[i + 1].position,
+			vertices[i + 2].position,
+		] ;
+		const normal = calculateNormal(triangle, transform);
 
-		const v0 = subtract(p1, p0);
-		const v1 = subtract(p2, p0);
-		const normal = normalize(cross(v0, v1));
 		vertices[i + 0].normal = normal;
 		vertices[i + 1].normal = normal;
 		vertices[i + 2].normal = normal;

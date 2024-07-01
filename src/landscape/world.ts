@@ -41,10 +41,28 @@ export class World {
 		return this.cameras[this.currentCameraId % this.cameras.length];
 	}
 
+	get shipCamera(): OrbitCameraController {
+		for (const camera of this.cameras) {
+			if (camera instanceof OrbitCameraController) {
+				return camera;
+			}
+		}
+		throw new Error("Missing Orbit Camera");
+	}
+
+	get freeCamera(): FreeCameraController {
+		for (const camera of this.cameras) {
+			if (camera instanceof FreeCameraController) {
+				return camera;
+			}
+		}
+		throw new Error("Missing Free Camera");
+	}
+
 	async init() {
 		const h = await this.terrainCache.heightAt(this.spawnPosition);
 		for (const camera of this.cameras) {
-			camera.camera.position = [0, 6.0 + h, -8];
+			camera.camera.position = [0, 6.0 + h, -20];
 			camera.camera.rotate(0.1, 0);
 		}
 		this.spawnPosition[1] = 1.0 + h;
@@ -85,7 +103,12 @@ export class World {
 			height = Math.max(height, await this.terrainCache.heightAt(add(this.player.position, coord)));
 		}
 		this.player.surfaceHeight = height;
-		this.playerController.update(this.player, this.activeCamera.camera, dt);
+		this.playerController.update(
+			this.player,
+			this.activeCamera.camera,
+			this,
+			dt,
+		);
 		this.player.update(dt);
 
 		for (const camera of this.cameras) {
@@ -99,11 +122,24 @@ export class World {
 	}
 
 	updateCameras() {
-		this.playerController.disabled = !(this.activeCamera instanceof OrbitCameraController);
+		this.playerController.keyboardDisabled = !(this.activeCamera instanceof OrbitCameraController);
 		for (const camera of this.cameras) {
 			camera.disabled = true;
 		}
 		this.activeCamera.disabled = false;
+	}
+
+	nextCamera() {
+		this.currentCameraId = (this.currentCameraId + 1) % this.cameras.length;
+		this.updateCameras();
+	}
+
+	prevCamera() {
+		this.currentCameraId -= 1;
+		if (this.currentCameraId < 0) {
+			this.currentCameraId = this.cameras.length - 1;
+		}
+		this.updateCameras();
 	}
 }
 

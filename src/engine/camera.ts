@@ -1,7 +1,10 @@
-import { Gfx } from 'engine';
-import { Matrix4, Point3, Vector3 } from './math';
+import { Gfx, Triangle, calculateNormal } from 'engine';
+import { Matrix4, Plane, Point3, Vector3 } from './math';
 import { identity, transformPoint, inverse, multiply, multiplyVector, perspective, rotation, scaling, translation } from './math/transform';
 import { UniformBuffer } from './uniform_buffer';
+
+
+export type ClippingPlanes = [Plane, Plane, Plane, Plane, Plane, Plane];
 
 /**
  * A camera in 3D space
@@ -23,6 +26,24 @@ export class Camera {
 			['t', 'f32'],
 		]);
 		this.updateView();
+	}
+
+	clippingPlanes(): ClippingPlanes {
+		const invProj = inverse(multiply(this.projection, this.view))!;
+		const planes = [];
+		for (let i = 0; i < 6; i++) {
+			const idx = i * 3;
+			const triangle: Triangle = [
+				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 0]),
+				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 1]),
+				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 2]),
+			];
+			planes[i] = [
+				triangle[0],
+				calculateNormal(triangle),
+			];
+		}
+		return planes as ClippingPlanes;
 	}
 
 	get position(): Point3 {
@@ -139,3 +160,34 @@ export class Camera {
 	}
 }
 
+export const FRUS_PLANE_VERTS: Array<Point3> = [
+	// Left
+	[-1, -1, 0],
+	[-1, -1, 0.1],
+	[-1, 1, 0.1],
+
+	// Right
+	[1, -1, 0.1],
+	[1, -1, 0],
+	[1, 1, 0],
+
+	// Top
+	[-1, 1, 0.1],
+	[1, 1, 0.1],
+	[1, 1, 0],
+
+	// Bottom
+	[1, -1, 0.1],
+	[-1, -1, 0],
+	[1, -1, 0],
+
+	// Near
+	[1, -1, 0],
+	[-1, -1, 0],
+	[-1, 1, 0],
+
+	// Far
+	[-1, -1, 1],
+	[1, -1, 1],
+	[1, 1, 1],
+];

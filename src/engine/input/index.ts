@@ -35,4 +35,10 @@ export enum Key {
 	Brake,
 	CameraYaw,
 	CameraPitch,
+	ToggleMode,
+	NextCamera,
+	PrevCamera,
+	Fire,
+	Bomb,
+	Pick,
 }

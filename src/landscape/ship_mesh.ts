@@ -58,6 +58,6 @@ function buildNGon(sides: number, size: number = 1): Array<Point3> {
 }
 
 export function buildShipMesh<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	const hull = buildNGon(3 + Math.random() * 6 | 0, 0.5);
+	const hull = buildNGon(5, 1.0);
 	return hull.map(callback);
 }

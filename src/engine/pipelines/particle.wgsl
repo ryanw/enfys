@@ -63,6 +63,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 
 			let speed = 100.0;
 			let gravity = -33.0 * u.dt;
+			// FIXME need to rotate this to match u.direction
 			let spray = vec3(n0 * 2.0, 0.0, n2 * 2.0);
 			let thrust = (u.direction * speed) * u.dt;
 			velocity = thrust + spray;

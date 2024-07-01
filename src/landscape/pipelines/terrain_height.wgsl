@@ -7,7 +7,7 @@ const BUILDING_CELL_SIZE: f32 = 256.0;
 
 fn buildingCell(pp: vec2f, seed: f32) -> f32 {
 	var p = floor(pp / BUILDING_CELL_SIZE) * BUILDING_CELL_SIZE;
-	let isBuilding = rnd2(p + seed) < 1.0/100.0;
+	let isBuilding = rnd2(p + seed) < 1.0/24.0;
 	if !isBuilding {
 		return -1.0;
 	}

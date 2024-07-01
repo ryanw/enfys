@@ -5,9 +5,9 @@
  */
 
 import { Gfx, calculateNormals } from 'engine';
-import { CUBE_VERTS, ColorVertex, buildIcosahedron, Icosahedron, QuadMesh } from 'engine/mesh';
+import { CUBE_VERTS, ColorVertex, buildIcosahedron, QuadMesh, Cube, SimpleMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
-import { multiply, multiplyVector, rotation, scaling, transformPoint, translation } from 'engine/math/transform';
+import { inverse, multiply, multiplyVector, rotation, scaling, transformPoint, translation } from 'engine/math/transform';
 import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { Chunker } from './chunker';
 import { World } from './world';
@@ -24,6 +24,7 @@ import { Particles } from 'engine/particles';
 import { Entity } from 'engine/entity';
 import { TreeDecorMesh } from './meshes/tree';
 import { getParam } from './helpers';
+import { ShipMode } from './player';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -124,6 +125,24 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	);
 	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5, 0.9)));
 
+	const cameraMesh = scene.addMesh(new Cube(gfx, 0.2))
+	if (cameraMesh.material instanceof SimpleMaterial) {
+		cameraMesh.material.color = 0xffffffff;
+		cameraMesh.material.emissive = true;
+	}
+
+	let frustumVertices = FRUS_VERTS.map(position => ({
+		position,
+		normal: [0, 0, 0],
+		color: BigInt(0xffffffff),
+	} as ColorVertex));
+	calculateNormals(frustumVertices);
+	const frustumMesh = scene.addMesh(new SimpleMesh(gfx, frustumVertices))
+	if (frustumMesh.material instanceof SimpleMaterial) {
+		frustumMesh.material.color = 0x0affff00;
+		frustumMesh.material.emissive = true;
+	}
+
 	// Add a forest of trees
 	const decors = [
 		addRocks(scene, 16.0, seed, seed + 1111),
@@ -142,7 +161,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	}
 
 	const flameParticle: Array<ColorVertex> = CROSS_CUBE.map(position => ({
-		position: [position[0] / 32.0, position[1] / 32.0, position[2] / 32.0],
+		position: [position[0] / 12.0, position[1] / 12.0, position[2] / 12.0],
 		normal: [0, 0, 0],
 		color: BigInt(0xffffffff),
 	}));
@@ -167,12 +186,13 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		particles.object.origin = world.player.position;//add(world.player.position, multiplyVector(rot, [0, -0.3, 0, 0]).slice(0, 2) as Vector3);
 		particles.object.direction = multiplyVector(rot, [0, -1, 0, 0]).slice(0, 3) as Vector3;
 		particles.object.update(performance.now() / 1000.0);
-		particles.object.count = 256 * Math.pow(thrust, 4.0);
+		particles.object.count = 256 * thrust;
 
 		// Update player model
 		player.transform = multiply(
 			translation(...world.player.position),
 			world.player.rotationMatrix(),
+			world.player.mode == ShipMode.Land ? scaling(0.5, 1.2, 1) : scaling(1, 1, 1),
 		);
 
 		// Move shadow under player
@@ -182,13 +202,25 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		scene.lightPosition = add(world.player.position, [0, 5, 0]);
 
 		// Sync terrain with camera view
-		const [cx, _cy, cz] = world.activeCamera.camera.position;
+		const [cx, _cy, cz] = world.shipCamera.camera.position;
 		const [px, _py, pz] = world.player.position;
 
 		chunker.move(px, pz);
 		chunker.processQueue(scene);
 
+		// Marker by the camera so it can be seen from other cameras
+		if (world.activeCamera === world.shipCamera) {
+			cameraMesh.transform = translation(0, -1000, 0);
+			frustumMesh.transform = translation(0, -1000, 0)!;
+		} else {
+			const { view, projection, position: camPos } = world.shipCamera.camera;
+			cameraMesh.transform = translation(...camPos);
+			frustumMesh.transform = inverse(multiply(projection, view))!;
+		}
+
+		const clippingPlanes = world.shipCamera.camera.clippingPlanes();
 		for (const dec of decors) {
+			dec.object.clippingPlanes = clippingPlanes;
 			dec.object.move(cx, cz);
 		}
 	}
@@ -440,3 +472,54 @@ const CROSS_CUBE: Array<Point3> = [
 	[-1, 0, 1],
 	[-1, 0, -1]
 ];
+
+export const FRUS_VERTS: Array<Point3> = [
+	[-1, -1, 1],
+	[1, -1, 1],
+	[1, 1, 1],
+
+	[-1, -1, 1],
+	[1, 1, 1],
+	[-1, 1, 1],
+
+	[1, -1, 1],
+	[1, -1, 0],
+	[1, 1, 0],
+
+	[1, -1, 1],
+	[1, 1, 0],
+	[1, 1, 1],
+
+	[1, -1, 0],
+	[-1, -1, 0],
+	[-1, 1, 0],
+
+	[1, -1, 0],
+	[-1, 1, 0],
+	[1, 1, 0],
+
+	[-1, -1, 0],
+	[-1, -1, 1],
+	[-1, 1, 1],
+
+	[-1, -1, 0],
+	[-1, 1, 1],
+	[-1, 1, 0],
+
+	[-1, 1, 1],
+	[1, 1, 1],
+	[1, 1, 0],
+
+	[-1, 1, 1],
+	[1, 1, 0],
+	[-1, 1, 0],
+
+	[1, -1, 1],
+	[-1, -1, 0],
+	[1, -1, 0],
+
+	[1, -1, 1],
+	[-1, -1, 1],
+	[-1, -1, 0]
+];
+

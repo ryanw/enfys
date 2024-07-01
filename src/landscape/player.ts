@@ -4,12 +4,20 @@ import { add, magnitude, scale } from "engine/math/vectors";
 
 const UNITS_PER_METER = 1.0;
 
+export enum ShipMode {
+	Land,
+	Air,
+	Water,
+	Space,
+}
+
 export class Player {
 	position: Point3 = [0, 0, 0];
 	velocity: Vector3 = [0, 0, 0];
 	rotation: Vector3 = [0, 0, 0];
+	mode: ShipMode = ShipMode.Air;
 	surfaceHeight = 0.0;
-	hoverGap = 0.2;
+	hoverGap = 0.5;
 
 	rotate(pitch: number, yaw: number) {
 		this.rotation[0] += Math.PI * pitch;
@@ -26,23 +34,27 @@ export class Player {
 
 		const speed = magnitude(this.velocity);
 
-		const targetHeight = this.surfaceHeight + this.hoverGap;
+		let targetHeight = this.surfaceHeight + this.hoverGap;
+		if (targetHeight < 0 && this.mode === ShipMode.Land) {
+			targetHeight = 0;
+		}
 
 		if (this.position[1] < targetHeight) {
 			// Hit the surface!
 			if (speed > 8.0) {
 				console.log("DEAD!", speed);
-				this.velocity = [0, 0, 0];
+				//this.velocity = [0, 0, 0];
 			}
 
 			if (this.velocity[1] < 0) {
 				// Bounce
-				this.velocity[1] = -(this.velocity[1] * 0.25);
+				//this.velocity[1] = -(this.velocity[1] * 0.25);
+				this.velocity[1] /= 1.5;
 			}
 
 			const diff = targetHeight - this.position[1];
 			// Speed to adjust ship height
-			const collideSpeed = Math.max(2.0, speed);
+			const collideSpeed = Math.max(0.0, speed);
 			const step = collideSpeed * dt;
 			if (diff < step) {
 				this.position[1] = targetHeight;
@@ -53,8 +65,9 @@ export class Player {
 		}
 
 		// Dampening
-		const vt = 1.0 - (0.333 * dt);
-		const scaled = scale(this.velocity, vt);;
+		const tt = this.mode === ShipMode.Land ? 1.0 : 0.333;
+		const vt = 1.0 - (tt * dt);
+		const scaled = scale(this.velocity, vt);
 		this.velocity[0] = scaled[0];
 		this.velocity[2] = scaled[2];
 		if (DEBUG) {

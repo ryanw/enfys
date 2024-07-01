@@ -1,11 +1,16 @@
 import { Gfx } from 'engine';
-import { Point2 } from 'engine/math';
+import { Plane, Point2 } from 'engine/math';
 import { ColorVertex, SimpleMesh } from 'engine/mesh';
 import { BuildingPipeline, DecorPipeline, DecorUniform } from './pipelines/decor';
+import { ClippingPlanes } from 'engine/camera';
+
+const NullPlane: Plane = [[0, 0, 0], [0, 0, 0]];
 
 export class DecorMesh extends SimpleMesh {
 	protected pipeline: DecorPipeline;
 	protected uniform: DecorUniform;
+	instanceBackBuffer!: GPUBuffer;
+	clippingPlanes: ClippingPlanes = [NullPlane, NullPlane, NullPlane, NullPlane, NullPlane, NullPlane];
 
 	constructor(
 		gfx: Gfx,
@@ -20,8 +25,8 @@ export class DecorMesh extends SimpleMesh {
 		super(gfx, vertices);
 		this.pipeline = new DecorPipeline(gfx);
 		this.uniform = new DecorUniform(gfx);
+		this.createInstanceBuffers();
 		this.updateUniform();
-		this.createInstanceBuffer();
 	}
 
 	protected updateUniform() {
@@ -36,34 +41,56 @@ export class DecorMesh extends SimpleMesh {
 			density: this.density,
 			terrainSeed: this.terrainSeed,
 			decorSeed: this.decorSeed,
-		});
+			// FIXME improve nesting
+			'clipping[0].origin': this.clippingPlanes[0][0],
+			'clipping[0].normal': this.clippingPlanes[0][1],
+			'clipping[1].origin': this.clippingPlanes[1][0],
+			'clipping[1].normal': this.clippingPlanes[1][1],
+			'clipping[2].origin': this.clippingPlanes[2][0],
+			'clipping[2].normal': this.clippingPlanes[2][1],
+			'clipping[3].origin': this.clippingPlanes[3][0],
+			'clipping[3].normal': this.clippingPlanes[3][1],
+			'clipping[4].origin': this.clippingPlanes[4][0],
+			'clipping[4].normal': this.clippingPlanes[4][1],
+			'clipping[5].origin': this.clippingPlanes[5][0],
+			'clipping[5].normal': this.clippingPlanes[5][1],
+		})
 	}
 
-	protected async createInstanceBuffer() {
-		const [buffer, count] = await this.pipeline.createInstanceBuffer(this.uniform, this.radius);
-		console.debug('Created %i Decor instances', count);
-		this.instanceBuffer = buffer;
-		this.instanceCount = count;
+	protected createInstanceBuffers() {
+		this.instanceBuffer = this.pipeline.createEmptyInstanceBuffer();
+		this.instanceBackBuffer = this.pipeline.createEmptyInstanceBuffer();
+	}
+
+	async updateInstanceBuffer(): Promise<void> {
+		return this.pipeline.updateInstanceBuffer(this.instanceBackBuffer, this.uniform, this.radius)
+			.then(count => {
+				// FIXME flicker when reducing instance count
+				if (count > 0) {
+					this.instanceCount = count;
+				}
+				this.swapBuffers();
+			});
 	}
 
 	move(x: number, y: number) {
 		const dx = Math.abs(this.position[0] - x);
 		const dy = Math.abs(this.position[1] - y);
-		if (dx < 16 && dy < 16) {
+		const rotated = 0;
+		if (dx < 16 && dy < 16 && rotated) {
 			// Haven't moved enough
 			return;
 		}
-		if (DEBUG) {
-			console.debug("Moving decor", x, y);
-		}
 		this.position = [x, y];
 		this.updateUniform();
-		this.pipeline.updateInstanceBuffer(this.instanceBuffer, this.uniform, this.radius).then(count => {
-			// FIXME flicker when reducing instance count
-			if (count > this.instanceCount) {
-				this.instanceCount = count;
-			}
-		});
+		this.updateInstanceBuffer();
+
+	}
+
+	swapBuffers() {
+		const back = this.instanceBackBuffer;
+		this.instanceBackBuffer = this.instanceBuffer;
+		this.instanceBuffer = back;
 	}
 }
 
@@ -80,6 +107,6 @@ export class BuildingMesh extends DecorMesh {
 	) {
 		super(gfx, vertices, position, density, spacing, terrainSeed, decorSeed, radius);
 		this.pipeline = new BuildingPipeline(gfx);
-		this.createInstanceBuffer();
+		this.createInstanceBuffers();
 	}
 }

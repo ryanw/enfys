@@ -20,6 +20,19 @@ export class DecorUniform extends UniformBuffer {
 			['density', 'f32'],
 			['terrainSeed', 'f32'],
 			['decorSeed', 'f32'],
+			// FIXME improve nesting
+			['clipping[0].origin', 'vec3f'],
+			['clipping[0].normal', 'vec3f'],
+			['clipping[1].origin', 'vec3f'],
+			['clipping[1].normal', 'vec3f'],
+			['clipping[2].origin', 'vec3f'],
+			['clipping[2].normal', 'vec3f'],
+			['clipping[3].origin', 'vec3f'],
+			['clipping[3].normal', 'vec3f'],
+			['clipping[4].origin', 'vec3f'],
+			['clipping[4].normal', 'vec3f'],
+			['clipping[5].origin', 'vec3f'],
+			['clipping[5].normal', 'vec3f'],
 		]);
 	}
 }
@@ -75,7 +88,7 @@ export class DecorPipeline extends Pipeline {
 		});
 	}
 
-	async createInstanceBuffer(uniform: DecorUniform, radius: number = 5): Promise<[GPUBuffer, number]> {
+	createEmptyInstanceBuffer(): GPUBuffer {
 		const { device } = this.gfx;
 
 
@@ -85,6 +98,11 @@ export class DecorPipeline extends Pipeline {
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 
+		return buffer;
+	}
+
+	async createInstanceBuffer(uniform: DecorUniform, radius: number = 5): Promise<[GPUBuffer, number]> {
+		const buffer = this.createEmptyInstanceBuffer();
 		const count = await this.updateInstanceBuffer(buffer, uniform, radius);
 		return [buffer, count];
 	}

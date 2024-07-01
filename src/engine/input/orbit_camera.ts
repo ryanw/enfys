@@ -44,7 +44,7 @@ export class OrbitCameraController {
 	}
 
 	update(dt: number) {
-		if (this.disabled) return;
+		//if (this.disabled) return;
 		this.updateGamepads();
 
 		let pitch = 0;
