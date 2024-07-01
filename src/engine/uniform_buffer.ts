@@ -31,16 +31,22 @@ export class UniformBuffer {
 		readonly mapping: UniformMapping,
 	) {
 		this.offsets = calculateOffsets(mapping);
-		const size = this.bufferSize();
+		const size = calculateBufferSize(this.offsets);
 		if (size > 0) {
 			this.buffer = this.gfx.createBuffer(size, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST);
+		}
+		else {
+			console.warn("Zero sized Uniform", this.mapping);
 		}
 	}
 
 	bufferSize() {
-		return calculateBufferSize(this.mapping);
+		return calculateBufferSize(this.offsets);
 	}
 
+	/**
+	 * Replace the entire uniform with new data. You must provide every field.
+	 */
 	replace(fields: Record<string, boolean | number | Array<number>>) {
 		const theirKeys = new Set(Object.keys(fields));
 		const ourKeys = new Set(Object.keys(this.offsets));
@@ -51,10 +57,44 @@ export class UniformBuffer {
 			throw new Error(`Keys don't match: ${theirKeys} != ${ourKeys}`);
 		}
 
-		// FIXME update everything in 1 write
+		// Copy every field into a single array buffer
+		const bufferSize = this.bufferSize();
+		const dataBuffer = new ArrayBuffer(bufferSize);
+		const floatBuffer = new Float32Array(dataBuffer);
+		const intBuffer = new Int32Array(dataBuffer);
+		const uintBuffer = new Uint32Array(dataBuffer);
+
 		for (const key of theirKeys) {
-			this.set(key, fields[key]);
+			const [typ, byteOffset] = this.offsets[key];
+			const offset = byteOffset / 4;
+			const value = toArray(fields[key]);
+
+			switch (typ) {
+				case 'f32':
+				case 'vec2f':
+				case 'vec3f':
+				case 'vec4f':
+				case 'mat4x4f':
+					floatBuffer.set(value, offset);
+					break;
+
+				case 'i32':
+				case 'vec2i':
+				case 'vec4i':
+				case 'vec3i':
+					intBuffer.set(value, offset);
+					break;
+
+				case 'u32':
+				case 'vec2u':
+				case 'vec3u':
+				case 'vec4u':
+					uintBuffer.set(value, offset);
+					break;
+			}
 		}
+
+		this.gfx.device.queue.writeBuffer(this.buffer, 0, dataBuffer);
 	}
 
 	/**
@@ -88,30 +128,44 @@ export type BufferLike = boolean | number | bigint | Array<number | bigint>;
 export function toArrayBuffer(typ: WgslType, value: BufferLike): ArrayBuffer {
 	const data = toArray(value);
 	switch (typ) {
-	case 'f32':
-	case 'vec2f':
-	case 'vec3f':
-	case 'vec4f':
-	case 'mat4x4f':
-		return new Float32Array(data);
+		case 'f32':
+		case 'vec2f':
+		case 'vec3f':
+		case 'vec4f':
+		case 'mat4x4f':
+			return new Float32Array(data);
 
-	case 'i32':
-	case 'vec2i':
-	case 'vec4i':
-	case 'vec3i':
-		return new Int32Array(data);
+		case 'i32':
+		case 'vec2i':
+		case 'vec4i':
+		case 'vec3i':
+			return new Int32Array(data);
 
-	case 'u32':
-	case 'vec2u':
-	case 'vec3u':
-	case 'vec4u':
-		return new Uint32Array(data);
+		case 'u32':
+		case 'vec2u':
+		case 'vec3u':
+		case 'vec4u':
+			return new Uint32Array(data);
 	}
 }
 
-function calculateBufferSize(mapping: UniformMapping): number {
-	// FIXME TODO
-	return 256;
+function calculateBufferSize(offsets: UniformOffsets): number {
+	let total = 0;
+	let lastType: WgslType | undefined;
+
+	for (const [typ, offset] of Object.values(offsets)) {
+		if (offset >= total) {
+			lastType = typ;
+			total = offset;
+		}
+	}
+
+	if (lastType) {
+		const [size, _] = ALIGNMENTS[lastType];
+		total += size;
+	}
+
+	return Math.max(total, 256);
 }
 
 function calculateOffsets(mapping: UniformMapping): UniformOffsets {
