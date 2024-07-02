@@ -38,7 +38,7 @@ export class FreeCameraController {
 
 	update(dt: number) {
 		if (this.disabled) return;
-		const speed = this.heldKeys.has(Key.Boost) ? 10240 : 64;
+		const speed = this.heldKeys.has(Key.Boost) ? 1024 : 64;
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {

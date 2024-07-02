@@ -7,6 +7,7 @@ import { add, magnitude, subtract } from 'engine/math/vectors';
 import { TerrainPipeline } from './pipelines/terrain';
 import { Entity } from 'engine/entity';
 import { SimpleMaterial } from 'engine/material';
+import { colorToInt, hsl } from 'engine/color';
 
 export type Chunk = {
 	lod: number,

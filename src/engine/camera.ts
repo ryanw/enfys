@@ -87,7 +87,7 @@ export class Camera {
 
 	set aspect(a: number) {
 		this._aspect = a;
-		this._projection = perspective(a, 45.0, 1.0, 200000.0);
+		this._projection = perspective(a, 45.0, 1.0, 20000.0);
 		this.updateView();
 	}
 
@@ -154,7 +154,7 @@ export class Camera {
 		const rot = this.rotationMatrix();
 		const tra = translation(...this._position);
 		const sca = scaling(...this._scaling);
-		const view = multiply(sca, multiply(tra, rot));
+		const view = multiply(tra, rot, sca);
 		this._view = inverse(view)!;
 		this.updateUniform();
 	}

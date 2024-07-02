@@ -16,16 +16,22 @@ fn buildingCell(pp: vec2f, seed: f32) -> f32 {
 }
 
 fn landscapeNoise(p: vec3f) -> f32 {
-	return lumpLandscapeNoise(p) / 1.5;
+	var t0 = continents(p);
+	var t1 = erosion(p);
+	var t2 = valleys(p);
+
+	var t = t0 * t1 * t2;
+
+	return t * 1024.0;
 }
 
 fn lumpLandscapeNoise(p: vec3f) -> f32 {
 	var t0 = continents(p);
 	var t1 = erosion(p);
 	var t2 = valleys(p);
-	var t = 0.2 + (t0 * t1 * t2) * 512.0;
+	var t = 0.2 + (t0 * t1 * t2);
 
-	return t;
+	return t * 512.0;
 }
 
 fn landHeight(op: vec3f, t: f32) -> f32 {
@@ -129,19 +135,19 @@ fn spline(t: f32, s: array<f32, 10>) -> f32 {
 
 fn continents(p: vec3<f32>) -> f32 {
 	var o = vec3(1000.0);
-	var t = fractalNoise((p + o) / 1.0, 4);
+	var t = fractalNoise((p + o) / 2.0, 2);
 	return spline(t, continents_spline);
 }
 
 fn erosion(p: vec3<f32>) -> f32 {
 	var o = vec3(1500.0);
-	var t = fractalNoise((p + o) / 4.0, 3);
+	var t = fractalNoise(p + o, 2);
 	return 0.5 + spline(t, erosion_spline) * 0.5;
 }
 
 fn valleys(p: vec3<f32>) -> f32 {
 	var o = vec3(3000.0);
-	var t = fractalNoise((p + o) * 3.0, 5);
+	var t = fractalNoise(p + o, 5);
 	return spline(t, valleys_spline);
 }
 

@@ -139,7 +139,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	calculateNormals(frustumVertices);
 	const frustumMesh = scene.addMesh(new SimpleMesh(gfx, frustumVertices))
 	if (frustumMesh.material instanceof SimpleMaterial) {
-		frustumMesh.material.color = 0x0affff00;
+		frustumMesh.material.color = 0x1111ffff;
 		frustumMesh.material.emissive = true;
 	}
 
@@ -470,30 +470,7 @@ const CROSS_CUBE: Array<Point3> = [
 ];
 
 export const FRUS_VERTS: Array<Point3> = [
-	[-1, -1, 1],
-	[1, -1, 1],
-	[1, 1, 1],
-
-	[-1, -1, 1],
-	[1, 1, 1],
-	[-1, 1, 1],
-
-	[1, -1, 1],
-	[1, -1, 0],
-	[1, 1, 0],
-
-	[1, -1, 1],
-	[1, 1, 0],
-	[1, 1, 1],
-
-	[1, -1, 0],
-	[-1, -1, 0],
-	[-1, 1, 0],
-
-	[1, -1, 0],
-	[-1, 1, 0],
-	[1, 1, 0],
-
+	// Left
 	[-1, -1, 0],
 	[-1, -1, 1],
 	[-1, 1, 1],
@@ -502,6 +479,16 @@ export const FRUS_VERTS: Array<Point3> = [
 	[-1, 1, 1],
 	[-1, 1, 0],
 
+	// Right
+	[1, -1, 1],
+	[1, -1, 0],
+	[1, 1, 0],
+
+	[1, -1, 1],
+	[1, 1, 0],
+	[1, 1, 1],
+
+	// Top
 	[-1, 1, 1],
 	[1, 1, 1],
 	[1, 1, 0],
@@ -510,12 +497,31 @@ export const FRUS_VERTS: Array<Point3> = [
 	[1, 1, 0],
 	[-1, 1, 0],
 
+	// Bottom
 	[1, -1, 1],
 	[-1, -1, 0],
 	[1, -1, 0],
 
 	[1, -1, 1],
 	[-1, -1, 1],
-	[-1, -1, 0]
+	[-1, -1, 0],
+
+	// Near
+	[1, -1, 0],
+	[-1, -1, 0],
+	[-1, 1, 0],
+
+	[1, -1, 0],
+	[-1, 1, 0],
+	[1, 1, 0],
+
+	// Far
+	[-1, -1, 1],
+	[1, -1, 1],
+	[1, 1, 1],
+
+	[-1, -1, 1],
+	[1, 1, 1],
+	[-1, 1, 1],
 ];
 

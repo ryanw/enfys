@@ -70,13 +70,15 @@ export class Scene {
 				const meshScale = 1 << lod;
 				const radius = magnitude(entity.object.size) * meshScale;
 
-				for (const plane of planes) {
+
+				// FIXME bottom (3) is clipping too much
+				for (const plane of planes.filter((_, i) => i != 3)) {
 					const n = plane[1];
-					const o = add(plane[0], scale(n, radius));
+					const o = plane[0];
 					const p = transformPoint(entity.transform, [0, 0, 0]);
-					const vp = normalize(subtract(p, o));
+					const vp = subtract(p, o);
 					const vd = dot(vp, n);
-					entity.visible = vd < 0;
+					entity.visible = vd < radius;
 					if (!entity.visible) {
 						continue entityLoop;
 					}
