@@ -25,6 +25,7 @@ export function isEntityOf<T>(entity: Entity<unknown>, constructor: new (...args
 
 
 export class Entity<T> {
+	public visible = true;
 	private buffer: UniformBuffer;
 	private _transform: Matrix4 = identity();
 

@@ -9,8 +9,8 @@ export class TerrainMesh extends SimpleMesh {
 
 	constructor(
 		gfx: Gfx,
-		private size: Size,
-		private chunkId: Point3,
+		readonly size: Size,
+		readonly chunkId: Point3,
 		private seed: number,
 		terrainPipeline?: TerrainPipeline,
 	) {

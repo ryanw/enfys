@@ -4,6 +4,10 @@ import { Color, Gfx } from 'engine';
 import { Mesh, SimpleMesh } from './mesh';
 import { ShadowBuffer } from './shadow_buffer';
 import { Entity } from './entity';
+import { ClippingPlanes } from './camera';
+import { TerrainMesh } from '../landscape/terrain_mesh';
+import { transformPoint } from './math/transform';
+import { add, dot, magnitude, normalize, scale, subtract } from './math/vectors';
 
 export type AddArguments = Parameters<Scene['addEntity']> | Parameters<Scene['addMesh']>;
 
@@ -54,5 +58,30 @@ export class Scene {
 	removeEntity(entity: Entity<unknown>) {
 		this.entities = this.entities.filter(e => e !== entity);
 		entity.destroy();
+	}
+
+	frustumClip(planes: ClippingPlanes) {
+		entityLoop:
+		for (const entity of this.entities) {
+			if (entity.object instanceof TerrainMesh) {
+				entity.visible = true;
+				const mesh = entity.object;
+				const lod = mesh.chunkId[2];
+				const meshScale = 1 << lod;
+				const radius = magnitude(entity.object.size) * meshScale;
+
+				for (const plane of planes) {
+					const n = plane[1];
+					const o = add(plane[0], scale(n, radius));
+					const p = transformPoint(entity.transform, [0, 0, 0]);
+					const vp = normalize(subtract(p, o));
+					const vd = dot(vp, n);
+					entity.visible = vd < 0;
+					if (!entity.visible) {
+						continue entityLoop;
+					}
+				}
+			}
+		}
 	}
 }

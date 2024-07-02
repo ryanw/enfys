@@ -60,6 +60,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		// Test for clipping
 		for (var i = 0; i < 6; i++) {
 			let n = u.clipping[i].normal;
+			// Add padding so we only clip off screen
 			let o = u.clipping[i].origin + n * (length(u.spacing) / 2.0);
 			let vp = normalize(p - o);
 			let vd = dot(vp, n);

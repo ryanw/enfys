@@ -81,7 +81,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 			},
 			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
 			depthStencil: {
-				format: 'depth24plus',
+				format: 'depth32float',
 				depthWriteEnabled: true,
 				depthCompare: 'less',
 			}
@@ -91,7 +91,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		this.pipelineNoDepth = device.createRenderPipeline({
 			...pipelineDescriptor,
 			depthStencil: {
-				format: 'depth24plus',
+				format: 'depth32float',
 				depthWriteEnabled: false,
 				depthCompare: 'less',
 			}
@@ -132,7 +132,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		pass.setPipeline(material.writeDepth ? this.pipeline : this.pipelineNoDepth);
 
 		for (const src of entities) {
-			if (src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+			if (!src.visible || src.object.vertexCount === 0 || src.object.instanceCount === 0) {
 				continue;
 			}
 			const bindGroup = device.createBindGroup({

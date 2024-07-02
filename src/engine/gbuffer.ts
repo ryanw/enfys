@@ -44,6 +44,6 @@ export class GBuffer {
 		this.albedo = this.gfx.createTexture('rgba8unorm', this.size, 'GBuffer Albedo Texture');
 		this.normal = this.gfx.createTexture('rgba16float', this.size, 'GBuffer Normal Texture');
 		this.meta = this.gfx.createTexture('r8uint', this.size, 'GBuffer Meta Texture');
-		this.depth = this.gfx.createTexture('depth24plus', this.size, 'GBuffer Depth Texture');
+		this.depth = this.gfx.createTexture('depth32float', this.size, 'GBuffer Depth Texture');
 	}
 }

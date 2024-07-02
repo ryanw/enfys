@@ -219,6 +219,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		}
 
 		const clippingPlanes = world.shipCamera.camera.clippingPlanes();
+		scene.frustumClip(clippingPlanes);
 		for (const dec of decors) {
 			dec.object.clippingPlanes = clippingPlanes;
 			dec.object.move(cx, cz);

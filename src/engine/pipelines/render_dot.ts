@@ -65,7 +65,7 @@ export class RenderDotPipeline extends MaterialPipeline {
 			},
 			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'back', },
 			depthStencil: {
-				format: 'depth24plus',
+				format: 'depth32float',
 				depthWriteEnabled: true,
 				depthCompare: 'less',
 			}
@@ -75,7 +75,7 @@ export class RenderDotPipeline extends MaterialPipeline {
 		this.pipelineNoDepth = device.createRenderPipeline({
 			...pipelineDescriptor,
 			depthStencil: {
-				format: 'depth24plus',
+				format: 'depth32float',
 				depthWriteEnabled: false,
 				depthCompare: 'less',
 			}

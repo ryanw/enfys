@@ -54,9 +54,9 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 		n = mix(cn + n * 0.2, n, d);
 	}
 
+	// Flatten around building
 	let buildingDist = buildingCell(op.xz, t);
 	if buildingDist >= 0.0 {
-		// Flatten around building
 		let cell = (floor(op.xz / BUILDING_CELL_SIZE) * BUILDING_CELL_SIZE) / scale;
 
 		// Height at building center
@@ -64,14 +64,8 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 		let diff = n - bn;
 		var t = smoothstep(0.0, 1.0, pow(1.0 - buildingDist, 1.0/2.0));
 		n = mix(n, bn, t);
-		if buildingDist < 0.01 {
-			//n = 40.0;
-		}
 	}
 
-	if (length(op.xz) < 50.0) {
-		//n = 100.0;
-	}
 
 	return n;
 }
