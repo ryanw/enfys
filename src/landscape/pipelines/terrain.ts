@@ -6,6 +6,7 @@ import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point3 } from 'engine/math';
 import { Color } from 'engine/color';
 import { RingBuffer } from 'engine/ring_buffer';
+import { ColorScheme } from '../color_scheme';
 
 /**
  * Compute Shader that takes a subdivided {@link QuadMesh}, updates the Y of every vertex, and recalculates every triangle's normal
@@ -15,10 +16,11 @@ export class TerrainPipeline extends Pipeline {
 	private chunkUniformBuffer: RingBuffer;
 	private terrainColors: GPUTexture;
 
-	constructor(gfx: Gfx, colors: Array<Color>) {
+	constructor(gfx: Gfx, colorScheme: ColorScheme) {
 		super(gfx);
 
 		const { device } = gfx;
+		const colors = colorScheme.colors();
 
 		this.chunkUniformBuffer = new RingBuffer(gfx, 1024, [
 			['size', 'vec2u'],

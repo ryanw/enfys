@@ -10,7 +10,7 @@ export class ShipMesh extends SimpleMesh {
 			let color = 0xff0000ff;
 			// Every even triangle is on the top
 			const isTop = (i / 3 | 0) % 2 == 0;
-			if (i < 3) {
+			if (i < 2) {
 				// First tri is the window
 				color = 0xff000000;
 			}
@@ -58,6 +58,6 @@ function buildNGon(sides: number, size: number = 1): Array<Point3> {
 }
 
 export function buildShipMesh<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	const hull = buildNGon(5, 1.0);
+	const hull = buildNGon(5, 0.5);
 	return hull.map(callback);
 }

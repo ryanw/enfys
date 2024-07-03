@@ -8,6 +8,7 @@ import { TerrainPipeline } from './pipelines/terrain';
 import { Entity } from 'engine/entity';
 import { SimpleMaterial } from 'engine/material';
 import { colorToInt, hsl } from 'engine/color';
+import { ColorScheme } from './color_scheme';
 
 export type Chunk = {
 	lod: number,
@@ -125,7 +126,7 @@ export class Chunker {
 		readonly gfx: Gfx,
 		public seed: number,
 		public maxLod: number = 5,
-		colorScheme: Array<Color>,
+		colorScheme: ColorScheme,
 	) {
 		this.terrainPipeline = new TerrainPipeline(this.gfx, colorScheme);
 		this.move(0, 0);

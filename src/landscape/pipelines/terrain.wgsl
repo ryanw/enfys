@@ -94,8 +94,8 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	//let shadeCount = 3.0;
 	//var shade = floor(clamp(h/5.0, 0.0, 1.0) * shadeCount)/shadeCount;
 	// Noise to jiggle colour bands a little
-	let colorN = (h / 64.0) * (fractalNoise((trip + vec3(0.0, u.seed, 0.0))/128.0, 2) - 0.5);
-	let color = getTerrainColor(clamp(colorN + h / 128.0, 0.0, 1.0));
+	let colorN = (h / 196.0) * (fractalNoise((trip + vec3(0.0, u.seed, 0.0))/128.0, 2) - 0.5);
+	let color = getTerrainColor(clamp(colorN + h / 256.0, 0.0, 1.0));
 
 	for (var i = 0; i < 3; i++) {
 		var tp = (toVec(tri.vertices[i].position) + chunkP * lodScale);

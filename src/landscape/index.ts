@@ -25,6 +25,7 @@ import { Entity } from 'engine/entity';
 import { TreeDecorMesh } from './meshes/tree';
 import { getParam } from './helpers';
 import { ShipMode } from './player';
+import { ColorScheme } from './color_scheme';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -172,7 +173,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		particles.material.emissive = true;
 	}
 
-	const colorScheme = buildColorScheme(seed);
+	const colorScheme = new ColorScheme(seed);
 	const chunker = new Chunker(gfx, seed, 6, colorScheme);
 	if (DEBUG && getParam('debug') == '1') {
 		debugChunker(gfx.canvas.parentElement!, chunker);
