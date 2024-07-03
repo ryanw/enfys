@@ -17,8 +17,11 @@ export class Camera {
 	private _view: Matrix4 = identity();
 	private _projection: Matrix4 = identity();
 	private _aspect: number = 1.0;
+	private _fov: number = 45.0;
+	private _near: number = 1.0;
+	private _far: number = 20000.0;
 
-	constructor(public gfx: Gfx) {
+	constructor(readonly gfx: Gfx) {
 		this.uniform = new UniformBuffer(gfx, [
 			['view', 'mat4x4f'],
 			['projection', 'mat4x4f'],
@@ -87,7 +90,38 @@ export class Camera {
 
 	set aspect(a: number) {
 		this._aspect = a;
-		this._projection = perspective(a, 45.0, 1.0, 20000.0);
+		this.rebuildProjection();
+	}
+
+	get near(): number {
+		return this._near;
+	}
+
+	set near(near: number) {
+		this._near = near;
+		this.rebuildProjection();
+	}
+
+	get far(): number {
+		return this._far;
+	}
+
+	set far(far: number) {
+		this._far = far;
+		this.rebuildProjection();
+	}
+
+	get fov(): number {
+		return this._fov;
+	}
+
+	set fov(fov: number) {
+		this._fov = fov;
+		this.rebuildProjection();
+	}
+
+	rebuildProjection() {
+		this._projection = perspective(this._aspect, this._fov, this._near, this._far);
 		this.updateView();
 	}
 
