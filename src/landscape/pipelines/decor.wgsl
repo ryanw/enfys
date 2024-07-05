@@ -76,7 +76,9 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		instance.offset = array(p.x, p.y, p.z);
 
 		let hue = rnd3(dp + vec3(43.0));
-		instance.color = colorToUint(hsl(hue, 0.6, 0.5));
+		var color = hsl(hue, 0.6, 0.5);
+		color.a = 0.5;
+		instance.color = colorToUint(color);
 		let count = atomicAdd(&counter, 1u);
 		instances[count] = instance;
 	}

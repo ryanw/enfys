@@ -1,27 +1,23 @@
-import { Gfx, Triangle, calculateNormal } from 'engine';
-import { Matrix4, Plane, Point3, Vector3 } from './math';
-import { identity, transformPoint, inverse, multiply, multiplyVector, perspectiveProjection, rotation, scaling, translation, orthographicProjection } from './math/transform';
-import { UniformBuffer } from './uniform_buffer';
+import { Gfx } from "engine";
+import { Matrix4, Point3, Vector3 } from "./math";
+import { UniformBuffer } from "./uniform_buffer";
+import { identity, inverse, multiply, multiplyVector, orthographicProjection, perspectiveProjection, rotation, transformPoint, translation } from "./math/transform";
+import { normalize, scale } from "./math/vectors";
 
-
-export type ClippingPlanes = [Plane, Plane, Plane, Plane, Plane, Plane];
-
-/**
- * A camera in 3D space
- */
-export class Camera {
+export class Light {
 	readonly uniform: UniformBuffer;
 	private _position: Point3 = [0.0, 0.0, 0.0];
 	private _rotation: Vector3 = [0.0, 0.0, 0.0];
-	private _scaling: Vector3 = [1.0, 1.0, 1.0];
 	private _view: Matrix4 = identity();
 	private _projection: Matrix4 = identity();
 	private _aspect: number = 1.0;
 	private _fov: number = 45.0;
 	private _near: number = 1.0;
 	private _far: number = 20000.0;
+	private _size: Vector3 = [1, 1, 1];
 
 	constructor(readonly gfx: Gfx) {
+		// FIXME must match Camera's uniform structure
 		this.uniform = new UniformBuffer(gfx, [
 			['view', 'mat4x4f'],
 			['projection', 'mat4x4f'],
@@ -29,25 +25,8 @@ export class Camera {
 			['t', 'f32'],
 			['isShadowMap', 'u32'],
 		]);
+		this.rebuildProjection();
 		this.updateView();
-	}
-
-	clippingPlanes(): ClippingPlanes {
-		const invProj = inverse(multiply(this.projection, this.view))!;
-		const planes = [];
-		for (let i = 0; i < 6; i++) {
-			const idx = i * 3;
-			const triangle: Triangle = [
-				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 0]),
-				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 1]),
-				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 2]),
-			];
-			planes[i] = [
-				triangle[0],
-				calculateNormal(triangle),
-			];
-		}
-		return planes as ClippingPlanes;
 	}
 
 	get position(): Point3 {
@@ -58,8 +37,8 @@ export class Camera {
 		return [...this._rotation];
 	}
 
-	get scaling(): Vector3 {
-		return [...this._scaling];
+	get size(): Vector3 {
+		return [...this._size];
 	}
 
 	set position(position: Point3) {
@@ -72,9 +51,9 @@ export class Camera {
 		this.updateView();
 	}
 
-	set scaling(scaling: Vector3) {
-		this._scaling = [...scaling];
-		this.updateView();
+	set size(size: Vector3) {
+		this._size = [...size];
+		this.rebuildProjection();
 	}
 
 	get view(): Matrix4 {
@@ -122,7 +101,14 @@ export class Camera {
 	}
 
 	rebuildProjection() {
-		this._projection = perspectiveProjection(this._aspect, this._fov, this._near, this._far);
+		this._projection = orthographicProjection(
+			-this._size[0] / 2,
+			this._size[0] / 2,
+			-this._size[1] / 2,
+			this._size[1] / 2,
+			this._size[2] + this._size[2]/2,
+			-this._size[2] + this._size[2]/2,
+		);
 		this.updateView();
 	}
 
@@ -132,12 +118,20 @@ export class Camera {
 			projection: this.projection,
 			resolution: [32, 32],
 			t: performance.now() / 1000,
-			isShadowMap: false,
+			isShadowMap: true,
 		});
 	}
 
+	updateView() {
+		const rot = this.rotationMatrix();
+		const tra = translation(...this._position);
+		const view = multiply(tra, rot);
+		this._view = inverse(view)!;
+		this.updateUniform();
+	}
+
 	/**
-	 * Move the camera relative to its current position
+	 * Move the light relative to its current position
 	 * @param direction Direction and amount to move the camera
 	 */
 	translate(direction: Vector3) {
@@ -153,23 +147,16 @@ export class Camera {
 	}
 
 	/**
-	 * Rotate the camera
+	 * Rotate the light
 	 * @param pitch Pitch in radians
 	 * @param yaw Yaw in radians
+	 * @param roll Roll in radians
 	 */
-	rotate(pitch: number, yaw: number) {
-		if (pitch === 0.0 && yaw === 0.0) return;
+	rotate(pitch: number, yaw: number = 0.0, roll: number = 0.0) {
+		if (pitch === 0.0 && yaw === 0.0 && roll === 0.0) return;
 		this._rotation[0] += Math.PI * pitch;
 		this._rotation[1] += Math.PI * yaw;
-
-		const pad = 0.01;
-
-		if (this._rotation[0] < -Math.PI / 2 + pad) {
-			this._rotation[0] = -Math.PI / 2 + pad;
-		}
-		if (this._rotation[0] > Math.PI / 2 - pad) {
-			this._rotation[0] = Math.PI / 2 - pad;
-		}
+		this._rotation[2] += Math.PI * roll;
 		this.updateView();
 	}
 
@@ -185,45 +172,17 @@ export class Camera {
 			rotation(this._rotation[0], 0, 0),
 		);
 	}
-
-	updateView() {
-		const rot = this.rotationMatrix();
-		const tra = translation(...this._position);
-		const sca = scaling(...this._scaling);
-		const view = multiply(tra, rot, sca);
-		this._view = inverse(view)!;
-		this.updateUniform();
-	}
 }
 
-export const FRUS_PLANE_VERTS: Array<Point3> = [
-	// Left
-	[-1, -1, 0],
-	[-1, -1, 0.1],
-	[-1, 1, 0.1],
+export class PointLight extends Light {
+}
 
-	// Right
-	[1, -1, 0.1],
-	[1, -1, 0],
-	[1, 1, 0],
+export class DirectionalLight extends Light {
+	constructor(gfx: Gfx) {
+		super(gfx);
+	}
 
-	// Top
-	[-1, 1, 0.1],
-	[1, 1, 0.1],
-	[1, 1, 0],
-
-	// Bottom
-	[1, -1, 0.1],
-	[-1, -1, 0],
-	[1, -1, 0],
-
-	// Near
-	[1, -1, 0],
-	[-1, -1, 0],
-	[-1, 1, 0],
-
-	// Far
-	[-1, -1, 1],
-	[1, -1, 1],
-	[1, 1, 1],
-];
+	get direction(): Vector3 {
+		return normalize(multiplyVector(this.rotationMatrix(), [0, 0, 1, 0]).slice(0, 3) as Vector3);
+	}
+}

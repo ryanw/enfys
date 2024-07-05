@@ -3,6 +3,7 @@ import { Point3 } from 'engine/math';
 import { SimpleMesh } from 'engine/mesh';
 import { TerrainPipeline } from './pipelines/terrain';
 import { hsl } from 'engine/color';
+import { ColorScheme } from './color_scheme';
 
 export class TerrainMesh extends SimpleMesh {
 	private terrainPipeline: TerrainPipeline;
@@ -15,7 +16,7 @@ export class TerrainMesh extends SimpleMesh {
 		terrainPipeline?: TerrainPipeline,
 	) {
 		super(gfx);
-		this.terrainPipeline = terrainPipeline || new TerrainPipeline(this.gfx, DEFAULT_COLORS);
+		this.terrainPipeline = terrainPipeline || new TerrainPipeline(this.gfx, new ColorScheme(0));
 		this.createVertexBuffer();
 	}
 

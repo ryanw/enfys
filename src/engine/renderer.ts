@@ -1,5 +1,4 @@
 import { Color, Constructor, Gfx } from 'engine';
-import { Scene } from './scene';
 import { ComposePipeline } from './pipelines/compose';
 import { RenderMeshPipeline } from './pipelines/render_mesh';
 import { Camera } from './camera';
@@ -10,6 +9,9 @@ import { Entity, isEntityOf } from './entity';
 import { DotMaterial, Material, SimpleMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
+import { ShadowMap } from './shadow_map';
+import { Scene } from './scene';
+import { DirectionalLight, Light } from './light';
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -44,6 +46,20 @@ export class Renderer {
 		console.error("Failed to find pipeline for", material);
 	}
 
+	drawSceneShadows(encoder: GPUCommandEncoder, scene: Scene, light: DirectionalLight, target: ShadowMap) {
+		this.clearShadows(encoder, target);
+
+		// Group entities by material, render them together if possible
+		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
+			function isSimpleMesh(entity: Entity<unknown>): entity is Entity<SimpleMesh> {
+				return isEntityOf(entity, SimpleMesh) && (entity.material instanceof Mat);
+			}
+
+			const entities = scene.entities.filter(isSimpleMesh);
+			pipeline.drawShadowMapBatch(encoder, entities, light, target);
+		}
+	}
+
 	drawScene(encoder: GPUCommandEncoder, scene: Scene, camera: Camera, target: GBuffer) {
 		const [w, h] = target.size;
 		camera.aspect = w / h;
@@ -57,14 +73,12 @@ export class Renderer {
 			}
 
 			const entities = scene.entities.filter(isSimpleMesh);
-			for (const entity of entities) {
-				pipeline.draw(encoder, entity, camera, scene.shadowBuffer, target);
-			}
+			pipeline.drawBatch(encoder, entities, camera, target);
 		}
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, light: Point3, target: GPUTexture, clear?: Color) {
-		this.pipelines.compose.compose(encoder, src, camera, light, target, clear);
+	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, light: DirectionalLight, shadows: ShadowMap, target: GPUTexture, clear?: Color) {
+		this.pipelines.compose.compose(encoder, src, camera, light, shadows, target, clear);
 	}
 
 	clear(encoder: GPUCommandEncoder, target: GBuffer) {
@@ -94,6 +108,20 @@ export class Renderer {
 					loadOp: 'clear',
 					storeOp: 'store',
 				},
+			],
+			depthStencilAttachment: {
+				view: depthView,
+				depthClearValue: 1.0,
+				depthLoadOp: 'clear',
+				depthStoreOp: 'store',
+			}
+		}).end();
+	}
+
+	clearShadows(encoder: GPUCommandEncoder, target: ShadowMap) {
+		const depthView = target.texture.createView();
+		encoder.beginRenderPass({
+			colorAttachments: [
 			],
 			depthStencilAttachment: {
 				view: depthView,

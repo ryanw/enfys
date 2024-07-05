@@ -1,4 +1,4 @@
-import { Matrix4, Point3 } from './math';
+import { Matrix4, Point3, Vector3 } from './math';
 import { SimpleMaterial } from './material';
 import { Color, Gfx } from 'engine';
 import { Mesh, SimpleMesh } from './mesh';
@@ -8,6 +8,7 @@ import { ClippingPlanes } from './camera';
 import { TerrainMesh } from '../landscape/terrain_mesh';
 import { transformPoint } from './math/transform';
 import { add, dot, magnitude, normalize, scale, subtract } from './math/vectors';
+import { DirectionalLight } from './light';
 
 export type AddArguments = Parameters<Scene['addEntity']> | Parameters<Scene['addMesh']>;
 
@@ -18,10 +19,13 @@ export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
 	entities: Entity<unknown>[] = [];
 	shadowBuffer: ShadowBuffer;
-	lightPosition: Point3 = [0, 0, 0];
+	light: DirectionalLight;
 
 	constructor(readonly gfx: Gfx) {
+		this.light = new DirectionalLight(gfx);
+		this.light.position = [0, 0, 0];
 		this.shadowBuffer = new ShadowBuffer(gfx, 32);
+		this.light.rotate(0.2, -0.3);
 		this.shadowBuffer.push({
 			position: [0.0, 1000.0, 0.0],
 			radius: 0.2,

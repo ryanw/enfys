@@ -1,5 +1,7 @@
 const BLEND_TO_ALPHA: bool = false;
+const DRAW_SHADOWS: bool = true;
 const EDGE_MODE: i32 = 2;
+const DEBUG_SHADOW_MAP: bool = false;
 
 struct VertexOut {
 	@builtin(position) position: vec4f,
@@ -8,7 +10,9 @@ struct VertexOut {
 
 struct Uniforms {
 	invMvp: mat4x4f,
-	lightPosition: vec3f,
+	light: vec4f,
+	lightVp: mat4x4f,
+	invLightVp: mat4x4f,
 	playerPosition: vec3f,
 	ditherSize: i32,
 	ditherDepth: i32,
@@ -35,6 +39,9 @@ var depthTex: texture_2d<f32>;
 
 @group(0) @binding(5)
 var metaTex: texture_2d<u32>;
+
+@group(0) @binding(6)
+var shadowTex: texture_2d<f32>;
 
 const ditherMatrix = mat4x4(
 	0.0000, 0.5000, 0.1250, 0.6250,
@@ -148,8 +155,9 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	var fogFactor = 0.0;
 
 	if length(normal) > 0.0 {
-		let lightPos = u.lightPosition;//vec3(cos(u.t/2.0) * 64.0, 64.0, 64.0 + sin(u.t/-2.0) * 64.0);
-		let lightDir = normalize(pos - lightPos);
+		//let lightPos = u.light.xyz;
+		//let lightDir = normalize(pos - lightPos);
+		let lightDir = u.light.xyz;
 		let shade = 0.5 - (dot(normal, lightDir) * 0.5);
 
 
@@ -243,7 +251,51 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	let fogColor = vec4(0.0);
-	return mix(color, fogColor, fogFactor);
+	color = mix(color, fogColor, fogFactor);
+
+	if DRAW_SHADOWS {
+		if length(normal) > 0.0 {
+			let shadowSize = vec2f(textureDimensions(shadowTex));
+			//let shadowPos = worldFromScreen(in.uv, pixel.r, u.lightVp);
+			let shadowPos = u.lightVp * vec4(pos + normal * 0.1, 1.0);
+			let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;
+			let coords = vec2u(vec2(suv.x, 1.0-suv.y) * shadowSize);
+			let shadowDepth = textureLoad(shadowTex, coords, 0).r;
+			//color = vec4(shadowPos.xyz/shadowPos.w, 1.0);
+			if suv.x < 0.0 || suv.x >= 1.0 || suv.y < 0.0 || suv.y >= 1.0 {
+				if DEBUG_SHADOW_MAP {
+					color = mix(color, vec4(1.0, 0.0, 0.0, 1.0), 0.8);
+				}
+			}
+			else if shadowPos.z < 1.0 && shadowPos.z > shadowDepth {
+				// In shadow
+				color = vec4(color.rgb*0.5, color.a);
+			}
+
+			//color = vec4(suv, 0.0, 1.0);
+		}
+	}
+
+
+	if DEBUG_SHADOW_MAP {
+
+		//color = vec4(vec3(shadowDepth), 1.0);
+		color = drawShadowMap(in.uv, color);
+	}
+	return color;
+}
+
+fn drawShadowMap(uv: vec2f, color: vec4f) -> vec4f {
+	let size = vec2(0.3);
+	if uv.x > size.x || uv.y > size.y {
+		return color;
+	}
+	let suv = vec2(uv.x / size.x, 1.0 - (uv.y / size.y));
+	let shadowSize = vec2f(textureDimensions(shadowTex));
+	let coords = vec2u(suv * shadowSize);
+	let pixel = textureLoad(shadowTex, coords, 0).rrr;
+	let pos = worldFromScreen(suv, pixel.r, u.lightVp);
+	return mix(vec4(suv, 0.0, 1.0), vec4(pixel, 1.0), 0.5);
 }
 
 fn intToColor(u: u32) -> vec4<f32> {

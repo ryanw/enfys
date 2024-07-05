@@ -6,6 +6,8 @@ import { UniformBuffer } from 'engine/uniform_buffer';
 import { identity, inverse, multiply } from 'engine/math/transform';
 import { Camera } from 'engine/camera';
 import { Point3 } from 'engine/math';
+import { DirectionalLight, Light } from 'engine/light';
+import { ShadowMap } from 'engine/shadow_map';
 
 /**
  * Composes a {@link GBuffer} onto a single {@link GPUTexture}
@@ -65,6 +67,12 @@ export class ComposePipeline extends Pipeline {
 					visibility: GPUShaderStage.FRAGMENT,
 					texture: { sampleType: 'uint' }
 				},
+				// Shadows
+				{
+					binding: 6,
+					visibility: GPUShaderStage.FRAGMENT,
+					texture: { sampleType: 'unfilterable-float' }
+				},
 			]
 		});
 		const pipelineLayout = device.createPipelineLayout({
@@ -96,7 +104,9 @@ export class ComposePipeline extends Pipeline {
 
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['invMvp', 'mat4x4f'],
-			['lightPosition', 'vec3f'],
+			['light', 'vec4f'],
+			['lightVp', 'mat4x4f'],
+			['invLightVp', 'mat4x4f'],
 			['playerPosition', 'vec3f'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
@@ -122,7 +132,8 @@ export class ComposePipeline extends Pipeline {
 		encoder: GPUCommandEncoder,
 		src: GBuffer,
 		camera: Camera,
-		lightPosition: Point3,
+		light: DirectionalLight,
+		shadows: ShadowMap,
 		target: GPUTexture,
 		clear: Color = [0, 0, 0, 0],
 	) {
@@ -133,7 +144,9 @@ export class ComposePipeline extends Pipeline {
 		const cameraInvMvp = inverse(multiply(camera.projection, camera.view));
 		this.uniformBuffer.replace({
 			invMvp: cameraInvMvp || identity(),
-			lightPosition,
+			light: [...light.direction, 0],
+			lightVp: multiply(light.projection, light.view),
+			invLightVp: inverse(multiply(light.projection, light.view))!,
 			playerPosition: camera.position,
 			ditherSize: this.config.ditherSize,
 			ditherDepth: this.config.ditherDepth,
@@ -165,6 +178,7 @@ export class ComposePipeline extends Pipeline {
 				{ binding: 3, resource: src.normal.createView() },
 				{ binding: 4, resource: src.depth.createView() },
 				{ binding: 5, resource: src.meta.createView() },
+				{ binding: 6, resource: shadows.texture.createView() },
 			],
 		});
 

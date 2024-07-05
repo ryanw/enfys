@@ -3,9 +3,10 @@ import shaderSource from './render_dot.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
-import { ShadowBuffer } from 'engine/shadow_buffer';
 import { Entity } from 'engine/entity';
 import { MaterialPipeline } from './material';
+import { ShadowMap } from 'engine/shadow_map';
+import { DirectionalLight } from 'engine/light';
 
 /**
  * Render Pipeline to draw {@link SimpleMesh} instances using the {@link DotMaterial} to a {@link GBuffer}
@@ -82,7 +83,11 @@ export class RenderDotPipeline extends MaterialPipeline {
 		});
 	}
 
-	override drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
+	override drawShadowMapBatch(encoder: GPUCommandEncoder, src: Array<Entity<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
+		// Stars don't cast shadows
+	}
+
+	override drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, target: GBuffer) {
 		if (entities.length === 0) {
 			return;
 		}

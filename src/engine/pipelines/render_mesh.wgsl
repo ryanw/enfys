@@ -31,6 +31,7 @@ struct Camera {
 	projection: mat4x4f,
 	resolution: vec2f,
 	t: f32,
+	isShadowMap: u32,
 }
 
 struct Entity {
@@ -71,8 +72,8 @@ var<uniform> entity: Entity;
 @group(0) @binding(2)
 var<uniform> material: Material;
 
-@group(0) @binding(3)
-var<storage> shadows: array<Shadow>;
+//@group(0) @binding(3)
+//var<storage> shadows: array<Shadow>;
 
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
@@ -123,6 +124,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	var shade = 0.0;
 	var shadowCount = 8u;
 
+	/*
 	if material.receiveShadows > 0 {
 		for (var i = 0u; i < shadowCount; i++) {
 			let shadow = shadows[i];
@@ -150,28 +152,32 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 			}
 		}
 	}
+	*/
 
 	if material.fadeout > 0.0 {
 		let depth = smoothstep(0.0, 1.0, pow(((in.position.z / in.position.w) / material.fadeout), 4.0));
 		color *= 1.0 - depth;
 	}
 
-	let opacity = color.a;
-
-
-	out.normal = vec4(in.normal, 0.0);
-	if color.a >= 0.99 {
-		out.metaOutput = in.triangleId;
-	}
-	else {
-		color.a = 1.0;
-		let ditherCoord = vec2(i32(in.position.x) % 4, i32(in.position.y) % 4);
-		let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
-		if opacity < ditherVal {
+	if camera.isShadowMap > 0 {
+		// Shadows don't do alpha
+		if color.a < 0.5 {
 			discard;
 		}
+	} else {
+		let opacity = color.a;
+		if color.a < 0.99 {
+			color.a = 1.0;
+			let ditherCoord = vec2(i32(in.position.x) % 4, i32(in.position.y) % 4);
+			let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
+			if opacity < ditherVal {
+				discard;
+			}
+		}
 	}
+	out.metaOutput = in.triangleId;
 	out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
+	out.normal = vec4(in.normal, 0.0);
 
 
 	return out;

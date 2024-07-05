@@ -20,16 +20,20 @@ fn landscapeNoise(p: vec3f) -> f32 {
 	var t1 = erosion(p);
 	var t2 = valleys(p);
 
+	var worldScale = 1024.0;
+	var waterLevel = -16.0;
 	var t = t0 * t1 * t2;
+	t *= worldScale;
+	t -= waterLevel;
 
-	return t * 1024.0;
+	return t;
 }
 
 fn lumpLandscapeNoise(p: vec3f) -> f32 {
 	var t0 = continents(p);
 	var t1 = erosion(p);
 	var t2 = valleys(p);
-	var t = 0.2 + (t0 * t1 * t2);
+	var t = 0.0 + (t0 * t1 * t2);
 
 	return t * 512.0;
 }

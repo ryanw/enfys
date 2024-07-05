@@ -8,6 +8,7 @@ import { NormalVertex } from './mesh';
 import { MaterialPipeline } from './pipelines/material';
 import { Renderer } from './renderer';
 import { Scene } from './scene';
+import { ShadowMap } from './shadow_map';
 
 export { Color } from './color';
 export type Size = Vector2;
@@ -44,6 +45,7 @@ export class Gfx {
 	readonly context: GPUCanvasContext;
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
+	readonly shadowMap: ShadowMap;
 	private renderer: Renderer;
 	private frameSample: number = 128;
 	private frameTimes: Array<number> = [];
@@ -103,6 +105,7 @@ export class Gfx {
 			alphaMode: 'premultiplied',
 		});
 
+		this.shadowMap = new ShadowMap(this, [4096, 4096]);
 		this.gbuffer = new GBuffer(this);
 		this.updateSize();
 
@@ -192,12 +195,14 @@ export class Gfx {
 	async draw(scene: Scene, camera: Camera) {
 		this.gbuffer.size = this.framebufferSize;
 		await this.encode(async (encoder) => {
+			this.renderer.drawSceneShadows(encoder, scene, scene.light, this.shadowMap);
 			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
 			this.renderer.compose(
 				encoder,
 				this.gbuffer,
 				camera,
-				scene.lightPosition,
+				scene.light,
+				this.shadowMap,
 				this.currentTexture,
 				scene.clearColor,
 			);
@@ -330,7 +335,7 @@ export function calculateNormals(vertices: Array<NormalVertex>, transform?: Matr
 			vertices[i + 0].position,
 			vertices[i + 1].position,
 			vertices[i + 2].position,
-		] ;
+		];
 		const normal = calculateNormal(triangle, transform);
 
 		vertices[i + 0].normal = normal;

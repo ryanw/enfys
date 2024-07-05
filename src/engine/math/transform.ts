@@ -1,6 +1,6 @@
 import { Matrix4, Point3, Point4, Vector3, Vector4 } from '.';
 import * as vec from './vectors';
-import { cross, dot } from './vectors';
+import { cross, dot, normalize } from './vectors';
 
 export type Columns = [Vector4, Vector4, Vector4, Vector4];
 export type Rows = [Vector4, Vector4, Vector4, Vector4];
@@ -97,11 +97,28 @@ export function scaling(x: number, y: number = x, z: number = x): Matrix4 {
 	];
 }
 
+/**
+ * Create an orthographic projection matrix
+ */
+export function orthographicProjection(left: number, right: number, bottom: number, top: number, near: number, far: number): Matrix4 {
+	const lr = 1 / (left - right);
+	const bt = 1 / (bottom - top);
+	const nf = 1 / (near - far);
+	return [
+		2 * lr, 0, 0, 0,
+		0, 2 * bt, 0, 0,
+		0, 0, 2 * nf, 0,
+		(left + right) * lr,
+		(bottom + top) * bt,
+		(near + far) * nf,
+		1,
+	];
+}
 
 /**
- * Create a perspective transform matrix
+ * Create a perspective projection matrix
  */
-export function perspective(aspect: number, fovDegrees: number, near: number, far: number): Matrix4 {
+export function perspectiveProjection(aspect: number, fovDegrees: number, near: number, far: number): Matrix4 {
 	const fov = fovDegrees * (Math.PI / 180);
 	const f = 1.0 / Math.tan(fov / 2.0);
 	const range = 1.0 / (near - far);
@@ -310,14 +327,13 @@ export function inverse(m: Matrix4): Matrix4 | null {
 	return inv;
 }
 
-export function matrixFromVector(vec: Vector3): Matrix4 {
-	const unit: Vector3 = [0, 0, 1];
-	const angle = Math.acos(dot(unit, vec));
+export function rotationFromVector(direction: Vector3, forward: Vector3 = [0, 0, 1]): Matrix4 {
+	const angle = Math.acos(dot(normalize(forward), normalize(direction)));
 	const c = Math.cos(angle);
 	const s = Math.sin(angle);
 	const t = 1 - c;
 
-	const [x, y, z] = cross(unit, vec);
+	const [x, y, z] = cross(forward, direction);
 	return [
 		t * x * x + c,
 		t * x * y - z * s,
@@ -334,9 +350,6 @@ export function matrixFromVector(vec: Vector3): Matrix4 {
 		t * z * z + c,
 		0,
 
-		0,
-		0,
-		0,
-		1
+		0, 0, 0, 1
 	];
 }

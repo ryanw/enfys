@@ -3,15 +3,18 @@ import defaultSource from './render_mesh.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
-import { ShadowBuffer } from 'engine/shadow_buffer';
 import { Entity } from 'engine/entity';
 import { MaterialPipeline } from './material';
+import { ShadowMap } from 'engine/shadow_map';
+import { UniformBuffer } from 'engine/uniform_buffer';
+import { DirectionalLight } from 'engine/light';
 
 /**
  * Render Pipeline to draw {@link SimpleMesh} instances to a {@link GBuffer}
  */
 export class RenderMeshPipeline extends MaterialPipeline {
 	private pipeline: GPURenderPipeline;
+	private pipelineShadowMap: GPURenderPipeline;
 	private pipelineNoDepth: GPURenderPipeline;
 
 	constructor(gfx: Gfx, source?: string) {
@@ -22,11 +25,12 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: source || defaultSource });
 
 		const cameraBindGroupLayout = device.createBindGroupLayout({
+			label: "RenderMeshPipeline Bind Group Layout",
 			entries: [
 				// Camera
 				{
 					binding: 0,
-					visibility: GPUShaderStage.VERTEX,
+					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
 				// Entity
@@ -40,12 +44,6 @@ export class RenderMeshPipeline extends MaterialPipeline {
 					binding: 2,
 					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
-				},
-				// Shadows
-				{
-					binding: 3,
-					visibility: GPUShaderStage.FRAGMENT,
-					buffer: { type: 'read-only-storage' }
 				},
 			]
 		});
@@ -96,9 +94,70 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				depthCompare: 'less',
 			}
 		});
+
+		const pipelineShadowDescriptor: GPURenderPipelineDescriptor = {
+			label: 'RenderMeshPipeline ShadowMap',
+			layout: pipelineLayout,
+			vertex: { module: shader, entryPoint: 'vs_main', buffers: [pointVertexLayout, offsetInstanceLayout] },
+			fragment: {
+				module: shader,
+				entryPoint: 'fs_main',
+				targets: [
+					// No targets other than depth
+				]
+			},
+			primitive: { topology: 'triangle-list', frontFace: 'cw', cullMode: 'front', },
+			depthStencil: {
+				format: 'depth32float',
+				depthWriteEnabled: true,
+				depthCompare: 'less',
+			}
+		};
+		this.pipelineShadowMap = device.createRenderPipeline(pipelineShadowDescriptor);
 	}
 
-	drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, shadows: ShadowBuffer, target: GBuffer) {
+	drawShadowMapBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
+		if (entities.length === 0) {
+			return;
+		}
+		const { device } = this.gfx;
+
+		const depthView = target.texture.createView();
+
+		const passDescriptor: GPURenderPassDescriptor = {
+			colorAttachments: [ ],
+			depthStencilAttachment: { 
+				view: depthView,
+				depthLoadOp: 'load',
+				depthStoreOp: 'store',
+			}
+		};
+
+		const pass = encoder.beginRenderPass(passDescriptor);
+		pass.setPipeline(this.pipelineShadowMap);
+
+		for (const src of entities) {
+			if (!src.visible || src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+				continue;
+			}
+			const bindGroup = device.createBindGroup({
+				label: 'RenderMeshPipeline Pass ShadowMap Bind Group',
+				layout: this.pipeline.getBindGroupLayout(0),
+				entries: [
+					{ binding: 0, resource: light.uniform.bindingResource() },
+					{ binding: 1, resource: src.bindingResource() },
+					{ binding: 2, resource: src.material.bindingResource() },
+				],
+			});
+			pass.setBindGroup(0, bindGroup);
+			pass.setVertexBuffer(0, src.object.vertexBuffer);
+			pass.setVertexBuffer(1, src.object.instanceBuffer);
+			pass.draw(src.object.vertexCount, src.object.instanceCount);
+		}
+		pass.end();
+	}
+
+	drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, target: GBuffer) {
 		if (entities.length === 0) {
 			return;
 		}
@@ -109,7 +168,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const metaView = target.meta.createView();
 		const depthView = target.depth.createView();
 		// FIXME assumes all entities use same material
-		const material = entities[0].material;
+		const writeDepth = entities[0].material.writeDepth;
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
 			clearValue: [0, 0, 0, 0],
@@ -123,13 +182,13 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				{ view: normalView, ...baseAttachment },
 				{ view: metaView, ...baseAttachment },
 			],
-			depthStencilAttachment: material.writeDepth
+			depthStencilAttachment: writeDepth
 				? { view: depthView, depthLoadOp: 'load', depthStoreOp: 'store' }
 				: { view: depthView, depthReadOnly: true }
 		};
 
 		const pass = encoder.beginRenderPass(passDescriptor);
-		pass.setPipeline(material.writeDepth ? this.pipeline : this.pipelineNoDepth);
+		pass.setPipeline(writeDepth ? this.pipeline : this.pipelineNoDepth);
 
 		for (const src of entities) {
 			if (!src.visible || src.object.vertexCount === 0 || src.object.instanceCount === 0) {
@@ -141,8 +200,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				entries: [
 					{ binding: 0, resource: camera.uniform.bindingResource() },
 					{ binding: 1, resource: src.bindingResource() },
-					{ binding: 2, resource: material.bindingResource() },
-					{ binding: 3, resource: shadows.bindingResource() },
+					{ binding: 2, resource: src.material.bindingResource() },
 				],
 			});
 			pass.setBindGroup(0, bindGroup);
