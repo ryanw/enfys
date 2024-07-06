@@ -4,24 +4,28 @@ import { Color, Gfx } from 'engine';
 import { Mesh, SimpleMesh } from './mesh';
 import { ShadowBuffer } from './shadow_buffer';
 import { Pawn } from './pawn';
-import { ClippingPlanes } from './camera';
+import { Camera, ClippingPlanes } from './camera';
 import { TerrainMesh } from '../landscape/terrain_mesh';
 import { transformPoint } from './math/transform';
 import { dot, magnitude, subtract } from './math/vectors';
 import { DirectionalLight } from './light';
 
 export type AddArguments = Parameters<Scene['addPawn']> | Parameters<Scene['addMesh']>;
+export type CameraId = number;
 
 /**
  * Contains the graph of all GPU objects draw in a scene
  */
 export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
-	pawns: Pawn<unknown>[] = [];
+	pawns: Array<Pawn<unknown>> = [];
+	cameras: Array<Camera> = [];
+	currentCameraId = 0;
 	shadowBuffer: ShadowBuffer;
 	light: DirectionalLight;
 
 	constructor(readonly gfx: Gfx) {
+		this.addCamera(new Camera(gfx));
 		this.light = new DirectionalLight(gfx);
 		this.light.position = [0, 0, 0];
 		this.shadowBuffer = new ShadowBuffer(gfx, 32);
@@ -35,6 +39,21 @@ export class Scene {
 		});
 	}
 
+	get activeCamera(): Camera {
+		return this.cameras[this.currentCameraId % this.cameras.length];
+	}
+
+	nextCamera() {
+		this.currentCameraId = (this.currentCameraId + 1) % this.cameras.length;
+	}
+
+	prevCamera() {
+		this.currentCameraId -= 1;
+		if (this.currentCameraId < 0) {
+			this.currentCameraId = this.cameras.length - 1;
+		}
+	}
+
 	add(...args: AddArguments): Pawn<unknown> | void {
 		// FIXME this is a big hacky
 		if (args[0] instanceof Pawn) {
@@ -43,6 +62,12 @@ export class Scene {
 		else if (args[0] instanceof SimpleMesh) {
 			return this.addMesh(...args as Parameters<Scene['addMesh']>);
 		}
+	}
+
+	addCamera<T extends Camera>(camera: T): CameraId {
+		this.cameras.push(camera);
+
+		return this.cameras.length - 1;
 	}
 
 	addPawn<T>(pawn: Pawn<T>): Pawn<T> {

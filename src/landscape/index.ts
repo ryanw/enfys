@@ -12,7 +12,7 @@ import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { Chunker } from './chunker';
 import { OldWorld as OldWorld } from './world';
 import { ShipMesh } from './ship_mesh';
-import { Color, colorToInt, hsl } from 'engine/color';
+import { colorToInt, hsl } from 'engine/color';
 import { randomizer } from 'engine/noise';
 import { ui } from './ui';
 import { debugChunker } from './chunker.debug';
@@ -25,8 +25,12 @@ import { TreeDecorMesh } from './meshes/tree';
 import { getParam } from './helpers';
 import { ShipMode } from './player';
 import { ColorScheme } from './color_scheme';
-import { World } from 'engine/ecs';
-import { playerPrefab } from './prefabs';
+import { freeCamPrefab, orbitCamPrefab, playerPrefab } from './prefabs';
+import { WorldGraphics } from 'engine/world_graphics';
+import { World } from 'engine/ecs/world';
+import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
+import { OrbitCameraInputSystem } from 'engine/ecs/systems/orbit_camera_input';
+import { VelocityComponent } from 'engine/ecs/components';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -51,56 +55,39 @@ export async function main(el: HTMLCanvasElement) {
 	// Initilise world and graphics
 	const oldWorld = new OldWorld(gfx, seed);
 	//world.cameras[0].camera.far = 400.0;
-	const [scene, sync] = buildScene(gfx, seed);
+	//const [scene, sync] = oldBuildScene(gfx, seed);
+	//oldWorld.run();
+	
+	// Graphics objects
+	const scene = new Scene(gfx);
 
-	oldWorld.run();
+	// Sync graphics with world
+	const graphics = new WorldGraphics();
+	graphics.insertResource('player-ship', new ShipMesh(gfx));
 
+	// World simulation
 	const world = new World();
-	const player = playerPrefab(world);
+	world.addSystem(new FreeCameraInputSystem(el));
+	world.addSystem(new OrbitCameraInputSystem(el));
+
+	const player0 = playerPrefab(world);
+	const player1 = playerPrefab(world);
+	const player2 = playerPrefab(world);
+	world.addComponent(player0, new VelocityComponent([0, -0.2, 0]));
+
+	const freeCam = freeCamPrefab(world);
+	const orbitCam = orbitCamPrefab(world, player0);
+
 	world.run();
 
+	// FIXME set default camera to orbit camera
+	scene.currentCameraId = 2;
 	// Start main loop
 	gfx.run(async (dt) => {
-		sync(oldWorld);
-		await gfx.draw(scene, oldWorld.activeCamera.camera);
+		graphics.update(world, scene);
+		await gfx.draw(scene, scene.activeCamera);
 	});
 }
-
-function buildColorScheme(seed: number): Array<Color> {
-	const rnd = randomizer(seed);
-
-	const sand = rnd(0.0, 1.0);
-	const grass = rnd(0.0, 1.0);
-	const soil = ((grass - rnd(0.1, 0.2)) + 1) % 1;
-	const rock = rnd(0.0, 1.0);
-	const snow = rnd(0.0, 1.0);
-	return [
-		hsl(sand, rnd(0.3, 0.6), rnd(0.4, 0.6)),
-		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
-		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.5)),
-		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
-		hsl(grass, rnd(0.4, 0.6), rnd(0.4, 0.6)),
-		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.5)),
-		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.4)),
-		hsl(soil, rnd(0.2, 0.4), rnd(0.2, 0.4)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.6)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.4, 0.7)),
-		hsl(rock, rnd(0.2, 0.3), rnd(0.8, 0.7)),
-		hsl(snow, rnd(0.1, 0.2), rnd(0.8, 1.0)),
-		hsl(snow, rnd(0.1, 0.2), rnd(0.9, 1.0)),
-	];
-}
-
 
 /**
  * Build the GPU objects we'll be rendering
@@ -132,7 +119,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	);
 	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5, 0.9)));
 
-	// Add a forest of trees
+	// Add lots of bits and bobs all over the place
 	const decors = [
 		addRocks(scene, 12.0, 3, seed, seed + 1111),
 		addRocks(scene, 24.0, 4, seed, seed + 1112),
