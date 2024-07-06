@@ -1,13 +1,12 @@
 import { Point2, Point3 } from 'engine/math';
 import { Scene } from 'engine/scene';
 import { TerrainMesh } from './terrain_mesh';
-import { Color, Gfx, Size } from 'engine';
+import { Gfx, Size } from 'engine';
 import { translation } from 'engine/math/transform';
 import { add, magnitude, subtract } from 'engine/math/vectors';
 import { TerrainPipeline } from './pipelines/terrain';
-import { Entity } from 'engine/entity';
+import { Pawn } from 'engine/pawn';
 import { SimpleMaterial } from 'engine/material';
-import { colorToInt, hsl } from 'engine/color';
 import { ColorScheme } from './color_scheme';
 
 export type Chunk = {
@@ -117,7 +116,7 @@ export class Chunker {
 	liveChunks: Map<ChunkKey, Chunk> = new Map();
 	queuedChunks: Map<ChunkKey, Chunk> = new Map();
 	activeChunks: Map<ChunkKey, Chunk> = new Map();
-	entities: Map<ChunkKey, Entity<TerrainMesh>> = new Map();
+	pawns: Map<ChunkKey, Pawn<TerrainMesh>> = new Map();
 	chunkSize: Size = [128, 128];
 	private terrainPipeline: TerrainPipeline;
 	private currentChunk: Point2 = [-1, -1];
@@ -176,15 +175,15 @@ export class Chunker {
 		for (const [key, _chunk] of this.liveChunks.entries()) {
 			if (this.activeChunks.has(key)) continue;
 			// Chunk has expired, remove it
-			const entity = this.entities.get(key);
+			const entity = this.pawns.get(key);
 			if (!entity) continue;
-			scene.removeEntity(entity);
+			scene.removePawn(entity);
 			this.liveChunks.delete(key);
 		}
 
-		if (DEBUG && this.entities.size > 0) {
+		if (DEBUG && this.pawns.size > 0) {
 			const vertexSize = (3 + 3 + 1) * 4; // Size of ColorVertex
-			const vertexCount = (this.entities.values().next().value.object as TerrainMesh).vertexCount;
+			const vertexCount = (this.pawns.values().next().value.object as TerrainMesh).vertexCount;
 			const chunkSize = vertexSize * vertexCount;
 			const memorySize = chunkSize * this.activeChunks.size;
 			console.debug(
@@ -224,7 +223,7 @@ export class Chunker {
 			terrain.material.receiveShadows = true;
 		}
 		//terrain.material = new Material(scene.gfx, hsl(chunkId[2] / 7, 0.5, 0.5));
-		this.entities.set(toChunkHash(chunk), terrain);
+		this.pawns.set(toChunkHash(chunk), terrain);
 	}
 
 	private updateQueue() {

@@ -3,7 +3,7 @@ import shaderSource from './render_dot.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
-import { Entity } from 'engine/entity';
+import { Pawn } from 'engine/pawn';
 import { MaterialPipeline } from './material';
 import { ShadowMap } from 'engine/shadow_map';
 import { DirectionalLight } from 'engine/light';
@@ -30,7 +30,7 @@ export class RenderDotPipeline extends MaterialPipeline {
 					visibility: GPUShaderStage.VERTEX,
 					buffer: {}
 				},
-				// Entity
+				// Pawn
 				{
 					binding: 1,
 					visibility: GPUShaderStage.VERTEX,
@@ -83,11 +83,11 @@ export class RenderDotPipeline extends MaterialPipeline {
 		});
 	}
 
-	override drawShadowMapBatch(encoder: GPUCommandEncoder, src: Array<Entity<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
+	override drawShadowMapBatch(encoder: GPUCommandEncoder, src: Array<Pawn<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
 		// Stars don't cast shadows
 	}
 
-	override drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, target: GBuffer) {
+	override drawBatch(encoder: GPUCommandEncoder, entities: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer) {
 		if (entities.length === 0) {
 			return;
 		}

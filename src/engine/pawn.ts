@@ -1,30 +1,30 @@
 import { Matrix4 } from './math';
-import { Material, SimpleMaterial } from './material';
+import { Material } from './material';
 import { Gfx } from 'engine';
 import { SimpleMesh } from './mesh';
 import { UniformBuffer } from './uniform_buffer';
 import { identity } from './math/transform';
 
 /**
- * Type Guard to test if the `T` in {@link Entity} is a specific type
+ * Type Guard to test if the `T` in {@link Pawn} is a specific type
  *
- * @param entity Entity to test
+ * @param pawn Pawn to test
  * @param constructor Constructor of the type to verify
  *
  * @example
- * if (isEntityOf(entity, SimpleMesh)) {
+ * if (isPawnOf(pawn, SimpleMesh)) {
  *   console.log(
- *     "Entity is a mesh with %i vertices",
- *     entity.object.vertexCount,
+ *     "Pawn is a mesh with %i vertices",
+ *     pawn.object.vertexCount,
  *   );
  * }
  */
-export function isEntityOf<T>(entity: Entity<unknown>, constructor: new (...args: any[]) => T): entity is Entity<T> {
-	return entity.object instanceof constructor;
+export function isPawnOf<T>(pawn: Pawn<unknown>, constructor: new (...args: any[]) => T): pawn is Pawn<T> {
+	return pawn.object instanceof constructor;
 }
 
 
-export class Entity<T> {
+export class Pawn<T> {
 	public visible = true;
 	private buffer: UniformBuffer;
 	private _transform: Matrix4 = identity();
@@ -57,7 +57,7 @@ export class Entity<T> {
 	}
 
 	destroy() {
-		if (isEntityOf(this, SimpleMesh)) {
+		if (isPawnOf(this, SimpleMesh)) {
 			this.object.destroy();
 		}
 	}

@@ -3,7 +3,7 @@ import defaultSource from './render_mesh.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
-import { Entity } from 'engine/entity';
+import { Pawn } from 'engine/pawn';
 import { MaterialPipeline } from './material';
 import { ShadowMap } from 'engine/shadow_map';
 import { DirectionalLight } from 'engine/light';
@@ -115,7 +115,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		this.pipelineShadowMap = device.createRenderPipeline(pipelineShadowDescriptor);
 	}
 
-	drawShadowMapBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
+	drawShadowMapBatch(encoder: GPUCommandEncoder, entities: Array<Pawn<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
 		if (entities.length === 0) {
 			return;
 		}
@@ -156,7 +156,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		pass.end();
 	}
 
-	drawBatch(encoder: GPUCommandEncoder, entities: Array<Entity<SimpleMesh>>, camera: Camera, target: GBuffer) {
+	drawBatch(encoder: GPUCommandEncoder, entities: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer) {
 		if (entities.length === 0) {
 			return;
 		}

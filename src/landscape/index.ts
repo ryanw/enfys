@@ -20,7 +20,7 @@ import { StarMesh } from './star_mesh';
 import { BuildingMesh, DecorMesh } from './decor_mesh';
 import { Point3, Vector3 } from 'engine/math';
 import { Particles } from 'engine/particles';
-import { Entity } from 'engine/entity';
+import { Pawn } from 'engine/pawn';
 import { TreeDecorMesh } from './meshes/tree';
 import { getParam } from './helpers';
 import { ShipMode } from './player';
@@ -199,14 +199,14 @@ function getSeed(): number {
 	return Math.abs(seedParam ? parseInt(seedParam, 36) : Math.random() * 0x7fffffff | 0);
 }
 
-function addCubes(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addCubes(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Pawn<DecorMesh> {
 	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
 		position: [p[0] / 3, p[1] / 3 + 0.3, p[2] / 3],
 		normal: [0, 0, 0],
 		color: BigInt(0xffffffff),
 	}));
 
-	const entity = scene.addMesh(new DecorMesh(
+	const pawn = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		cube,
 		[0, 0],
@@ -217,14 +217,14 @@ function addCubes(scene: Scene, spread: number, radius: number, terrainSeed: num
 		radius,
 	));
 
-	if (entity.material instanceof SimpleMaterial) {
-		entity.material.fadeout = 8 * radius * spread;
+	if (pawn.material instanceof SimpleMaterial) {
+		pawn.material.fadeout = 8 * radius * spread;
 	}
 
-	return entity;
+	return pawn;
 }
 
-function addBuildings(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addBuildings(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Pawn<DecorMesh> {
 	const cube: Array<ColorVertex> = CUBE_VERTS.map(p => ({
 		position: [p[0] * 32, p[1] * 320, p[2] * 32],
 		normal: [0, 0, 0],
@@ -232,7 +232,7 @@ function addBuildings(scene: Scene, spread: number, radius: number, terrainSeed:
 	}));
 	calculateNormals(cube);
 
-	const entity = scene.addMesh(new BuildingMesh(
+	const pawn = scene.addMesh(new BuildingMesh(
 		scene.gfx,
 		cube,
 		[0, 0],
@@ -243,14 +243,14 @@ function addBuildings(scene: Scene, spread: number, radius: number, terrainSeed:
 		radius,
 	));
 
-	if (entity.material instanceof SimpleMaterial) {
-		entity.material.fadeout = 8 * radius * spread;
+	if (pawn.material instanceof SimpleMaterial) {
+		pawn.material.fadeout = 8 * radius * spread;
 	}
 
-	return entity;
+	return pawn;
 }
 
-function addTufts(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addTufts(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Pawn<DecorMesh> {
 	const rnd = randomizer(decorSeed + 531);
 	const bt = 16;
 	const brad = 1.5;
@@ -278,7 +278,7 @@ function addTufts(scene: Scene, spread: number, radius: number, terrainSeed: num
 		vertices = [...vertices, ...blade];
 	}
 
-	const entity = scene.addMesh(new DecorMesh(
+	const pawn = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		vertices,
 		[0, 0],
@@ -289,14 +289,14 @@ function addTufts(scene: Scene, spread: number, radius: number, terrainSeed: num
 		radius
 	));
 
-	if (entity.material instanceof SimpleMaterial) {
-		entity.material.fadeout = 8 * radius * spread;
+	if (pawn.material instanceof SimpleMaterial) {
+		pawn.material.fadeout = 8 * radius * spread;
 	}
 
-	return entity;
+	return pawn;
 }
 
-function addRocks(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
+function addRocks(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Pawn<DecorMesh> {
 	const icos: Array<ColorVertex> = buildIcosahedron(p => ({
 		position: [...p],
 		normal: [0, 0, 0],
@@ -304,7 +304,7 @@ function addRocks(scene: Scene, spread: number, radius: number, terrainSeed: num
 	}));
 	calculateNormals(icos);
 
-	const entity = scene.addMesh(new DecorMesh(
+	const pawn = scene.addMesh(new DecorMesh(
 		scene.gfx,
 		icos,
 		[0, 0],
@@ -315,15 +315,15 @@ function addRocks(scene: Scene, spread: number, radius: number, terrainSeed: num
 		radius
 	));
 
-	if (entity.material instanceof SimpleMaterial) {
-		entity.material.fadeout = 8 * radius * spread;
+	if (pawn.material instanceof SimpleMaterial) {
+		pawn.material.fadeout = 8 * radius * spread;
 	}
 
-	return entity;
+	return pawn;
 }
 
-function addTrees(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Entity<DecorMesh> {
-	const entity = scene.addMesh(new TreeDecorMesh(
+function addTrees(scene: Scene, spread: number, radius: number, terrainSeed: number, decorSeed: number): Pawn<DecorMesh> {
+	const pawn = scene.addMesh(new TreeDecorMesh(
 		scene.gfx,
 		[0, 0],
 		1.0,
@@ -333,11 +333,11 @@ function addTrees(scene: Scene, spread: number, radius: number, terrainSeed: num
 		radius,
 	));
 
-	if (entity.material instanceof SimpleMaterial) {
-		entity.material.fadeout = 8 * radius * spread;
+	if (pawn.material instanceof SimpleMaterial) {
+		pawn.material.fadeout = 8 * radius * spread;
 	}
 
-	return entity;
+	return pawn;
 }
 
 

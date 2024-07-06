@@ -4,14 +4,13 @@ import { RenderMeshPipeline } from './pipelines/render_mesh';
 import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { SimpleMesh } from './mesh';
-import { Point3 } from './math';
-import { Entity, isEntityOf } from './entity';
+import { Pawn, isPawnOf } from './pawn';
 import { DotMaterial, Material, SimpleMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
 import { ShadowMap } from './shadow_map';
 import { Scene } from './scene';
-import { DirectionalLight, Light } from './light';
+import { DirectionalLight } from './light';
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -51,11 +50,11 @@ export class Renderer {
 
 		// Group entities by material, render them together if possible
 		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
-			function isSimpleMesh(entity: Entity<unknown>): entity is Entity<SimpleMesh> {
-				return isEntityOf(entity, SimpleMesh) && (entity.material instanceof Mat);
+			function isSimpleMesh(entity: Pawn<unknown>): entity is Pawn<SimpleMesh> {
+				return isPawnOf(entity, SimpleMesh) && (entity.material instanceof Mat);
 			}
 
-			const entities = scene.entities.filter(isSimpleMesh);
+			const entities = scene.pawns.filter(isSimpleMesh);
 			pipeline.drawShadowMapBatch(encoder, entities, light, target);
 		}
 	}
@@ -68,11 +67,11 @@ export class Renderer {
 
 		// Group entities by material, render them together if possible
 		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
-			function isSimpleMesh(entity: Entity<unknown>): entity is Entity<SimpleMesh> {
-				return isEntityOf(entity, SimpleMesh) && (entity.material instanceof Mat);
+			function isSimpleMesh(entity: Pawn<unknown>): entity is Pawn<SimpleMesh> {
+				return isPawnOf(entity, SimpleMesh) && (entity.material instanceof Mat);
 			}
 
-			const entities = scene.entities.filter(isSimpleMesh);
+			const entities = scene.pawns.filter(isSimpleMesh);
 			pipeline.drawBatch(encoder, entities, camera, target);
 		}
 	}

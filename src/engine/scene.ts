@@ -1,23 +1,23 @@
-import { Matrix4, Point3, Vector3 } from './math';
+import { Matrix4 } from './math';
 import { SimpleMaterial } from './material';
-import { Color, Gfx, Volume } from 'engine';
+import { Color, Gfx } from 'engine';
 import { Mesh, SimpleMesh } from './mesh';
 import { ShadowBuffer } from './shadow_buffer';
-import { Entity } from './entity';
-import { Camera, ClippingPlanes } from './camera';
+import { Pawn } from './pawn';
+import { ClippingPlanes } from './camera';
 import { TerrainMesh } from '../landscape/terrain_mesh';
-import { inverse, multiply, transformPoint } from './math/transform';
-import { add, dot, magnitude, normalize, scale, subtract } from './math/vectors';
+import { transformPoint } from './math/transform';
+import { dot, magnitude, subtract } from './math/vectors';
 import { DirectionalLight } from './light';
 
-export type AddArguments = Parameters<Scene['addEntity']> | Parameters<Scene['addMesh']>;
+export type AddArguments = Parameters<Scene['addPawn']> | Parameters<Scene['addMesh']>;
 
 /**
  * Contains the graph of all GPU objects draw in a scene
  */
 export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
-	entities: Entity<unknown>[] = [];
+	pawns: Pawn<unknown>[] = [];
 	shadowBuffer: ShadowBuffer;
 	light: DirectionalLight;
 
@@ -35,23 +35,23 @@ export class Scene {
 		});
 	}
 
-	add(...args: AddArguments): Entity<unknown> | void {
+	add(...args: AddArguments): Pawn<unknown> | void {
 		// FIXME this is a big hacky
-		if (args[0] instanceof Entity) {
-			return this.addEntity(...(args as Parameters<Scene['addEntity']>));
+		if (args[0] instanceof Pawn) {
+			return this.addPawn(...(args as Parameters<Scene['addPawn']>));
 		}
 		else if (args[0] instanceof SimpleMesh) {
 			return this.addMesh(...args as Parameters<Scene['addMesh']>);
 		}
 	}
 
-	addEntity<T>(entity: Entity<T>): Entity<T> {
-		this.entities.push(entity);
-		return entity;
+	addPawn<T>(pawn: Pawn<T>): Pawn<T> {
+		this.pawns.push(pawn);
+		return pawn;
 	}
 
-	addMesh<T extends Mesh<any, any>>(item: T, transform?: Matrix4): Entity<T> {
-		return this.addEntity(new Entity(
+	addMesh<T extends Mesh<any, any>>(item: T, transform?: Matrix4): Pawn<T> {
+		return this.addPawn(new Pawn(
 			this.gfx,
 			item,
 			new SimpleMaterial(this.gfx, 0xffffffff),
@@ -59,32 +59,32 @@ export class Scene {
 		));
 	}
 
-	removeEntity(entity: Entity<unknown>) {
-		this.entities = this.entities.filter(e => e !== entity);
-		entity.destroy();
+	removePawn(pawn: Pawn<unknown>) {
+		this.pawns = this.pawns.filter(e => e !== pawn);
+		pawn.destroy();
 	}
 
 	frustumClip(planes: ClippingPlanes) {
-		entityLoop:
-		for (const entity of this.entities) {
-			if (entity.object instanceof TerrainMesh) {
-				entity.visible = true;
-				const mesh = entity.object;
+		pawnLoop:
+		for (const pawn of this.pawns) {
+			if (pawn.object instanceof TerrainMesh) {
+				pawn.visible = true;
+				const mesh = pawn.object;
 				const lod = mesh.chunkId[2];
 				const meshScale = 1 << lod;
-				const radius = magnitude(entity.object.size) * meshScale;
+				const radius = magnitude(pawn.object.size) * meshScale;
 
 
 				// FIXME bottom (3) is clipping too much
 				for (const plane of planes.filter((_, i) => i != 3)) {
 					const n = plane[1];
 					const o = plane[0];
-					const p = transformPoint(entity.transform, [0, 0, 0]);
+					const p = transformPoint(pawn.transform, [0, 0, 0]);
 					const vp = subtract(p, o);
 					const vd = dot(vp, n);
-					entity.visible = vd < radius;
-					if (!entity.visible) {
-						continue entityLoop;
+					pawn.visible = vd < radius;
+					if (!pawn.visible) {
+						continue pawnLoop;
 					}
 				}
 			}
