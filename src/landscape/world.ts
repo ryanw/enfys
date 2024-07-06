@@ -12,7 +12,7 @@ import { add } from 'engine/math/vectors';
 type Timeout = ReturnType<typeof setTimeout>;
 type CameraController = OrbitCameraController | FreeCameraController;
 
-export class World {
+export class OldWorld {
 	player = new Player();
 	playerController: PlayerController;
 	spawnPosition: Point3 = [0, 0, 0];

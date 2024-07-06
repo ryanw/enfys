@@ -10,7 +10,7 @@ import { Scene } from 'engine/scene';
 import { multiply, multiplyVector, scaling, translation } from 'engine/math/transform';
 import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { Chunker } from './chunker';
-import { World } from './world';
+import { OldWorld as OldWorld } from './world';
 import { ShipMesh } from './ship_mesh';
 import { Color, colorToInt, hsl } from 'engine/color';
 import { randomizer } from 'engine/noise';
@@ -25,11 +25,13 @@ import { TreeDecorMesh } from './meshes/tree';
 import { getParam } from './helpers';
 import { ShipMode } from './player';
 import { ColorScheme } from './color_scheme';
+import { World } from 'engine/ecs';
+import { playerPrefab } from './prefabs';
 
 /**
  * Function that synchronises the graphics with the world state
  */
-export type SyncGraphics = (world: World) => void;
+export type SyncGraphics = (world: OldWorld) => void;
 
 /**
  * Procedurally generated alien worlds
@@ -47,16 +49,20 @@ export async function main(el: HTMLCanvasElement) {
 	ui(el.parentElement!, gfx, seed);
 
 	// Initilise world and graphics
-	const world = new World(gfx, seed);
+	const oldWorld = new OldWorld(gfx, seed);
 	//world.cameras[0].camera.far = 400.0;
 	const [scene, sync] = buildScene(gfx, seed);
 
+	oldWorld.run();
+
+	const world = new World();
+	const player = playerPrefab(world);
 	world.run();
 
 	// Start main loop
 	gfx.run(async (dt) => {
-		sync(world);
-		await gfx.draw(scene, world.activeCamera.camera);
+		sync(oldWorld);
+		await gfx.draw(scene, oldWorld.activeCamera.camera);
 	});
 }
 
@@ -157,7 +163,7 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		debugChunker(gfx.canvas.parentElement!, chunker);
 	}
 
-	function syncGraphics(world: World) {
+	function syncGraphics(world: OldWorld) {
 		scene.light.updateForCamera(world.shipCamera.camera);
 
 		// Enlarge flames to match thrust

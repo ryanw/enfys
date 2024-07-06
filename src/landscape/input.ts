@@ -4,7 +4,7 @@ import { multiply, multiplyVector } from 'engine/math/transform';
 import { add, scale } from 'engine/math/vectors';
 import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
 import { Player, ShipMode } from './player';
-import { World } from './world';
+import { OldWorld } from './world';
 
 export class PlayerController {
 	disabled = false;
@@ -46,7 +46,7 @@ export class PlayerController {
 		window.addEventListener('keyup', this.onKeyUp);
 	}
 
-	update(player: Player, camera: Camera, world: World, dt: number) {
+	update(player: Player, camera: Camera, world: OldWorld, dt: number) {
 		if (this.disabled) return;
 
 		this.updateGamepads();
