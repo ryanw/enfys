@@ -1,8 +1,9 @@
-import { Gfx } from "engine";
+import { Gfx, Volume } from "engine";
 import { Matrix4, Point3, Vector3 } from "./math";
 import { UniformBuffer } from "./uniform_buffer";
 import { identity, inverse, multiply, multiplyVector, orthographicProjection, perspectiveProjection, rotation, transformPoint, translation } from "./math/transform";
-import { normalize, scale } from "./math/vectors";
+import { add, normalize, scale, subtract } from "./math/vectors";
+import { Camera } from "./camera";
 
 export class Light {
 	readonly uniform: UniformBuffer;
@@ -185,4 +186,70 @@ export class DirectionalLight extends Light {
 	get direction(): Vector3 {
 		return normalize(multiplyVector(this.rotationMatrix(), [0, 0, 1, 0]).slice(0, 3) as Vector3);
 	}
+
+	/**
+	 * Moves the direction light so it surrounds a camera's view frustum
+	 */
+	updateForCamera(camera: Camera) {
+		const shadowVolume = buildLightVolume(camera, this, 0.97);
+		this.size = shadowVolume.size;
+		this.position = shadowVolume.position;
+	}
+}
+
+function buildLightVolume(camera: Camera, light: Light, maxDist: number = 1.0): Volume {
+	const lightTransform = light.rotationMatrix();
+	const invLightTransform = inverse(lightTransform)!;
+	const vp = inverse(multiply(camera.projection, camera.view))!;
+	let frustum: Array<Point3> = [
+		// Left, Bottom, Near
+		[-1, -1, 0],
+		// Right, Bottom, Near
+		[1, -1, 0],
+		// Left, Top, Near
+		[-1, 1, 0],
+		// Right, Top, Near
+		[1, 1, 0],
+		// Left, Bottom, Far
+		[-1, -1, maxDist],
+		// Right, Bottom, Far
+		[1, -1, maxDist],
+		// Left, Top, Far
+		[-1, 1, maxDist],
+		// Right, Top, Far
+		[1, 1, maxDist],
+	];
+	// Transform unit cube in NDC to frustum corners in world space
+	frustum = frustum.map(p => transformPoint(vp, p));
+
+	// Transfrom from world to lightspace
+	const points = frustum.map(p => transformPoint(invLightTransform, p));
+
+	// Find bounding box in light space
+	const minCoord = [...points[0]];
+	const maxCoord = [...points[0]];
+	const { min, max } = Math;
+	for (const p of points) {
+		minCoord[0] = min(minCoord[0], p[0]);
+		minCoord[1] = min(minCoord[1], p[1]);
+		minCoord[2] = min(minCoord[2], p[2]);
+		maxCoord[0] = max(maxCoord[0], p[0]);
+		maxCoord[1] = max(maxCoord[1], p[1]);
+		maxCoord[2] = max(maxCoord[2], p[2]);
+	}
+
+	const size = subtract(maxCoord, minCoord) as Vector3;
+
+	const centre = scale(
+		add(
+			minCoord as Vector3,
+			maxCoord as Vector3,
+		),
+		0.5,
+	) as Point3;
+
+	const transform = lightTransform;
+	const origin = transformPoint(lightTransform, centre);
+
+	return { position: origin, size, rotation: transform }
 }

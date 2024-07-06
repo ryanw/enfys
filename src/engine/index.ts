@@ -14,6 +14,7 @@ export { Color } from './color';
 export type Size = Vector2;
 export type Constructor<T> = new (...args: Array<any>) => T;
 export type Triangle = [Point3, Point3, Point3];
+export type Volume = { position: Point3, size: Vector3, rotation: Matrix4 };
 
 export interface Config {
 	ditherSize: number;

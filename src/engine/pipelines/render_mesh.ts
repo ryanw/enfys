@@ -6,7 +6,6 @@ import { SimpleMesh } from 'engine/mesh';
 import { Entity } from 'engine/entity';
 import { MaterialPipeline } from './material';
 import { ShadowMap } from 'engine/shadow_map';
-import { UniformBuffer } from 'engine/uniform_buffer';
 import { DirectionalLight } from 'engine/light';
 
 /**

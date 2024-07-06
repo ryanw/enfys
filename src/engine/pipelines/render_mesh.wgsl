@@ -72,9 +72,6 @@ var<uniform> entity: Entity;
 @group(0) @binding(2)
 var<uniform> material: Material;
 
-//@group(0) @binding(3)
-//var<storage> shadows: array<Shadow>;
-
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
@@ -123,36 +120,6 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	var shade = 0.0;
 	var shadowCount = 8u;
-
-	/*
-	if material.receiveShadows > 0 {
-		for (var i = 0u; i < shadowCount; i++) {
-			let shadow = shadows[i];
-			if (shadow.radius <= 0.0) {
-				continue;
-			}
-
-			// If object is below shadow
-			if (shadow.position.y >= in.modelPosition.y) {
-				let p = in.modelPosition.xz - shadow.position.xz;
-				var shadowDist = length(p);
-				var alt = abs(in.modelPosition.y - shadow.position.y);
-
-				var radalt = clamp(alt/2.0 + 2.0, 0.0, 32.0);
-				var radius = shadow.radius * radalt;
-
-				if (shadowDist < radius) {
-					//let d = sdPentagon(p / radius * 2.0, 1.0);
-					let d = (shadowDist - radius) / radius;
-					if d < 0.0 {
-						shade = smoothstep(0.0, -0.6, d);
-						shade *= 0.7 - clamp(alt/10.0, 0.0, 0.4);
-					}
-				}
-			}
-		}
-	}
-	*/
 
 	if material.fadeout > 0.0 {
 		let depth = smoothstep(0.0, 1.0, pow(((in.position.z / in.position.w) / material.fadeout), 4.0));

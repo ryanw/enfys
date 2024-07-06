@@ -1,12 +1,12 @@
 import { Matrix4, Point3, Vector3 } from './math';
 import { SimpleMaterial } from './material';
-import { Color, Gfx } from 'engine';
+import { Color, Gfx, Volume } from 'engine';
 import { Mesh, SimpleMesh } from './mesh';
 import { ShadowBuffer } from './shadow_buffer';
 import { Entity } from './entity';
-import { ClippingPlanes } from './camera';
+import { Camera, ClippingPlanes } from './camera';
 import { TerrainMesh } from '../landscape/terrain_mesh';
-import { transformPoint } from './math/transform';
+import { inverse, multiply, transformPoint } from './math/transform';
 import { add, dot, magnitude, normalize, scale, subtract } from './math/vectors';
 import { DirectionalLight } from './light';
 
@@ -91,3 +91,4 @@ export class Scene {
 		}
 	}
 }
+

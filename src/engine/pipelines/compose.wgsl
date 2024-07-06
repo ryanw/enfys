@@ -256,12 +256,10 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	if DRAW_SHADOWS {
 		if length(normal) > 0.0 {
 			let shadowSize = vec2f(textureDimensions(shadowTex));
-			//let shadowPos = worldFromScreen(in.uv, pixel.r, u.lightVp);
 			let shadowPos = u.lightVp * vec4(pos + normal * 0.1, 1.0);
 			let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;
 			let coords = vec2u(vec2(suv.x, 1.0-suv.y) * shadowSize);
 			let shadowDepth = textureLoad(shadowTex, coords, 0).r;
-			//color = vec4(shadowPos.xyz/shadowPos.w, 1.0);
 			if suv.x < 0.0 || suv.x >= 1.0 || suv.y < 0.0 || suv.y >= 1.0 {
 				if DEBUG_SHADOW_MAP {
 					color = mix(color, vec4(1.0, 0.0, 0.0, 1.0), 0.8);
@@ -271,15 +269,11 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 				// In shadow
 				color = vec4(color.rgb*0.5, color.a);
 			}
-
-			//color = vec4(suv, 0.0, 1.0);
 		}
 	}
 
 
 	if DEBUG_SHADOW_MAP {
-
-		//color = vec4(vec3(shadowDepth), 1.0);
 		color = drawShadowMap(in.uv, color);
 	}
 	return color;

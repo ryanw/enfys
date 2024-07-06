@@ -4,10 +4,10 @@
  * @module
  */
 
-import { Gfx, Size, calculateNormals } from 'engine';
-import { CUBE_VERTS, ColorVertex, buildIcosahedron, QuadMesh, Cube, SimpleMesh } from 'engine/mesh';
+import { Gfx, calculateNormals } from 'engine';
+import { CUBE_VERTS, ColorVertex, buildIcosahedron, QuadMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
-import { inverse, rotationFromVector, multiply, multiplyVector, rotation, scaling, transformPoint, translation, identity } from 'engine/math/transform';
+import { multiply, multiplyVector, scaling, translation } from 'engine/math/transform';
 import { DotMaterial, SimpleMaterial } from 'engine/material';
 import { Chunker } from './chunker';
 import { World } from './world';
@@ -15,19 +15,16 @@ import { ShipMesh } from './ship_mesh';
 import { Color, colorToInt, hsl } from 'engine/color';
 import { randomizer } from 'engine/noise';
 import { ui } from './ui';
-import { add, normalize, scale, subtract } from 'engine/math/vectors';
 import { debugChunker } from './chunker.debug';
 import { StarMesh } from './star_mesh';
 import { BuildingMesh, DecorMesh } from './decor_mesh';
-import { Matrix4, Point3, Vector3 } from 'engine/math';
+import { Point3, Vector3 } from 'engine/math';
 import { Particles } from 'engine/particles';
 import { Entity } from 'engine/entity';
 import { TreeDecorMesh } from './meshes/tree';
 import { getParam } from './helpers';
 import { ShipMode } from './player';
 import { ColorScheme } from './color_scheme';
-import { Camera } from 'engine/camera';
-import { DirectionalLight, Light } from 'engine/light';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -129,36 +126,6 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	);
 	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5, 0.9)));
 
-	const cameraMesh = scene.addMesh(new Cube(gfx, 1.0))
-	if (cameraMesh.material instanceof SimpleMaterial) {
-		cameraMesh.material.color = 0xffffff00;
-		cameraMesh.material.emissive = true;
-	}
-
-	const shadowBoxMesh = scene.addMesh(new Cube(gfx, 0.5))
-	if (shadowBoxMesh.material instanceof SimpleMaterial) {
-		shadowBoxMesh.material.color = 0x55ff0000;
-		shadowBoxMesh.material.emissive = true;
-	}
-
-	let frustumVertices = FRUS_VERTS.map(position => ({
-		position,
-		normal: [0, 0, 0],
-		color: BigInt(0xffffffff),
-	} as ColorVertex));
-	calculateNormals(frustumVertices);
-	const frustumMesh = scene.addMesh(new SimpleMesh(gfx, frustumVertices))
-	if (frustumMesh.material instanceof SimpleMaterial) {
-		frustumMesh.material.color = 0xaa00ff00;
-		frustumMesh.material.emissive = true;
-	}
-
-	const lightMesh = scene.addMesh(new SimpleMesh(gfx, frustumVertices))
-	if (lightMesh.material instanceof SimpleMaterial) {
-		lightMesh.material.color = 0x55ffffff;
-		lightMesh.material.emissive = true;
-	}
-
 	// Add a forest of trees
 	const decors = [
 		addRocks(scene, 12.0, 3, seed, seed + 1111),
@@ -172,9 +139,6 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	];
 
 	const player = scene.addMesh(new ShipMesh(gfx));
-	if (player.material instanceof SimpleMaterial) {
-		player.material.receiveShadows = false;
-	}
 
 	const flameParticle: Array<ColorVertex> = CROSS_CUBE.map(position => ({
 		position: [position[0] / 12.0, position[1] / 12.0, position[2] / 12.0],
@@ -184,7 +148,6 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	calculateNormals(flameParticle);
 	const particles = scene.addMesh(new Particles(gfx, flameParticle, 256));
 	if (particles.material instanceof SimpleMaterial) {
-		particles.material.receiveShadows = false;
 		particles.material.emissive = true;
 	}
 
@@ -194,46 +157,14 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 		debugChunker(gfx.canvas.parentElement!, chunker);
 	}
 
-	function updateShadowMap(world: World) {
-		//const altitude = Math.pow(Math.max(0, (world.player.position[1] - world.player.surfaceHeight - world.player.hoverGap)) / 1000.0, 1.1);
-		const altitude = (world.player.position[1] - world.player.surfaceHeight - world.player.hoverGap);
-		const shadowDist = Math.pow(
-			Math.min(1, Math.max(0, altitude / 1000.0)),
-			1.2
-		);
-		console.log("ALT", altitude,shadowDist);
-		const shadowVolume = buildLightVolume(
-			world.shipCamera.camera,
-			scene.light,
-			Math.min(0.9995, 0.965 + (shadowDist))
-		);
-		scene.light.size = shadowVolume.size;
-		scene.light.position = shadowVolume.position;
-		lightMesh.transform = inverse(multiply(scene.light.projection, scene.light.view))!;
-		lightMesh.visible = true;
-
-		// FIXME light appears to rotate backwards, so shadow map is rendered from the wrong angle
-		cameraMesh.transform = translation(...scene.light.position);
-		//cameraMesh.transform = translation(...world.shipCamera.camera.position);
-		cameraMesh.visible = false;
-
-		frustumMesh.visible = false;
-		shadowBoxMesh.visible = false;
-		shadowBoxMesh.transform = multiply(
-			translation(...shadowVolume.position),
-			shadowVolume.rotation,
-			scaling(...shadowVolume.size),
-		);
-	}
-
 	function syncGraphics(world: World) {
-		updateShadowMap(world);
+		scene.light.updateForCamera(world.shipCamera.camera);
 
 		// Enlarge flames to match thrust
 		const thrust = world.playerController.thrust;
 
 		const rot = world.player.rotationMatrix();
-		particles.object.origin = world.player.position;//add(world.player.position, multiplyVector(rot, [0, -0.3, 0, 0]).slice(0, 2) as Vector3);
+		particles.object.origin = world.player.position;
 		particles.object.direction = multiplyVector(rot, [0, -1, 0, 0]).slice(0, 3) as Vector3;
 		particles.object.update(performance.now() / 1000.0);
 		particles.object.count = 256 * thrust;
@@ -251,16 +182,6 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 
 		chunker.move(px, pz);
 		chunker.processQueue(scene);
-
-		// Marker by the camera so it can be seen from other cameras
-		if (world.activeCamera === world.shipCamera) {
-			cameraMesh.transform = translation(0, -1000, 0);
-			frustumMesh.transform = translation(0, -1000, 0)!;
-		} else {
-			const { view, projection, position: camPos } = world.shipCamera.camera;
-			//cameraMesh.transform = translation(...camPos);
-			//frustumMesh.transform = inverse(multiply(projection, view))!;
-		}
 
 		const clippingPlanes = world.shipCamera.camera.clippingPlanes();
 		scene.frustumClip(clippingPlanes);
@@ -419,63 +340,6 @@ function addTrees(scene: Scene, spread: number, radius: number, terrainSeed: num
 	return entity;
 }
 
-export interface Volume { position: Point3, size: Vector3, rotation: Matrix4 }
-function buildLightVolume(camera: Camera, light: DirectionalLight, maxDist: number = 1.0): Volume {
-	const lightTransform = light.rotationMatrix();
-	const invLightTransform = inverse(lightTransform)!;
-	const vp = inverse(multiply(camera.projection, camera.view))!;
-	let frustum: Array<Point3> = [
-		// Left, Bottom, Near
-		[-1, -1, 0],
-		// Right, Bottom, Near
-		[1, -1, 0],
-		// Left, Top, Near
-		[-1, 1, 0],
-		// Right, Top, Near
-		[1, 1, 0],
-		// Left, Bottom, Far
-		[-1, -1, maxDist],
-		// Right, Bottom, Far
-		[1, -1, maxDist],
-		// Left, Top, Far
-		[-1, 1, maxDist],
-		// Right, Top, Far
-		[1, 1, maxDist],
-	];
-	// Transform unit cube in NDC to frustum corners in world space
-	frustum = frustum.map(p => transformPoint(vp, p));
-
-	// Transfrom from world to lightspace
-	const points = frustum.map(p => transformPoint(invLightTransform, p));
-
-	// Find bounding box in light space
-	const minCoord = [...points[0]];
-	const maxCoord = [...points[0]];
-	const { min, max } = Math;
-	for (const p of points) {
-		minCoord[0] = min(minCoord[0], p[0]);
-		minCoord[1] = min(minCoord[1], p[1]);
-		minCoord[2] = min(minCoord[2], p[2]);
-		maxCoord[0] = max(maxCoord[0], p[0]);
-		maxCoord[1] = max(maxCoord[1], p[1]);
-		maxCoord[2] = max(maxCoord[2], p[2]);
-	}
-
-	const size = subtract(maxCoord, minCoord) as Vector3;
-
-	const centre = scale(
-		add(
-			minCoord as Vector3,
-			maxCoord as Vector3,
-		),
-		0.5,
-	) as Point3;
-
-	const transform = lightTransform;
-	const origin = transformPoint(lightTransform, centre);
-
-	return { position: origin, size, rotation: transform }
-}
 
 
 const CROSS_CUBE: Array<Point3> = [
@@ -527,60 +391,3 @@ const CROSS_CUBE: Array<Point3> = [
 	[-1, 0, 1],
 	[-1, 0, -1]
 ];
-
-export const FRUS_VERTS: Array<Point3> = [
-	// Left
-	[-1, -1, 0],
-	[-1, -1, 1],
-	[-1, 1, 1],
-
-	[-1, -1, 0],
-	[-1, 1, 1],
-	[-1, 1, 0],
-
-	// Right
-	[1, -1, 1],
-	[1, -1, 0],
-	[1, 1, 0],
-
-	[1, -1, 1],
-	[1, 1, 0],
-	[1, 1, 1],
-
-	// Top
-	[-1, 1, 1],
-	[1, 1, 1],
-	[1, 1, 0],
-
-	[-1, 1, 1],
-	[1, 1, 0],
-	[-1, 1, 0],
-
-	// Bottom
-	[1, -1, 1],
-	[-1, -1, 0],
-	[1, -1, 0],
-
-	[1, -1, 1],
-	[-1, -1, 1],
-	[-1, -1, 0],
-
-	// Near
-	[1, -1, 0],
-	[-1, -1, 0],
-	[-1, 1, 0],
-
-	[1, -1, 0],
-	[-1, 1, 0],
-	[1, 1, 0],
-
-	// Far
-	[-1, -1, 1],
-	[1, -1, 1],
-	[1, 1, 1],
-
-	[-1, -1, 1],
-	[1, 1, 1],
-	[-1, 1, 1],
-];
-
