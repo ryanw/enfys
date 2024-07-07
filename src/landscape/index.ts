@@ -115,17 +115,6 @@ function buildScene(gfx: Gfx, seed: number): [Scene, SyncGraphics] {
 	));
 	stars.material = new DotMaterial(gfx);
 
-	// Add water plane
-	const waterMesh = scene.addMesh(
-		new QuadMesh(
-			gfx,
-			[32, 32],
-			[51200, 51200],
-		),
-		translation(0, 0, 0),
-	);
-	waterMesh.material = new SimpleMaterial(gfx, colorToInt(hsl(waterColor, 0.5, 0.5, 0.9)));
-
 	// Add a forest of trees
 	const decors = [
 		addRocks(scene, 12.0, 3, seed, seed + 1111),
