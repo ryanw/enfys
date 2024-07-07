@@ -5,7 +5,7 @@
  */
 
 import { Gfx, calculateNormals } from 'engine';
-import { CUBE_VERTS, ColorVertex, buildIcosahedron, QuadMesh } from 'engine/mesh';
+import { CUBE_VERTS, ColorVertex, buildIcosahedron, QuadMesh, Cube } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { multiply, multiplyVector, scaling, translation } from 'engine/math/transform';
 import { DotMaterial, SimpleMaterial } from 'engine/material';
@@ -23,14 +23,15 @@ import { Particles } from 'engine/particles';
 import { Pawn } from 'engine/pawn';
 import { TreeDecorMesh } from './meshes/tree';
 import { getParam } from './helpers';
-import { ShipMode } from './player';
 import { ColorScheme } from './color_scheme';
-import { freeCamPrefab, orbitCamPrefab, playerPrefab } from './prefabs';
+import { decorPrefab, freeCamPrefab, orbitCamPrefab, playerPrefab, terrainPrefab, waterPrefab } from './prefabs';
 import { WorldGraphics } from 'engine/world_graphics';
 import { World } from 'engine/ecs/world';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
 import { OrbitCameraInputSystem } from 'engine/ecs/systems/orbit_camera_input';
-import { VelocityComponent } from 'engine/ecs/components';
+import { TerrainSystem } from './systems/terrain';
+import { PlayerInputSystem } from './systems/player_input';
+import { ShipMode } from './components/ship';
 
 /**
  * Function that synchronises the graphics with the world state
@@ -48,35 +49,47 @@ export async function main(el: HTMLCanvasElement) {
 		gfx.framecap = 60;
 	}
 	const seed = getSeed();
+	const rnd = randomizer(seed + 12345);
+	const waterColor = rnd(0.0, 1.0);
 
 	// Add the HTML UI stuff
 	ui(el.parentElement!, gfx, seed);
-
-	// Initilise world and graphics
-	const oldWorld = new OldWorld(gfx, seed);
-	//world.cameras[0].camera.far = 400.0;
-	//const [scene, sync] = oldBuildScene(gfx, seed);
-	//oldWorld.run();
 	
 	// Graphics objects
 	const scene = new Scene(gfx);
+	// Sky dome
+	const stars = scene.addMesh(new StarMesh(
+		gfx,
+		[0, 0, 0],
+		1000.0,
+		1.0,
+		seed
+	));
+	stars.material = new DotMaterial(gfx);
+
 
 	// Sync graphics with world
-	const graphics = new WorldGraphics();
+	const graphics = new WorldGraphics(gfx);
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
+	graphics.insertResource('decor-rocks', new Cube(gfx));
+	graphics.insertResource('decor-trees', new Cube(gfx));
+	graphics.insertResource('decor-tufts', new Cube(gfx));
 
 	// World simulation
 	const world = new World();
+	world.addSystem(new PlayerInputSystem(el));
 	world.addSystem(new FreeCameraInputSystem(el));
 	world.addSystem(new OrbitCameraInputSystem(el));
+	world.addSystem(new TerrainSystem(gfx));
 
-	const player0 = playerPrefab(world);
-	const player1 = playerPrefab(world);
-	const player2 = playerPrefab(world);
-	world.addComponent(player0, new VelocityComponent([0, -0.2, 0]));
-
+	const player = playerPrefab(world, [0, 3, 7]);
 	const freeCam = freeCamPrefab(world);
-	const orbitCam = orbitCamPrefab(world, player0);
+	const orbitCam = orbitCamPrefab(world, player);
+	const water = waterPrefab(world);
+	const rocks = decorPrefab(world, "decor-rocks", orbitCam);
+	const trees = decorPrefab(world, "decor-trees", orbitCam);
+	const tufts = decorPrefab(world, "decor-tufts", orbitCam);
+	const terrain = terrainPrefab(world, seed, orbitCam);
 
 	world.run();
 

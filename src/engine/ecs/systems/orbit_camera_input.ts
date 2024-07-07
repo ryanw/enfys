@@ -32,8 +32,8 @@ export class OrbitCameraInputSystem extends System {
 		super();
 		document.addEventListener('pointerlockchange', this.onPointerLockChange);
 		el.addEventListener('mousedown', this.onMouseDown);
-		el.addEventListener('touchstart', this.onTouchStart);
-		el.addEventListener('wheel', this.onWheel);
+		el.addEventListener('touchstart', this.onTouchStart, { passive: true });
+		el.addEventListener('wheel', this.onWheel, { passive: true });
 	}
 
 	override setup(world: World) {
@@ -147,7 +147,6 @@ export class OrbitCameraInputSystem extends System {
 	};
 
 	onWheel = (e: WheelEvent) => {
-		e.preventDefault();
 		this.distance *= 1.0 - (e.deltaY / -1000.0);
 		this.distance = Math.min(Math.max(this.distance, MIN_DISTANCE), MAX_DISTANCE);
 	};
@@ -180,7 +179,6 @@ export class OrbitCameraInputSystem extends System {
 	};
 
 	onTouchStart = (e: TouchEvent) => {
-		e.preventDefault();
 		const [touch] = e.changedTouches;
 		this.previousTouch = touch;
 		document.addEventListener('touchend', this.onTouchEnd);

@@ -36,12 +36,16 @@ export class World {
 		}
 	}
 
-	createEntity(): Entity {
+	createEntity(components?: Array<Component>): Entity {
 		this.prevEntity += 1;
-		return this.prevEntity;
+		const entity = this.prevEntity;
+		if (components) {
+			this.addComponents(entity, components)
+		}
+		return entity;
 	}
 
-	addComponents(entity: Entity, ...components: Array<Component>) {
+	addComponents(entity: Entity, components: Array<Component>) {
 		for (const comp of components) {
 			this.addComponent(entity, comp);
 		}

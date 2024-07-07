@@ -31,8 +31,8 @@ export class OrbitCameraController {
 		this.gfx = camera.gfx;
 		document.addEventListener('pointerlockchange', this.onPointerLockChange);
 		el.addEventListener('mousedown', this.onMouseDown);
-		el.addEventListener('touchstart', this.onTouchStart);
-		el.addEventListener('wheel', this.onWheel);
+		el.addEventListener('touchstart', this.onTouchStart, { passive: true });
+		el.addEventListener('wheel', this.onWheel, { passive: true });
 	}
 
 	grab() {
@@ -114,7 +114,6 @@ export class OrbitCameraController {
 
 	onWheel = (e: WheelEvent) => {
 		if (this.disabled) return;
-		e.preventDefault();
 		this.distance *= 1.0 - (e.deltaY / -1000.0);
 		this.distance = Math.min(Math.max(this.distance, MIN_DISTANCE), MAX_DISTANCE);
 	};

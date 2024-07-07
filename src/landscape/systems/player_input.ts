@@ -1,15 +1,14 @@
-import { Camera } from 'engine/camera';
-import { Point3, Vector3 } from 'engine/math';
-import { multiply, multiplyVector } from 'engine/math/transform';
-import { add, scale } from 'engine/math/vectors';
-import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
-import { Player } from './player';
-import { OldWorld } from './world';
-import { ShipMode } from './components/ship';
+import { DEADZONE, Key, XboxAxis, XboxButton } from "engine/input";
+import { add, normalize, scale } from "engine/math/vectors";
+import { Point3, Vector3 } from "engine/math";
+import { multiply, multiplyVector, rotation } from "engine/math/transform";
+import { System } from "engine/ecs/systems";
+import { World } from "engine/ecs/world";
+import { PlayerComponent, TransformComponent, VelocityComponent } from "engine/ecs/components";
+import { ShipComponent, ShipMode } from "../components/ship";
+import { Entity } from "engine/ecs";
 
-export class PlayerController {
-	disabled = false;
-	keyboardDisabled = false;
+export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
 	readonly heldKeys = new Map<Key, number>;
 	readonly pressedKeys = new Map<Key, number>;
@@ -41,49 +40,63 @@ export class PlayerController {
 		[XboxAxis[XboxAxis.RightStickX]]: Key.CameraYaw,
 		[XboxAxis[XboxAxis.RightStickY]]: Key.CameraPitch,
 	};
+	private world?: World;
 
 	constructor(private el: HTMLElement) {
+		super();
 		window.addEventListener('keydown', this.onKeyDown);
 		window.addEventListener('keyup', this.onKeyUp);
 	}
 
-	update(player: Player, camera: Camera, world: OldWorld, dt: number) {
-		if (this.disabled) return;
+	override setup(world: World) {
+		this.world = world;
+	}
 
+	override teardown(_world: World) {
+		this.world = undefined;
+	}
+
+	override async tick(dt: number, world: World) {
+		const entities = world.entitiesWithComponents([PlayerComponent, ShipComponent, VelocityComponent, TransformComponent]);
+		for (const entity of entities) {
+			this.updateMovement(dt, world, entity);
+		}
+	}
+
+	updateMovement(dt: number, world: World, entity: Entity) {
 		this.updateGamepads();
+
+		const ship = world.getComponent(entity, ShipComponent)!;
+		const transform = world.getComponent(entity, TransformComponent)!;
 
 		for (const [key, _amount] of this.pressedKeys) {
 			switch (key) {
 				case Key.ToggleMode:
-					switch (player.mode) {
+					switch (ship.mode) {
 						case ShipMode.Air:
-							player.rotation[0] = 0;
-							player.mode = ShipMode.Land;
+							transform.rotation[0] = 0;
+							ship.mode = ShipMode.Land;
 							break;
 						case ShipMode.Land:
-							player.mode = ShipMode.Air;
+							ship.mode = ShipMode.Air;
 							break;
 					}
-					break;
-
-				case Key.NextCamera:
-					world.nextCamera();
-					break;
-				case Key.PrevCamera:
-					world.prevCamera();
 					break;
 			}
 		}
 
-		switch (player.mode) {
+		switch (ship.mode) {
 			case ShipMode.Air:
-				this.updateModeAir(player, camera, dt);
+				this.updateModeAir(dt, world, entity);
 				break;
+
 			case ShipMode.Land:
-				this.updateModeLand(player, camera, dt);
+				this.updateModeLand(dt, world, entity);
 				break;
+
 			case ShipMode.Water:
 				break;
+
 			case ShipMode.Space:
 				break;
 		}
@@ -92,8 +105,12 @@ export class PlayerController {
 		this.pressedKeys.clear();
 	}
 
-	updateModeLand(player: Player, camera: Camera, dt: number) {
+	updateModeLand(dt: number, world: World, entity: Entity) {
+		const transform = world.getComponent(entity, TransformComponent)!;
+		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
+
 		const speed = this.heldKeys.has(Key.Boost) ? 256 : 10;
+		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;
 		let pitch = 0.0;
@@ -123,8 +140,8 @@ export class PlayerController {
 					brake = value;
 					break;
 				case Key.Stable:
-					player.rotation[0] = 0;
-					player.rotation[2] = 0;
+					transform.rotation[0] = 0;
+					transform.rotation[2] = 0;
 					break;
 			}
 		}
@@ -141,30 +158,33 @@ export class PlayerController {
 			}
 		}
 
-		if (pitch !== 0 || yaw !== 0) {
-			player.rotate(pitch * dt, yaw * dt);
-		}
-		if (movement[0] !== 0 || movement[1] !== 0 || movement[2] !== 0) {
+		transform.rotation = add(transform.rotation, [pitch * dt * rotateSpeed, yaw * dt * rotateSpeed, 0]);
 
-			const direction = multiplyVector(
-				multiply(
-					player.rotationMatrix(),
-				),
-				[...movement, 0]
+		if (movement[0] !== 0 || movement[1] !== 0 || movement[2] !== 0) {
+			const playerRotationMatrix = multiply(
+				rotation(0, 0, transform.rotation[2]),
+				rotation(0, transform.rotation[1], 0),
+				rotation(transform.rotation[0], 0, 0),
 			);
-			const velocity = scale(direction.slice(0, 3) as Point3, speed * dt);
-			player.velocity = add(player.velocity, velocity);
+
+			const direction = multiplyVector(playerRotationMatrix, [...movement, 0]).slice(0, 3) as Vector3;
+			const velocity = scale(direction, speed * dt);
+			playerVelocity.velocity = add(playerVelocity.velocity, velocity);
 		}
 
 		if (brake > 0) {
 			const stopTime = 1.0 / 10.0;
 			const vt = 1.0 - ((1.0 / stopTime) * brake * dt);
-			player.velocity = scale(player.velocity, vt);
+			playerVelocity.velocity = scale(playerVelocity.velocity, vt);
 		}
 	}
 
-	updateModeAir(player: Player, camera: Camera, dt: number) {
+	updateModeAir(dt: number, world: World, entity: Entity) {
+		const transform = world.getComponent(entity, TransformComponent)!;
+		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
+
 		const speed = this.heldKeys.has(Key.Boost) ? 256 : 16;
+		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;
 		let pitch = 0.0;
@@ -196,8 +216,8 @@ export class PlayerController {
 					brake = value;
 					break;
 				case Key.Stable:
-					player.rotation[0] = 0;
-					player.rotation[2] = 0;
+					transform.rotation[0] = 0;
+					transform.rotation[2] = 0;
 					break;
 			}
 		}
@@ -216,25 +236,24 @@ export class PlayerController {
 			}
 		}
 
-		if (pitch !== 0 || yaw !== 0) {
-			player.rotate(pitch * dt, yaw * dt);
-		}
-		if (movement[0] !== 0 || movement[1] !== 0 || movement[2] !== 0) {
+		transform.rotation = add(transform.rotation, [pitch * dt * rotateSpeed, yaw * dt * rotateSpeed, 0]);
 
-			const direction = multiplyVector(
-				multiply(
-					player.rotationMatrix(),
-				),
-				[...movement, 0]
+		if (movement[0] !== 0 || movement[1] !== 0 || movement[2] !== 0) {
+			const playerRotationMatrix = multiply(
+				rotation(0, 0, transform.rotation[2]),
+				rotation(0, transform.rotation[1], 0),
+				rotation(transform.rotation[0], 0, 0),
 			);
-			const velocity = scale(direction.slice(0, 3) as Point3, speed * dt);
-			player.velocity = add(player.velocity, velocity);
+
+			const direction = multiplyVector(playerRotationMatrix, [...movement, 0]).slice(0, 3) as Vector3;
+			const velocity = scale(direction, speed * dt);
+			playerVelocity.velocity = add(playerVelocity.velocity, velocity);
 		}
 
 		if (brake > 0) {
 			const stopTime = 1.0;
 			const vt = 1.0 - ((1.0 / stopTime) * brake * dt);
-			player.velocity = scale(player.velocity, vt);
+			playerVelocity.velocity = scale(playerVelocity.velocity, vt);
 		}
 	}
 
@@ -273,11 +292,7 @@ export class PlayerController {
 	}
 
 	onKeyDown = (e: KeyboardEvent) => {
-		if (this.disabled) return;
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
-		if (this.keyboardDisabled && [Key.PrevCamera, Key.NextCamera].indexOf(key) === -1) {
-			return;
-		}
 		if (key == null) return;
 		this.pressedKeys.set(key, 1.0);
 		this.heldKeys.set(key, 1.0);

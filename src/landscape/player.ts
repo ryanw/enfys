@@ -1,15 +1,9 @@
 import { Matrix4, Point3, Vector3 } from "engine/math";
 import { rotation } from "engine/math/transform";
 import { add, magnitude, scale } from "engine/math/vectors";
+import { ShipMode } from "./components/ship";
 
 const UNITS_PER_METER = 1.0;
-
-export enum ShipMode {
-	Land,
-	Air,
-	Water,
-	Space,
-}
 
 export class Player {
 	position: Point3 = [0, 0, 0];
