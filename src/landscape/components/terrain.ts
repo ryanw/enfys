@@ -1,8 +1,8 @@
 import { Entity } from "engine/ecs";
 import { Component } from "engine/ecs/components";
-import { Chunk, ChunkKey } from "../chunker";
 import { Point2 } from "engine/math";
 import { Size } from "engine";
+import { Chunk, ChunkKey } from "engine/terrain";
 
 export class TerrainComponent extends Component {
 	chunks: Map<ChunkKey, Chunk> = new Map();

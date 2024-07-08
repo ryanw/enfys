@@ -3,8 +3,8 @@ import { System } from "engine/ecs/systems";
 import { World } from "engine/ecs/world";
 import { TerrainComponent } from "../components/terrain";
 import { Entity } from "engine/ecs";
-import { generateChunks, toChunkHash } from "../chunker";
 import { TransformComponent } from "engine/ecs/components";
+import { generateChunks, toChunkHash } from "engine/terrain";
 
 export class TerrainSystem extends System {
 	constructor(readonly gfx: Gfx) {

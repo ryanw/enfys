@@ -14,7 +14,6 @@ import { Scene } from "./scene";
 import { SimpleMaterial } from "./material";
 
 // FIXME shouldn't reference landscape from engine
-import { Chunk, ChunkKey, toChunkHash } from "../landscape/chunker";
 import { TerrainComponent } from "../landscape/components/terrain";
 import { TerrainMesh } from "../landscape/terrain_mesh";
 import { TerrainPipeline } from "../landscape/pipelines/terrain";
@@ -23,6 +22,7 @@ import { DecorComponent } from "../landscape/components/decor";
 import { DecorMesh } from "../landscape/decor_mesh";
 import { LightComponent } from "./ecs/components/light";
 import { DirectionalLight, Light } from "./light";
+import { Chunk, ChunkKey, toChunkHash } from "./terrain";
 
 export type Resource = {};
 

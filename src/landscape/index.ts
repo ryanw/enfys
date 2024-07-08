@@ -22,6 +22,7 @@ import { PlayerInputSystem } from './systems/player_input';
 import { PhysicsSystem } from 'engine/ecs/systems/physics';
 import { RockMesh } from './meshes/rock';
 import { TreeMesh } from './meshes/tree';
+import { TransformComponent, VelocityComponent } from 'engine/ecs/components';
 /**
  * Procedurally generated alien worlds
  *
@@ -55,8 +56,8 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
 	graphics.insertResource('decor-rocks', new RockMesh(gfx));
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed));
-	graphics.insertResource('decor-cubes', new Cube(gfx));
-	graphics.insertResource('decor-tufts', new Cube(gfx));
+	graphics.insertResource('decor-cubes', new Cube(gfx, 0.2));
+	graphics.insertResource('decor-tufts', new Cube(gfx, 0.2));
 
 	// World simulation
 	const world = new World();
@@ -67,7 +68,13 @@ export async function main(el: HTMLCanvasElement) {
 	world.addSystem(new TerrainSystem(gfx));
 	console.log("GO!", world, graphics);
 
-	const light = lightPrefab(world, [0.8, 1.0, 0.0]);
+	const light = lightPrefab(world, [0.7, 1.0, 0.0]);
+	setInterval(() => {
+		const tra = world.getComponent(light, TransformComponent)!;
+		tra.rotation[1] += 0.0001;
+
+	}, 1000 / 60);
+
 	const player = playerPrefab(world, [0, 3, 7]);
 	const freeCam = freeCamPrefab(world);
 	const orbitCam = orbitCamPrefab(world, player);
