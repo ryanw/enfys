@@ -12,7 +12,7 @@ import { ShipMesh } from './ship_mesh';
 import { ui } from './ui';
 import { StarMesh } from './star_mesh';
 import { getParam } from './helpers';
-import { decorPrefab, freeCamPrefab, orbitCamPrefab, playerPrefab, terrainPrefab, waterPrefab } from './prefabs';
+import { decorPrefab, freeCamPrefab, lightPrefab, orbitCamPrefab, playerPrefab, terrainPrefab, waterPrefab } from './prefabs';
 import { WorldGraphics } from 'engine/world_graphics';
 import { World } from 'engine/ecs/world';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
@@ -65,7 +65,9 @@ export async function main(el: HTMLCanvasElement) {
 	world.addSystem(new FreeCameraInputSystem(el));
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new TerrainSystem(gfx));
+	console.log("GO!", world, graphics);
 
+	const light = lightPrefab(world, [0.8, 1.0, 0.0]);
 	const player = playerPrefab(world, [0, 3, 7]);
 	const freeCam = freeCamPrefab(world);
 	const orbitCam = orbitCamPrefab(world, player);

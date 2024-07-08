@@ -21,6 +21,8 @@ import { TerrainPipeline } from "../landscape/pipelines/terrain";
 import { ColorScheme } from "../landscape/color_scheme";
 import { DecorComponent } from "../landscape/components/decor";
 import { DecorMesh } from "../landscape/decor_mesh";
+import { LightComponent } from "./ecs/components/light";
+import { DirectionalLight, Light } from "./light";
 
 export type Resource = {};
 
@@ -36,6 +38,7 @@ export type QueuedChunk = {
 export class WorldGraphics {
 	private meshes: Map<Entity, Pawn<SimpleMesh>> = new Map();
 	private decors: Map<Entity, Pawn<DecorMesh>> = new Map();
+	private lights: Map<Entity, DirectionalLight> = new Map();
 	private terrains: Map<Entity, Map<ChunkKey, Pawn<SimpleMesh>>> = new Map();
 	private cameras: Map<Entity, Camera> = new Map();
 	private resources: Map<ResourceId, Resource> = new Map();
@@ -51,6 +54,7 @@ export class WorldGraphics {
 
 	update(world: World, scene: Scene) {
 		this.updateCameras(world, scene);
+		this.updateLights(world, scene);
 		this.updateMeshes(world, scene);
 		this.updateTerrain(world, scene);
 		this.updateDecor(world, scene);
@@ -78,6 +82,32 @@ export class WorldGraphics {
 		const removed: Array<Entity> = [...this.cameras.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
 			console.warn("Camera Removed", entity);
+		}
+	}
+
+	updateLights(world: World, scene: Scene) {
+		const entities = world.entitiesWithComponents([LightComponent, TransformComponent]);
+		const saw = new Set();
+		for (const entity of entities) {
+			saw.add(entity);
+
+			const { position: lightPosition, rotation: lightRotation } = world.getComponent(entity, TransformComponent)!;
+
+			let light = this.lights.get(entity);
+			if (!light) {
+				scene.light = new DirectionalLight(this.gfx);
+				light = scene.light;
+				this.lights.set(entity, light);
+			}
+			light.position = lightPosition;
+			light.rotation = lightRotation;
+			const camera = scene.primaryCamera;
+			light.updateForCamera(camera);
+		}
+
+		const removed: Array<Entity> = [...this.lights.keys()].filter(e => !saw.has(e));
+		for (const entity of removed) {
+			console.warn("Not implemented: Remove light", entity);
 		}
 	}
 

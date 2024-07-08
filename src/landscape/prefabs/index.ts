@@ -3,12 +3,21 @@ import { PlayerComponent, TransformComponent, VelocityComponent } from "engine/e
 import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engine/ecs/components/camera";
 import { MeshComponent } from "engine/ecs/components/mesh";
 import { World } from "engine/ecs/world";
-import { Point3 } from "engine/math";
+import { Point3, Vector3 } from "engine/math";
 import { DecorComponent } from "../components/decor";
 import { ResourceId } from "engine/resource";
 import { TerrainComponent } from "../components/terrain";
 import { WaterComponent } from "../components/water";
 import { ShipComponent } from "../components/ship";
+import { LightComponent } from "engine/ecs/components/light";
+import { normalize } from "engine/math/vectors";
+
+export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
+	return world.createEntity([
+		new LightComponent(),
+		new TransformComponent([0,0,0], rotation),
+	]);
+}
 
 export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
