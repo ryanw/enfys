@@ -21,6 +21,7 @@ export class Scene {
 	pawns: Array<Pawn<unknown>> = [];
 	cameras: Array<Camera> = [];
 	currentCameraId = 0;
+	primaryCameraId = 0;
 	shadowBuffer: ShadowBuffer;
 	light: DirectionalLight;
 
@@ -41,6 +42,10 @@ export class Scene {
 
 	get activeCamera(): Camera {
 		return this.cameras[this.currentCameraId % this.cameras.length];
+	}
+
+	get primaryCamera(): Camera {
+		return this.cameras[this.primaryCameraId % this.cameras.length];
 	}
 
 	nextCamera() {

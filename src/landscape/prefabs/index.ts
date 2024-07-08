@@ -36,9 +36,12 @@ export function freeCamPrefab(world: World): Entity {
 	]);
 }
 
-export function decorPrefab(world: World, mesh: ResourceId, target?: Entity): Entity {
+let decorRngIdx = 0;
+export function decorPrefab(world: World, mesh: ResourceId, seed: number, spread: number, radius: number, target?: Entity): Entity {
+	const idx = decorRngIdx;
+	decorRngIdx += 1;
 	return world.createEntity([
-		new DecorComponent(mesh, target),
+		new DecorComponent(mesh, seed + idx * 3211.4, spread, radius, target),
 	]);
 }
 

@@ -1,23 +1,13 @@
 import { Gfx, calculateNormals } from "engine";
 import { DecorMesh } from "../decor_mesh";
 import { Point2, Point3, Vector2 } from "engine/math";
-import { ColorVertex, buildIcosahedron } from "engine/mesh";
-import { add, scale } from "engine/math/vectors";
+import { ColorVertex, SimpleMesh, buildIcosahedron } from "engine/mesh";
+import { add } from "engine/math/vectors";
 import { randomizer } from "engine/noise";
 
-export class TreeDecorMesh extends DecorMesh {
-	constructor(
-		gfx: Gfx,
-		position: Point2,
-		density: number,
-		spacing: number,
-		terrainSeed: number,
-		decorSeed: number,
-		radius: number = 5,
-
-	) {
+export class TreeMesh extends SimpleMesh {
+	constructor(gfx: Gfx, seed: number) {
 		const { cos, sin } = Math;
-		const seed = decorSeed - 123123;
 		let vertices: ColorVertex[] = [];
 
 		// wobble
@@ -52,9 +42,8 @@ export class TreeDecorMesh extends DecorMesh {
 		});
 		vertices = [...vertices, ...trunk, ...bush];
 
-
 		calculateNormals(vertices);
-		super(gfx, vertices, position, density, spacing, terrainSeed, decorSeed, radius);
+		super(gfx, vertices);
 	}
 }
 

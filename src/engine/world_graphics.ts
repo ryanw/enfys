@@ -1,7 +1,4 @@
-import { Gfx, Size } from "engine";
-import { Chunk, ChunkKey, toChunkHash } from "../landscape/chunker";
-import { TerrainComponent } from "../landscape/components/terrain";
-import { TerrainMesh } from "../landscape/terrain_mesh";
+import { Gfx, Size, calculateNormals } from "engine";
 import { Camera } from "./camera";
 import { Entity } from "./ecs";
 import { TransformComponent } from "./ecs/components";
@@ -10,12 +7,20 @@ import { MeshComponent } from "./ecs/components/mesh";
 import { World } from "./ecs/world";
 import { Point3 } from "./math";
 import { multiply, rotation, translation } from "./math/transform";
-import { SimpleMesh } from "./mesh";
+import { SimpleMesh, buildIcosahedron, ColorVertex, CUBE_VERTS } from "./mesh";
 import { Pawn } from "./pawn";
 import { ResourceId } from "./resource";
 import { Scene } from "./scene";
+import { SimpleMaterial } from "./material";
+
+// FIXME shouldn't reference landscape from engine
+import { Chunk, ChunkKey, toChunkHash } from "../landscape/chunker";
+import { TerrainComponent } from "../landscape/components/terrain";
+import { TerrainMesh } from "../landscape/terrain_mesh";
 import { TerrainPipeline } from "../landscape/pipelines/terrain";
 import { ColorScheme } from "../landscape/color_scheme";
+import { DecorComponent } from "../landscape/components/decor";
+import { DecorMesh } from "../landscape/decor_mesh";
 
 export type Resource = {};
 
@@ -29,8 +34,8 @@ export type QueuedChunk = {
 };
 
 export class WorldGraphics {
-	camera?: Camera;
 	private meshes: Map<Entity, Pawn<SimpleMesh>> = new Map();
+	private decors: Map<Entity, Pawn<DecorMesh>> = new Map();
 	private terrains: Map<Entity, Map<ChunkKey, Pawn<SimpleMesh>>> = new Map();
 	private cameras: Map<Entity, Camera> = new Map();
 	private resources: Map<ResourceId, Resource> = new Map();
@@ -48,6 +53,10 @@ export class WorldGraphics {
 		this.updateCameras(world, scene);
 		this.updateMeshes(world, scene);
 		this.updateTerrain(world, scene);
+		this.updateDecor(world, scene);
+		const camera = scene.primaryCamera;
+		const planes = camera.clippingPlanes();
+		scene.frustumClip(planes);
 	}
 
 	updateCameras(world: World, scene: Scene) {
@@ -121,10 +130,41 @@ export class WorldGraphics {
 		}
 		this.processTerrainQueue(scene);
 
-		const removed: Array<Entity> = [...this.meshes.keys()].filter(e => !saw.has(e));
+		const removed: Array<Entity> = [...this.terrains.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
 		}
+	}
 
+	updateDecor(world: World, scene: Scene) {
+		const entities = world.entitiesWithComponent(DecorComponent);
+		const terrainId = [...world.entitiesWithComponent(TerrainComponent)][0];
+		if (!terrainId) return;
+		const { seed: terrainSeed } = world.getComponent(terrainId, TerrainComponent)!;
+		const saw = new Set();
+		for (const entity of entities) {
+			saw.add(entity);
+			const { seed: decorSeed, spread, radius, meshId } = world.getComponent(entity, DecorComponent)!;
+			let decor = this.decors.get(entity);
+			if (!decor) {
+				console.debug("Adding Decor for entity", entity, meshId);
+				const mesh: SimpleMesh = this.getResource(meshId);
+				decor = scene.addMesh(new DecorMesh(this.gfx, [], [0, 0], 1.0, spread, terrainSeed, decorSeed, radius));
+				decor.object.vertexBuffer = mesh.vertexBuffer;
+				decor.object.vertexCount = mesh.vertexCount;
+				if (decor.material instanceof SimpleMaterial) {
+					decor.material.fadeout = 8 * radius * spread;
+				}
+				this.decors.set(entity, decor);
+			}
+			decor.object.clippingPlanes = scene.primaryCamera.clippingPlanes();
+			const pos = scene.primaryCamera.position;
+			decor.object.move(pos[0], pos[2]);
+		}
+		this.processTerrainQueue(scene);
+
+		const removed: Array<Entity> = [...this.decors.keys()].filter(e => !saw.has(e));
+		for (const entity of removed) {
+		}
 	}
 
 	nextResourceId() {

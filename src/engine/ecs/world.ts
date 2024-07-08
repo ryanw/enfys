@@ -12,10 +12,6 @@ export class World {
 	private currentTimer: Timeout | null = null;
 	tickrate = 60;
 
-	constructor() {
-		this.addSystem(new PhysicsSystem());
-	}
-
 	run() {
 		const tick = async () => {
 			const now = performance.now();
@@ -77,7 +73,7 @@ export class World {
 		this.entityComponents.set(entity, components);
 	}
 
-	addSystem(system: PhysicsSystem) {
+	addSystem(system: System) {
 		this.systems.push(system);
 		system.setup(this);
 	}
