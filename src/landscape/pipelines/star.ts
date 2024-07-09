@@ -70,7 +70,7 @@ export class StarPipeline extends Pipeline {
 		this.uniformBuffer.replace({ seed, position, radius, density });
 		device.queue.writeBuffer(this.counter, 0, new Uint32Array([0]));
 
-		const instanceByteSize = 4 * 4;// FIXME vec3f derive from type? OffsetInstance
+		const instanceByteSize = 5 * 4;// FIXME vec3f derive from type? OffsetInstance
 		const buffer = device.createBuffer({
 			label: 'StarMesh Attribute Buffer',
 			size: maxInstances * instanceByteSize,

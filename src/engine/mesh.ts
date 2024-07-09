@@ -41,7 +41,8 @@ export interface ColorVertex extends NormalVertex {
  * Vertex with an offset
  */
 export interface OffsetInstance {
-	offset: Point3,
+	offset: Point3;
+	vertexIndex: number | bigint;
 }
 
 export interface ColorInstance extends OffsetInstance {
@@ -53,6 +54,7 @@ export interface ColorInstance extends OffsetInstance {
 /**
  * Collection of Vertices representing some kind of 3D geometry.
  * @typeParm V - Type of the vertices in this mesh
+ * @typeParm I - Type of the instances of this mesh
  */
 export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	// Matches the `in: VertexIn` order
@@ -90,7 +92,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		this.instanceBuffer = instanceBuffer;
 	}
 
-	uploadVertices(vertices: Array<V>) {
+	uploadVertices(vertices: Array<V>, vertexCount?: number) {
 		const { device } = this.gfx;
 		const keys = this.vertexOrder.length === 0 && vertices.length > 0
 			? Object.keys(vertices[0]).sort() as Array<keyof V>
@@ -101,11 +103,12 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		const vertexBuffer = device.createBuffer({
 			label: 'Mesh Vertex Buffer',
 			size: vertexData.byteLength,
-			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+			usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 		device.queue.writeBuffer(vertexBuffer, 0, vertexData);
 
-		this.vertexCount = vertices.length;
+		// Vertex count can be lower if we have multiple variants in the same buffer
+		this.vertexCount = vertexCount ?? vertices.length;
 		this.vertexBuffer = vertexBuffer;
 	}
 
@@ -120,7 +123,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
  */
 export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color'];
-	instanceOrder: Array<keyof ColorInstance> = ['offset', 'instanceColor'];
+	instanceOrder: Array<keyof ColorInstance> = ['offset', 'instanceColor', 'vertexIndex'];
 	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<ColorInstance>) {
 		super(gfx);
 		this.uploadVertices(vertices);
@@ -128,7 +131,11 @@ export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 			this.uploadInstances(instances);
 		}
 		else {
-			this.uploadInstances([{ offset: [0, 0, 0], instanceColor: BigInt(0xffffffff) }]);
+			this.uploadInstances([{
+				offset: [0, 0, 0],
+				instanceColor: BigInt(0xffffffff),
+				vertexIndex: 0,
+			}]);
 		}
 	}
 }

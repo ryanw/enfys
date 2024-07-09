@@ -42,7 +42,7 @@ export async function main(el: HTMLCanvasElement) {
 	// Graphics objects
 	const scene = new Scene(gfx);
 	// Sky dome
-	const stars = scene.addMesh(new StarMesh(gfx, [0, 0, 0], 1000.0, 1.0, seed), new DotMaterial(gfx));
+	//const stars = scene.addMesh(new StarMesh(gfx, [0, 0, 0], 1000.0, 1.0, seed), new DotMaterial(gfx));
 
 
 	// Sync graphics with world

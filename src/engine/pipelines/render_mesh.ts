@@ -44,6 +44,14 @@ export class RenderMeshPipeline extends MaterialPipeline {
 					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {}
 				},
+				// Vertices
+				{
+					binding: 3,
+					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+					buffer: {
+						type: "read-only-storage",
+					}
+				},
 			]
 		});
 		const pipelineLayout = device.createPipelineLayout({
@@ -53,7 +61,11 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const pipelineDescriptor: GPURenderPipelineDescriptor = {
 			label: 'RenderMeshPipeline',
 			layout: pipelineLayout,
-			vertex: { module: shader, entryPoint: 'vs_main', buffers: [pointVertexLayout, offsetInstanceLayout] },
+			vertex: { 
+				module: shader,
+				entryPoint: 'vs_main',
+				buffers: [offsetInstanceLayout]
+			},
 			fragment: {
 				module: shader,
 				entryPoint: 'fs_main',
@@ -97,7 +109,11 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const pipelineShadowDescriptor: GPURenderPipelineDescriptor = {
 			label: 'RenderMeshPipeline ShadowMap',
 			layout: pipelineLayout,
-			vertex: { module: shader, entryPoint: 'vs_main', buffers: [pointVertexLayout, offsetInstanceLayout] },
+			vertex: { 
+				module: shader,
+				entryPoint: 'vs_main',
+				buffers: [offsetInstanceLayout],
+			},
 			fragment: {
 				module: shader,
 				entryPoint: 'fs_main',
@@ -146,11 +162,11 @@ export class RenderMeshPipeline extends MaterialPipeline {
 					{ binding: 0, resource: light.uniform.bindingResource() },
 					{ binding: 1, resource: src.bindingResource() },
 					{ binding: 2, resource: src.material.bindingResource() },
+					{ binding: 3, resource: { buffer: src.object.vertexBuffer } },
 				],
 			});
 			pass.setBindGroup(0, bindGroup);
-			pass.setVertexBuffer(0, src.object.vertexBuffer);
-			pass.setVertexBuffer(1, src.object.instanceBuffer);
+			pass.setVertexBuffer(0, src.object.instanceBuffer);
 			pass.draw(src.object.vertexCount, src.object.instanceCount);
 		}
 		pass.end();
@@ -200,11 +216,11 @@ export class RenderMeshPipeline extends MaterialPipeline {
 					{ binding: 0, resource: camera.uniform.bindingResource() },
 					{ binding: 1, resource: src.bindingResource() },
 					{ binding: 2, resource: src.material.bindingResource() },
+					{ binding: 3, resource: { buffer: src.object.vertexBuffer } },
 				],
 			});
 			pass.setBindGroup(0, bindGroup);
-			pass.setVertexBuffer(0, src.object.vertexBuffer);
-			pass.setVertexBuffer(1, src.object.instanceBuffer);
+			pass.setVertexBuffer(0, src.object.instanceBuffer);
 			pass.draw(src.object.vertexCount, src.object.instanceCount);
 		}
 		pass.end();
@@ -247,6 +263,12 @@ const offsetInstanceLayout: GPUVertexBufferLayout = {
 			offset: 12,
 			format: 'uint32'
 		},
+		{
+			// Vertex Index
+			shaderLocation: 5,
+			offset: 16,
+			format: 'uint32'
+		},
 	],
-	arrayStride: 16,
+	arrayStride: 20,
 };

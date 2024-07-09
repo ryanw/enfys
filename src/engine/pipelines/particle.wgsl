@@ -1,6 +1,7 @@
 struct Instance {
 	offset: array<f32, 3>,
 	color: u32,
+	vertexIndex: u32,
 }
 
 struct Particle {

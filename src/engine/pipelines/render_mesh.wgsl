@@ -1,13 +1,23 @@
 @import "engine/shaders/noise.wgsl";
 
+struct PackedVertex {
+	position: array<f32, 3>,
+	normal: array<f32, 3>,
+	color: u32,
+}
+
+struct Vertex {
+	position: vec3f,
+	normal: vec3f,
+	color: u32,
+}
+
 struct VertexIn {
 	@builtin(vertex_index) id: u32,
-	@location(0) position: vec3f,
-	@location(1) normal: vec3f,
-	@location(2) color: u32,
 	// Instance
 	@location(3) offset: vec3f,
 	@location(4) instanceColor: u32,
+	@location(5) vertexIndex: u32,
 }
 
 struct VertexOut {
@@ -72,15 +82,25 @@ var<uniform> entity: Entity;
 @group(0) @binding(2)
 var<uniform> material: Material;
 
+@group(0) @binding(3)
+var<storage, read> vertices: array<PackedVertex>;
+
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
+	let idx = in.id + in.vertexIndex;
+	let packedVertex = vertices[idx];
+	let v = Vertex(
+		vec3(packedVertex.position[0], packedVertex.position[1], packedVertex.position[2]),
+		vec3(packedVertex.normal[0], packedVertex.normal[1], packedVertex.normal[2]),
+		packedVertex.color,
+	);
 
 	let offsetModel = translate(in.offset) * entity.model;
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * mv;
-	out.position = mvp * vec4(in.position, 1.0);
-	out.uv = in.position.xy * 0.5 + 0.5;
+	out.position = mvp * vec4(v.position, 1.0);
+	out.uv = v.position.xy * 0.5 + 0.5;
 
 
 	let triangleId = in.id / 3;
@@ -88,14 +108,14 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		out.normal = vec3(0.0);
 	}
 	else {
-		out.normal = (entity.model * vec4(normalize(in.normal), 0.0)).xyz;
+		out.normal = (entity.model * vec4(normalize(v.normal), 0.0)).xyz;
 	}
 
-	let modelPosition = offsetModel * vec4(in.position, 1.0);
+	let modelPosition = offsetModel * vec4(v.position, 1.0);
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
-	out.modelNormal = (mv * vec4(in.normal, 0.0)).xyz;
+	out.modelNormal = (mv * vec4(v.normal, 0.0)).xyz;
 
-	let vertexColor = uintToColor(in.color);
+	let vertexColor = uintToColor(v.color);
 	let instanceColor = uintToColor(in.instanceColor);
 	let materialColor = uintToColor(material.color);
 	if vertexColor.r == 1.0 && vertexColor.g == 1.0 && vertexColor.b == 1.0 && vertexColor.a == 1.0 {

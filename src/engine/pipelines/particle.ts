@@ -5,7 +5,7 @@ import { UniformBuffer } from 'engine/uniform_buffer';
 import { Point3, Vector3 } from 'engine/math';
 import { normalize } from 'engine/math/vectors';
 
-export const INSTANCE_SIZE = 4 * 4;// FIXME vec3f derive from type? ColorInstance
+export const INSTANCE_SIZE = 5 * 4;// FIXME vec3f derive from type? ColorInstance
 export const PARTICLE_SIZE = 4 * 4;// FIXME derive from type ParticleInstance
 
 export class ParticlePipeline extends Pipeline {
