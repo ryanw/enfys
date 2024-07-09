@@ -1,4 +1,4 @@
-import { Gfx, Size, calculateNormals } from "engine";
+import { Gfx, Size } from "engine";
 import { Camera } from "./camera";
 import { Entity } from "./ecs";
 import { TransformComponent } from "./ecs/components";
@@ -17,8 +17,6 @@ import { DirectionalLight } from "./light";
 import { Chunk, ChunkKey, toChunkHash } from "./terrain";
 import { ParticlesComponent } from "./ecs/components/particles";
 import { Particles } from "./particles";
-
-// FIXME shouldn't reference landscape from engine
 import { TerrainComponent } from "./ecs/components/terrain";
 import { TerrainMesh } from "./terrain_mesh";
 import { TerrainPipeline } from "./pipelines/terrain";
@@ -122,13 +120,16 @@ export class WorldGraphics {
 		const saw = new Set();
 		for (const entity of entities) {
 			saw.add(entity);
-			const { meshId, count: particleCount } = world.getComponent(entity, ParticlesComponent)!;
+			const { meshId, count: particleCount, emissive } = world.getComponent(entity, ParticlesComponent)!;
 			const { position: emitterPosition, rotation: emitterRotation } = world.getComponent(entity, TransformComponent)!;
 
 			let particles = this.particles.get(entity);
 			if (!particles) {
 				const mesh: SimpleMesh = this.getResource(meshId);
 				particles = scene.addMesh(new Particles(this.gfx, [], 256));
+				if (particles.material instanceof SimpleMaterial) {
+					particles.material.emissive = emissive;
+				}
 				this.particles.set(entity, particles);
 				particles.object.vertexBuffer = mesh.vertexBuffer;
 				particles.object.vertexCount = mesh.vertexCount;

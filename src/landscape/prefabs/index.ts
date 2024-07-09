@@ -25,7 +25,7 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 	return world.createEntity([
 		new PlayerComponent(),
 		new PhysicsComponent(),
-		new ParticlesComponent("tiny-cube"),
+		new ParticlesComponent("tiny-cube", 0, true),
 		new ShipComponent(),
 		new TransformComponent(position),
 		new VelocityComponent([0, 0, 0]),
