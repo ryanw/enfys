@@ -1,5 +1,5 @@
-import { Component } from ".";
-import { Entity } from "..";
+import { Component } from '.';
+import { Entity } from '..';
 
 export class CameraComponent extends Component {
 }

@@ -54,7 +54,7 @@ export class DecorMesh extends SimpleMesh {
 			'clipping[4].normal': this.clippingPlanes[4][1],
 			'clipping[5].origin': this.clippingPlanes[5][0],
 			'clipping[5].normal': this.clippingPlanes[5][1],
-		})
+		});
 	}
 
 	protected createInstanceBuffers() {

@@ -1,5 +1,5 @@
-import { Gfx, calculateNormals } from "engine";
-import { ColorVertex, SimpleMesh, buildIcosahedron } from "engine/mesh";
+import { Gfx, calculateNormals } from 'engine';
+import { ColorVertex, SimpleMesh, buildIcosahedron } from 'engine/mesh';
 
 export class RockMesh extends SimpleMesh {
 	constructor(gfx: Gfx) {

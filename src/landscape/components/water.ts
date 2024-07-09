@@ -1,4 +1,4 @@
-import { Component } from "engine/ecs/components";
+import { Component } from 'engine/ecs/components';
 
 export class WaterComponent extends Component {
 	constructor(

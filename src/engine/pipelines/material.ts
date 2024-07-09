@@ -1,10 +1,10 @@
-import { Pawn } from "engine/pawn";
-import { Pipeline } from ".";
-import { SimpleMesh } from "engine/mesh";
-import { Camera } from "engine/camera";
-import { GBuffer } from "engine/gbuffer";
-import { ShadowMap } from "engine/shadow_map";
-import { DirectionalLight } from "engine/light";
+import { Pawn } from 'engine/pawn';
+import { Pipeline } from '.';
+import { SimpleMesh } from 'engine/mesh';
+import { Camera } from 'engine/camera';
+import { GBuffer } from 'engine/gbuffer';
+import { ShadowMap } from 'engine/shadow_map';
+import { DirectionalLight } from 'engine/light';
 
 export abstract class MaterialPipeline extends Pipeline {
 	abstract drawBatch(encoder: GPUCommandEncoder, src: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer): void;

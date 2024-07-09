@@ -7,7 +7,7 @@ const WorkgroupSize = [16, 16];
 const WorkgroupCount = [64, 64];
 const MaxInstances = WorkgroupSize[0] * WorkgroupSize[1] * WorkgroupCount[0] * WorkgroupCount[1];
 const InstanceByteSize = 4 * 4;// FIXME vec3f + u32 + u32 derive from type? OffsetInstance
-console.debug("Decor buffer size:", InstanceByteSize * MaxInstances);
+console.debug('Decor buffer size:', InstanceByteSize * MaxInstances);
 
 export class DecorUniform extends UniformBuffer {
 	constructor(gfx: Gfx) {

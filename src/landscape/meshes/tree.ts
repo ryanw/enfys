@@ -1,8 +1,8 @@
-import { Gfx, calculateNormals } from "engine";
-import { Point3, Vector2 } from "engine/math";
-import { ColorVertex, SimpleMesh, buildIcosahedron } from "engine/mesh";
-import { add } from "engine/math/vectors";
-import { randomizer } from "engine/noise";
+import { Gfx, calculateNormals } from 'engine';
+import { Point3, Vector2 } from 'engine/math';
+import { ColorVertex, SimpleMesh, buildIcosahedron } from 'engine/mesh';
+import { add } from 'engine/math/vectors';
+import { randomizer } from 'engine/noise';
 
 export class TreeMesh extends SimpleMesh {
 	constructor(gfx: Gfx, seed: number) {
@@ -52,7 +52,7 @@ function buildBush() {
 		p[1] * 5.0 + 9.0,
 		p[2] * 5.0,
 	]);
-	return bush
+	return bush;
 }
 
 function buildCylinder(
@@ -65,7 +65,7 @@ function buildCylinder(
 	const topCap = buildDisc(radius, rd).map<Point3>(p => add(p, [0, 0.5, 0]));
 	const botCap = flipFaces(buildDisc(radius, rd).map<Point3>(p => add(p, [0, -0.5, 0])));
 
-	let vertices = [...topCap, ...botCap,];
+	const vertices = [...topCap, ...botCap,];
 
 	for (let i = 0; i < rd; i++) {
 		const x = i * 3;
@@ -100,7 +100,7 @@ function buildCylinder(
 function buildDisc(radius: number, divisions: number): Point3[] {
 	const { cos, sin } = Math;
 
-	let vertices: Point3[] = [];
+	const vertices: Point3[] = [];
 	const div = (Math.PI * 2) / divisions;
 	for (let i = 0; i < divisions + 1; i++) {
 		const a0 = div * i;

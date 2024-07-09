@@ -42,7 +42,7 @@ export class Renderer {
 			}
 			constructor = Object.getPrototypeOf(constructor);
 		}
-		console.error("Failed to find pipeline for", material);
+		console.error('Failed to find pipeline for', material);
 	}
 
 	drawSceneShadows(encoder: GPUCommandEncoder, scene: Scene, light: DirectionalLight, target: ShadowMap) {

@@ -1,4 +1,4 @@
-import { Component } from ".";
+import { Component } from '.';
 
 export class PhysicsComponent extends Component {
 	constructor(

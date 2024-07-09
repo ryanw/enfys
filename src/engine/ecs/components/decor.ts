@@ -1,6 +1,6 @@
-import { Entity } from "engine/ecs";
-import { Component } from "engine/ecs/components";
-import { ResourceId } from "engine/resource";
+import { Entity } from 'engine/ecs';
+import { Component } from 'engine/ecs/components';
+import { ResourceId } from 'engine/resource';
 
 export class DecorComponent extends Component {
 	constructor(

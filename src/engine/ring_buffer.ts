@@ -1,5 +1,5 @@
-import { Gfx } from "engine";
-import { UniformBuffer, UniformMapping, toArrayBuffer as toUniformArrayBuffer } from "./uniform_buffer";
+import { Gfx } from 'engine';
+import { UniformBuffer, UniformMapping, toArrayBuffer as toUniformArrayBuffer } from './uniform_buffer';
 
 export class RingBuffer extends UniformBuffer {
 	private nextIndex = 0;

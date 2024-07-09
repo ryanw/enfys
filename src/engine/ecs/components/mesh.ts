@@ -1,5 +1,5 @@
-import { ResourceId } from "engine/resource";
-import { Component } from ".";
+import { ResourceId } from 'engine/resource';
+import { Component } from '.';
 
 export class MeshComponent extends Component {
 	constructor(

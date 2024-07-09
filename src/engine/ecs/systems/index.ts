@@ -1,4 +1,4 @@
-import { World } from "../world";
+import { World } from '../world';
 
 export abstract class System {
 	setup(world: World): void {};

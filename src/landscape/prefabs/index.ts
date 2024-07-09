@@ -1,18 +1,18 @@
-import { Entity } from "engine/ecs";
-import { PlayerComponent, TransformComponent, VelocityComponent } from "engine/ecs/components";
-import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engine/ecs/components/camera";
-import { MeshComponent } from "engine/ecs/components/mesh";
-import { World } from "engine/ecs/world";
-import { Point3, Vector3 } from "engine/math";
-import { ResourceId } from "engine/resource";
-import { WaterComponent } from "../components/water";
-import { ShipComponent } from "../components/ship";
-import { LightComponent } from "engine/ecs/components/light";
-import { ParticlesComponent } from "engine/ecs/components/particles";
-import { PhysicsComponent } from "engine/ecs/components/physics";
-import { Planet } from "../planet";
-import { DecorComponent } from "engine/ecs/components/decor";
-import { TerrainComponent } from "engine/ecs/components/terrain";
+import { Entity } from 'engine/ecs';
+import { PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from 'engine/ecs/components/camera';
+import { MeshComponent } from 'engine/ecs/components/mesh';
+import { World } from 'engine/ecs/world';
+import { Point3, Vector3 } from 'engine/math';
+import { ResourceId } from 'engine/resource';
+import { WaterComponent } from '../components/water';
+import { ShipComponent } from '../components/ship';
+import { LightComponent } from 'engine/ecs/components/light';
+import { ParticlesComponent } from 'engine/ecs/components/particles';
+import { PhysicsComponent } from 'engine/ecs/components/physics';
+import { Planet } from '../planet';
+import { DecorComponent } from 'engine/ecs/components/decor';
+import { TerrainComponent } from 'engine/ecs/components/terrain';
 
 export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	return world.createEntity([
@@ -25,7 +25,7 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 	return world.createEntity([
 		new PlayerComponent(),
 		new PhysicsComponent(),
-		new ParticlesComponent("tiny-cube", 0, true),
+		new ParticlesComponent('tiny-cube', 0, true),
 		new ShipComponent(),
 		new TransformComponent(position),
 		new VelocityComponent([0, 0, 0]),

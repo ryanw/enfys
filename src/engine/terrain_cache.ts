@@ -1,9 +1,9 @@
-import { Gfx } from "engine";
-import { TerrainChunk, TerrainExtractPipeline } from "./pipelines/terrain_extract";
-import { Point2, Point3 } from "engine/math";
-import { hsl } from "engine/color";
-import { getParam } from "./helpers";
-import { scale, subtract } from "engine/math/vectors";
+import { Gfx } from 'engine';
+import { TerrainChunk, TerrainExtractPipeline } from './pipelines/terrain_extract';
+import { Point2, Point3 } from 'engine/math';
+import { hsl } from 'engine/color';
+import { getParam } from './helpers';
+import { scale, subtract } from 'engine/math/vectors';
 
 export const TERRAIN_CHUNK_SIZE = 1024;
 export type TerrainId = string;
@@ -34,19 +34,19 @@ export class TerrainCache {
 		let chunk = this.chunks.get(id);
 		if (!chunk) {
 			if (chunk === null) {
-				console.info("Waiting for chunk", id);
+				console.info('Waiting for chunk', id);
 				chunk = await new Promise<TerrainChunk>((resolve) => {
 					const t = setInterval(() => {
 						const chunk = this.chunks.get(id);
 						if (chunk) {
-							console.info("Chunk arrived", id);
+							console.info('Chunk arrived', id);
 							clearInterval(t);
 							resolve(chunk);
 						}
 					}, 1);
 				});
 			} else {
-				console.info("Building chunk", id);
+				console.info('Building chunk', id);
 				this.chunks.set(id, null);
 				chunk = await this.buildChunk(coord);
 				this.chunks.set(id, chunk);

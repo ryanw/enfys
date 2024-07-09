@@ -10,8 +10,8 @@ export default function html(config = {}) {
 			const escapedCode = JSON
 				.stringify(source)
 				// Put whitespace back in for readability in non-minified code
-				.replaceAll("\\n", "\n")
-				.replaceAll("\\t", "\t")
+				.replaceAll('\\n', '\n')
+				.replaceAll('\\t', '\t')
 				// Remove wrapping qutoes
 				.slice(1, -1);
 

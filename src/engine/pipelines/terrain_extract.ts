@@ -43,7 +43,7 @@ export class TerrainExtractPipeline extends Pipeline {
 
 		const shader = device.createShaderModule({ label: 'TerrainExtractPipeline Query Shader', code: shaderSource });
 		const bindGroupLayout = device.createBindGroupLayout({
-			label: "TerrainExtract BindGroup Layout",
+			label: 'TerrainExtract BindGroup Layout',
 			entries: [
 				{
 					binding: 0,
@@ -95,7 +95,7 @@ export class TerrainExtractPipeline extends Pipeline {
 	async computeChunk(origin: Point2, size: Vector2, seed: number): Promise<TerrainChunk> {
 		// FIXME better handling of pending maps
 		if (this.readBuffer.mapState !== 'unmapped') {
-			throw new Error("Attempted to extract chunk while extracting");
+			throw new Error('Attempted to extract chunk while extracting');
 		}
 
 		// Must match the shader
@@ -140,7 +140,7 @@ export class TerrainExtractPipeline extends Pipeline {
 			origin,
 			size: [...size],
 			pixels,
-		}
+		};
 	}
 }
 

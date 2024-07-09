@@ -1,10 +1,10 @@
-import { Key } from "engine/input";
-import { System } from ".";
-import { TransformComponent, VelocityComponent } from "../components";
-import { FreeCameraComponent } from "../components/camera";
-import { World } from "../world";
-import { add, normalize, scale } from "engine/math/vectors";
-import { Vector3 } from "engine/math";
+import { Key } from 'engine/input';
+import { System } from '.';
+import { TransformComponent, VelocityComponent } from '../components';
+import { FreeCameraComponent } from '../components/camera';
+import { World } from '../world';
+import { add, normalize, scale } from 'engine/math/vectors';
+import { Vector3 } from 'engine/math';
 
 export class FreeCameraInputSystem extends System {
 	bindings: Record<string, Key> = {
@@ -44,24 +44,24 @@ export class FreeCameraInputSystem extends System {
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {
-				case Key.Forward:
-					adjustment[2] = 1;
-					break;
-				case Key.Backward:
-					adjustment[2] = -1;
-					break;
-				case Key.Left:
-					adjustment[0] = -1;
-					break;
-				case Key.Right:
-					adjustment[0] = 1;
-					break;
-				case Key.Up:
-					adjustment[1] = 1;
-					break;
-				case Key.Down:
-					adjustment[1] = -1;
-					break;
+			case Key.Forward:
+				adjustment[2] = 1;
+				break;
+			case Key.Backward:
+				adjustment[2] = -1;
+				break;
+			case Key.Left:
+				adjustment[0] = -1;
+				break;
+			case Key.Right:
+				adjustment[0] = 1;
+				break;
+			case Key.Up:
+				adjustment[1] = 1;
+				break;
+			case Key.Down:
+				adjustment[1] = -1;
+				break;
 			}
 		}
 

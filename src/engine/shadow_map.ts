@@ -1,6 +1,6 @@
-import { Gfx, Size } from "engine";
-import { identity } from "./math/transform";
-import { Matrix4 } from "./math";
+import { Gfx, Size } from 'engine';
+import { identity } from './math/transform';
+import { Matrix4 } from './math';
 
 export class ShadowMap {
 	/**
@@ -17,6 +17,6 @@ export class ShadowMap {
 	constructor(readonly gfx: Gfx, size: Size = [512, 512]) {
 		this._size = size;
 		this._viewProjection = identity();
-		this.texture = gfx.createTexture('depth32float', size, "ShadowMap Texture")
+		this.texture = gfx.createTexture('depth32float', size, 'ShadowMap Texture');
 	}
 }

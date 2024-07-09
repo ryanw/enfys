@@ -1,9 +1,9 @@
-import { Gfx, Volume } from "engine";
-import { Matrix4, Point3, Vector3 } from "./math";
-import { UniformBuffer } from "./uniform_buffer";
-import { identity, inverse, multiply, multiplyVector, orthographicProjection, perspectiveProjection, rotation, transformPoint, translation } from "./math/transform";
-import { add, normalize, scale, subtract } from "./math/vectors";
-import { Camera } from "./camera";
+import { Gfx, Volume } from 'engine';
+import { Matrix4, Point3, Vector3 } from './math';
+import { UniformBuffer } from './uniform_buffer';
+import { identity, inverse, multiply, multiplyVector, orthographicProjection, perspectiveProjection, rotation, transformPoint, translation } from './math/transform';
+import { add, normalize, scale, subtract } from './math/vectors';
+import { Camera } from './camera';
 
 export class Light {
 	readonly uniform: UniformBuffer;
@@ -251,5 +251,5 @@ function buildLightVolume(camera: Camera, light: Light, maxDist: number = 1.0): 
 	const transform = lightTransform;
 	const origin = transformPoint(lightTransform, centre);
 
-	return { position: origin, size, rotation: transform }
+	return { position: origin, size, rotation: transform };
 }

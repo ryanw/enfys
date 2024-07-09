@@ -1,11 +1,11 @@
-import { DEADZONE, Key, XboxAxis, XboxButton } from "engine/input";
-import { System } from ".";
-import { TransformComponent } from "../components";
-import { OrbitCameraComponent } from "../components/camera";
-import { World } from "../world";
-import { Matrix4, Point3 } from "engine/math";
-import { multiply, rotation, transformPoint, translation } from "engine/math/transform";
-import { add } from "engine/math/vectors";
+import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
+import { System } from '.';
+import { TransformComponent } from '../components';
+import { OrbitCameraComponent } from '../components/camera';
+import { World } from '../world';
+import { Matrix4, Point3 } from 'engine/math';
+import { multiply, rotation, transformPoint, translation } from 'engine/math/transform';
+import { add } from 'engine/math/vectors';
 
 const MIN_DISTANCE = 3;
 const MAX_DISTANCE = 20000;
@@ -55,18 +55,18 @@ export class OrbitCameraInputSystem extends System {
 				continue;
 			}
 			switch (key) {
-				case XboxAxis.RightStickX:
-					yaw = value * rotateSpeed;
-					break;
-				case XboxAxis.RightStickY:
-					pitch = value * rotateSpeed;
-					break;
+			case XboxAxis.RightStickX:
+				yaw = value * rotateSpeed;
+				break;
+			case XboxAxis.RightStickY:
+				pitch = value * rotateSpeed;
+				break;
 			}
 		}
 
 		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
 		for (const entity of entities) {
-			let trans = world.getComponent(entity, TransformComponent)!;
+			const trans = world.getComponent(entity, TransformComponent)!;
 			const { target } = world.getComponent(entity, OrbitCameraComponent)!;
 			if (!target) continue;
 			const { position: targetPoint} = world.getComponent(target, TransformComponent)!;

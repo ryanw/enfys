@@ -20,7 +20,7 @@ import { PlayerInputSystem } from './systems/player_input';
 import { PhysicsSystem } from 'engine/ecs/systems/physics';
 import { RockMesh } from './meshes/rock';
 import { TreeMesh } from './meshes/tree';
-import { TuftMesh } from './meshes/tuft'
+import { TuftMesh } from './meshes/tuft';
 import { TerrainSystem } from 'engine/ecs/systems/terrain';
 import { getParam } from 'engine/helpers';
 
@@ -64,7 +64,7 @@ export async function main(el: HTMLCanvasElement) {
 	world.addSystem(new FreeCameraInputSystem(el));
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new TerrainSystem(gfx));
-	console.log("GO!", world, graphics);
+	console.log('GO!', world, graphics);
 
 	const light = lightPrefab(world, [0.7, 1.0, 0.0]);
 	const player = playerPrefab(world, [0, 3, 0]);

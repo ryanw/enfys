@@ -1,12 +1,12 @@
-import { add, scale } from "engine/math/vectors";
-import { System } from ".";
-import { World } from "../world";
-import { TransformComponent, VelocityComponent } from "../components";
-import { Gfx } from "engine";
-import { PhysicsComponent } from "../components/physics";
-import { Entity } from "..";
-import { TerrainCache } from "engine/terrain_cache";
-import { TerrainComponent } from "../components/terrain";
+import { add, scale } from 'engine/math/vectors';
+import { System } from '.';
+import { World } from '../world';
+import { TransformComponent, VelocityComponent } from '../components';
+import { Gfx } from 'engine';
+import { PhysicsComponent } from '../components/physics';
+import { Entity } from '..';
+import { TerrainCache } from 'engine/terrain_cache';
+import { TerrainComponent } from '../components/terrain';
 
 type Seed = number;
 const GRAVITY = -10.0;

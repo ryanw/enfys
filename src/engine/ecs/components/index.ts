@@ -1,4 +1,4 @@
-import { Point3, Vector3 } from "engine/math";
+import { Point3, Vector3 } from 'engine/math';
 
 export abstract class Component { }
 

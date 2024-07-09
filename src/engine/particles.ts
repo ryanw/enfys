@@ -1,7 +1,7 @@
-import { Gfx } from "engine";
-import { Point3, Vector3 } from "./math";
-import { ColorVertex, SimpleMesh } from "./mesh";
-import { INSTANCE_SIZE, PARTICLE_SIZE, ParticlePipeline } from "./pipelines/particle";
+import { Gfx } from 'engine';
+import { Point3, Vector3 } from './math';
+import { ColorVertex, SimpleMesh } from './mesh';
+import { INSTANCE_SIZE, PARTICLE_SIZE, ParticlePipeline } from './pipelines/particle';
 
 export class Particles extends SimpleMesh {
 	public count = 0;

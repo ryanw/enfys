@@ -1,7 +1,7 @@
-import { ComponentConstructor, Entity } from ".";
-import { Component } from "./components";
-import { System } from "./systems";
-import { PhysicsSystem } from "./systems/physics";
+import { ComponentConstructor, Entity } from '.';
+import { Component } from './components';
+import { System } from './systems';
+import { PhysicsSystem } from './systems/physics';
 
 type Timeout = ReturnType<typeof setTimeout>;
 export class World {
@@ -36,7 +36,7 @@ export class World {
 		this.prevEntity += 1;
 		const entity = this.prevEntity;
 		if (components) {
-			this.addComponents(entity, components)
+			this.addComponents(entity, components);
 		}
 		return entity;
 	}

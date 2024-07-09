@@ -1,6 +1,6 @@
-import { Color } from "engine";
-import { hsl } from "engine/color";
-import { randomizer, Randomizer } from "engine/noise";
+import { Color } from 'engine';
+import { hsl } from 'engine/color';
+import { randomizer, Randomizer } from 'engine/noise';
 
 export class ColorScheme {
 	private rnd: Randomizer;

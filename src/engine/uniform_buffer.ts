@@ -36,7 +36,7 @@ export class UniformBuffer {
 			this.buffer = this.gfx.createBuffer(size, GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST);
 		}
 		else {
-			console.warn("Zero sized Uniform", this.mapping);
+			console.warn('Zero sized Uniform', this.mapping);
 		}
 	}
 
@@ -70,27 +70,27 @@ export class UniformBuffer {
 			const value = toArray(fields[key]);
 
 			switch (typ) {
-				case 'f32':
-				case 'vec2f':
-				case 'vec3f':
-				case 'vec4f':
-				case 'mat4x4f':
-					floatBuffer.set(value, offset);
-					break;
+			case 'f32':
+			case 'vec2f':
+			case 'vec3f':
+			case 'vec4f':
+			case 'mat4x4f':
+				floatBuffer.set(value, offset);
+				break;
 
-				case 'i32':
-				case 'vec2i':
-				case 'vec4i':
-				case 'vec3i':
-					intBuffer.set(value, offset);
-					break;
+			case 'i32':
+			case 'vec2i':
+			case 'vec4i':
+			case 'vec3i':
+				intBuffer.set(value, offset);
+				break;
 
-				case 'u32':
-				case 'vec2u':
-				case 'vec3u':
-				case 'vec4u':
-					uintBuffer.set(value, offset);
-					break;
+			case 'u32':
+			case 'vec2u':
+			case 'vec3u':
+			case 'vec4u':
+				uintBuffer.set(value, offset);
+				break;
 			}
 		}
 
@@ -128,24 +128,24 @@ export type BufferLike = boolean | number | bigint | Array<number | bigint>;
 export function toArrayBuffer(typ: WgslType, value: BufferLike): ArrayBuffer {
 	const data = toArray(value);
 	switch (typ) {
-		case 'f32':
-		case 'vec2f':
-		case 'vec3f':
-		case 'vec4f':
-		case 'mat4x4f':
-			return new Float32Array(data);
+	case 'f32':
+	case 'vec2f':
+	case 'vec3f':
+	case 'vec4f':
+	case 'mat4x4f':
+		return new Float32Array(data);
 
-		case 'i32':
-		case 'vec2i':
-		case 'vec4i':
-		case 'vec3i':
-			return new Int32Array(data);
+	case 'i32':
+	case 'vec2i':
+	case 'vec4i':
+	case 'vec3i':
+		return new Int32Array(data);
 
-		case 'u32':
-		case 'vec2u':
-		case 'vec3u':
-		case 'vec4u':
-			return new Uint32Array(data);
+	case 'u32':
+	case 'vec2u':
+	case 'vec3u':
+	case 'vec4u':
+		return new Uint32Array(data);
 	}
 }
 

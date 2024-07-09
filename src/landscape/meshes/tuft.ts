@@ -1,6 +1,6 @@
-import { Gfx, calculateNormals } from "engine";
-import { ColorVertex, SimpleMesh, CUBE_VERTS } from "engine/mesh";
-import { randomizer } from "engine/noise";
+import { Gfx, calculateNormals } from 'engine';
+import { ColorVertex, SimpleMesh, CUBE_VERTS } from 'engine/mesh';
+import { randomizer } from 'engine/noise';
 
 export class TuftMesh extends SimpleMesh {
 	constructor(gfx: Gfx, seed: number, count: number = 4) {

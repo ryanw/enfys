@@ -1,13 +1,13 @@
-import { DEADZONE, Key, XboxAxis, XboxButton } from "engine/input";
-import { add, normalize, scale } from "engine/math/vectors";
-import { Point3, Vector3 } from "engine/math";
-import { multiply, multiplyVector, rotation } from "engine/math/transform";
-import { System } from "engine/ecs/systems";
-import { World } from "engine/ecs/world";
-import { PlayerComponent, TransformComponent, VelocityComponent } from "engine/ecs/components";
-import { ShipComponent, ShipMode } from "../components/ship";
-import { Entity } from "engine/ecs";
-import { ParticlesComponent } from "engine/ecs/components/particles";
+import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
+import { add, normalize, scale } from 'engine/math/vectors';
+import { Point3, Vector3 } from 'engine/math';
+import { multiply, multiplyVector, rotation } from 'engine/math/transform';
+import { System } from 'engine/ecs/systems';
+import { World } from 'engine/ecs/world';
+import { PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { ShipComponent, ShipMode } from '../components/ship';
+import { Entity } from 'engine/ecs';
+import { ParticlesComponent } from 'engine/ecs/components/particles';
 
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
@@ -71,34 +71,34 @@ export class PlayerInputSystem extends System {
 
 		for (const [key, _amount] of this.pressedKeys) {
 			switch (key) {
-				case Key.ToggleMode:
-					switch (ship.mode) {
-						case ShipMode.Air:
-							transform.rotation[0] = 0;
-							ship.mode = ShipMode.Land;
-							break;
-						case ShipMode.Land:
-							ship.mode = ShipMode.Air;
-							break;
-					}
+			case Key.ToggleMode:
+				switch (ship.mode) {
+				case ShipMode.Air:
+					transform.rotation[0] = 0;
+					ship.mode = ShipMode.Land;
 					break;
+				case ShipMode.Land:
+					ship.mode = ShipMode.Air;
+					break;
+				}
+				break;
 			}
 		}
 
 		switch (ship.mode) {
-			case ShipMode.Air:
-				this.updateModeAir(dt, world, entity);
-				break;
+		case ShipMode.Air:
+			this.updateModeAir(dt, world, entity);
+			break;
 
-			case ShipMode.Land:
-				this.updateModeLand(dt, world, entity);
-				break;
+		case ShipMode.Land:
+			this.updateModeLand(dt, world, entity);
+			break;
 
-			case ShipMode.Water:
-				break;
+		case ShipMode.Water:
+			break;
 
-			case ShipMode.Space:
-				break;
+		case ShipMode.Space:
+			break;
 		}
 
 
@@ -114,36 +114,36 @@ export class PlayerInputSystem extends System {
 		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;
-		let pitch = 0.0;
+		const pitch = 0.0;
 		let yaw = 0.0;
 		let thrust = 0;
 
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
-				case Key.Forward:
-					break;
-				case Key.Backward:
-					break;
-				case Key.Left:
-					yaw = -value;
-					break;
-				case Key.Right:
-					yaw = value;
-					break;
-				case Key.Thrust:
-					if (Math.abs(value) > DEADZONE) {
-						thrust = value;
+			case Key.Forward:
+				break;
+			case Key.Backward:
+				break;
+			case Key.Left:
+				yaw = -value;
+				break;
+			case Key.Right:
+				yaw = value;
+				break;
+			case Key.Thrust:
+				if (Math.abs(value) > DEADZONE) {
+					thrust = value;
 
-						movement[2] = value;
-					}
-					break;
-				case Key.Brake:
-					brake = value;
-					break;
-				case Key.Stable:
-					transform.rotation[0] = 0;
-					transform.rotation[2] = 0;
-					break;
+					movement[2] = value;
+				}
+				break;
+			case Key.Brake:
+				brake = value;
+				break;
+			case Key.Stable:
+				transform.rotation[0] = 0;
+				transform.rotation[2] = 0;
+				break;
 			}
 		}
 		for (const [key, value] of this.axis.entries()) {
@@ -151,11 +151,11 @@ export class PlayerInputSystem extends System {
 				continue;
 			}
 			switch (key) {
-				case XboxAxis.LeftStickX:
-					yaw = value;
-					break;
-				case XboxAxis.LeftStickY:
-					break;
+			case XboxAxis.LeftStickX:
+				yaw = value;
+				break;
+			case XboxAxis.LeftStickY:
+				break;
 			}
 		}
 
@@ -199,32 +199,32 @@ export class PlayerInputSystem extends System {
 
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
-				case Key.Forward:
-					pitch = value;
-					break;
-				case Key.Backward:
-					pitch = -value;
-					break;
-				case Key.Left:
-					yaw = -value;
-					break;
-				case Key.Right:
-					yaw = value;
-					break;
-				case Key.Thrust:
-					if (Math.abs(value) > DEADZONE) {
-						thrust = value;
+			case Key.Forward:
+				pitch = value;
+				break;
+			case Key.Backward:
+				pitch = -value;
+				break;
+			case Key.Left:
+				yaw = -value;
+				break;
+			case Key.Right:
+				yaw = value;
+				break;
+			case Key.Thrust:
+				if (Math.abs(value) > DEADZONE) {
+					thrust = value;
 
-						movement[1] = value;
-					}
-					break;
-				case Key.Brake:
-					brake = value;
-					break;
-				case Key.Stable:
-					transform.rotation[0] = 0;
-					transform.rotation[2] = 0;
-					break;
+					movement[1] = value;
+				}
+				break;
+			case Key.Brake:
+				brake = value;
+				break;
+			case Key.Stable:
+				transform.rotation[0] = 0;
+				transform.rotation[2] = 0;
+				break;
 			}
 		}
 
@@ -233,12 +233,12 @@ export class PlayerInputSystem extends System {
 				continue;
 			}
 			switch (key) {
-				case XboxAxis.LeftStickX:
-					yaw = value;
-					break;
-				case XboxAxis.LeftStickY:
-					pitch -= value;
-					break;
+			case XboxAxis.LeftStickX:
+				yaw = value;
+				break;
+			case XboxAxis.LeftStickY:
+				pitch -= value;
+				break;
 			}
 		}
 

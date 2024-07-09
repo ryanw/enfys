@@ -24,7 +24,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const shader = device.createShaderModule({ label: 'RenderMeshPipeline Shader', code: source || defaultSource });
 
 		const cameraBindGroupLayout = device.createBindGroupLayout({
-			label: "RenderMeshPipeline Bind Group Layout",
+			label: 'RenderMeshPipeline Bind Group Layout',
 			entries: [
 				// Camera
 				{
@@ -49,7 +49,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 					binding: 3,
 					visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
 					buffer: {
-						type: "read-only-storage",
+						type: 'read-only-storage',
 					}
 				},
 			]

@@ -1,4 +1,4 @@
-import { BigVector3, Point3, Vector3 } from "./math";
+import { BigVector3, Point3, Vector3 } from './math';
 
 // http://www.jcgt.org/published/0009/03/02/
 export function pcg3d(v: Vector3): Vector3 {
@@ -10,7 +10,7 @@ export function pcg3d(v: Vector3): Vector3 {
 
 	n0 = n0.map(v => v % BigInt(0xffffffff)) as BigVector3;
 
-	let n1 = n0.map(i => Number(i ^ (i >> BigInt(16))) * (1.0 / 0xffffffff)) as Vector3;
+	const n1 = n0.map(i => Number(i ^ (i >> BigInt(16))) * (1.0 / 0xffffffff)) as Vector3;
 
 	n1[0] += n1[1] * n1[2];
 	n1[1] += n1[2] * n1[0];

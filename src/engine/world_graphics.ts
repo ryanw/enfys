@@ -1,28 +1,28 @@
-import { Gfx, Size } from "engine";
-import { Camera } from "./camera";
-import { Entity } from "./ecs";
-import { TransformComponent } from "./ecs/components";
-import { CameraComponent } from "./ecs/components/camera";
-import { MeshComponent } from "./ecs/components/mesh";
-import { World } from "./ecs/world";
-import { Point3, Vector3 } from "./math";
-import { multiply, multiplyVector, rotation, translation } from "./math/transform";
-import { SimpleMesh } from "./mesh";
-import { Pawn } from "./pawn";
-import { ResourceId } from "./resource";
-import { Scene } from "./scene";
-import { SimpleMaterial } from "./material";
-import { LightComponent } from "./ecs/components/light";
-import { DirectionalLight } from "./light";
-import { Chunk, ChunkKey, toChunkHash } from "./terrain";
-import { ParticlesComponent } from "./ecs/components/particles";
-import { Particles } from "./particles";
-import { TerrainComponent } from "./ecs/components/terrain";
-import { TerrainMesh } from "./terrain_mesh";
-import { TerrainPipeline } from "./pipelines/terrain";
-import { ColorScheme } from "./color_scheme";
-import { DecorComponent } from "./ecs/components/decor";
-import { DecorMesh } from "./decor_mesh";
+import { Gfx, Size } from 'engine';
+import { Camera } from './camera';
+import { Entity } from './ecs';
+import { TransformComponent } from './ecs/components';
+import { CameraComponent } from './ecs/components/camera';
+import { MeshComponent } from './ecs/components/mesh';
+import { World } from './ecs/world';
+import { Point3, Vector3 } from './math';
+import { multiply, multiplyVector, rotation, translation } from './math/transform';
+import { SimpleMesh } from './mesh';
+import { Pawn } from './pawn';
+import { ResourceId } from './resource';
+import { Scene } from './scene';
+import { SimpleMaterial } from './material';
+import { LightComponent } from './ecs/components/light';
+import { DirectionalLight } from './light';
+import { Chunk, ChunkKey, toChunkHash } from './terrain';
+import { ParticlesComponent } from './ecs/components/particles';
+import { Particles } from './particles';
+import { TerrainComponent } from './ecs/components/terrain';
+import { TerrainMesh } from './terrain_mesh';
+import { TerrainPipeline } from './pipelines/terrain';
+import { ColorScheme } from './color_scheme';
+import { DecorComponent } from './ecs/components/decor';
+import { DecorMesh } from './decor_mesh';
 
 export type Resource = {};
 
@@ -85,7 +85,7 @@ export class WorldGraphics {
 
 		const removed: Array<Entity> = [...this.cameras.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
-			console.warn("Camera Removed", entity);
+			console.warn('Camera Removed', entity);
 		}
 	}
 
@@ -111,7 +111,7 @@ export class WorldGraphics {
 
 		const removed: Array<Entity> = [...this.lights.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
-			console.warn("Not implemented: Remove light", entity);
+			console.warn('Not implemented: Remove light', entity);
 		}
 	}
 
@@ -142,7 +142,7 @@ export class WorldGraphics {
 
 		const removed: Array<Entity> = [...this.particles.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
-			console.warn("Not implemented: Remove particles", entity);
+			console.warn('Not implemented: Remove particles', entity);
 		}
 	}
 
@@ -163,7 +163,7 @@ export class WorldGraphics {
 			if (!pawn) {
 				// Create
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
-				console.debug("Adding mesh for entity", entity, mesh);
+				console.debug('Adding mesh for entity', entity, mesh);
 				pawn = scene.addMesh(mesh, new SimpleMaterial(this.gfx, 0xffffffff), transform);
 				this.meshes.set(entity, pawn);
 			}
@@ -211,7 +211,7 @@ export class WorldGraphics {
 			const { seed: decorSeed, spread, radius, meshId } = world.getComponent(entity, DecorComponent)!;
 			let decor = this.decors.get(entity);
 			if (!decor) {
-				console.debug("Adding Decor for entity", entity, meshId);
+				console.debug('Adding Decor for entity', entity, meshId);
 				const mesh: SimpleMesh = this.getResource(meshId);
 				decor = scene.addMesh(new DecorMesh(this.gfx, [], [0, 0], 1.0, spread, terrainSeed, decorSeed, radius));
 				decor.object.vertexBuffer = mesh.vertexBuffer;
@@ -334,7 +334,7 @@ export class WorldGraphics {
 		let pipeline = this.terrainPipelines.get(seed);
 		if (!pipeline) {
 			pipeline = new TerrainPipeline(this.gfx, new ColorScheme(seed));
-			this.terrainPipelines.set(seed, pipeline)
+			this.terrainPipelines.set(seed, pipeline);
 		}
 		return pipeline;
 	}

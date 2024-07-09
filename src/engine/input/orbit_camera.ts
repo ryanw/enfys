@@ -1,8 +1,8 @@
-import { Point3 } from "engine/math";
-import { DEADZONE, Key, XboxAxis, XboxButton } from ".";
-import { Gfx } from "engine";
-import { Camera } from "engine/camera";
-import { multiply, transformPoint, translation } from "engine/math/transform";
+import { Point3 } from 'engine/math';
+import { DEADZONE, Key, XboxAxis, XboxButton } from '.';
+import { Gfx } from 'engine';
+import { Camera } from 'engine/camera';
+import { multiply, transformPoint, translation } from 'engine/math/transform';
 
 const MIN_DISTANCE = 3;
 const MAX_DISTANCE = 20000;
@@ -54,12 +54,12 @@ export class OrbitCameraController {
 				continue;
 			}
 			switch (key) {
-				case XboxAxis.RightStickX:
-					yaw = value;
-					break;
-				case XboxAxis.RightStickY:
-					pitch = value;
-					break;
+			case XboxAxis.RightStickX:
+				yaw = value;
+				break;
+			case XboxAxis.RightStickY:
+				pitch = value;
+				break;
 			}
 		}
 		this.camera.rotate(pitch * dt, yaw * dt);

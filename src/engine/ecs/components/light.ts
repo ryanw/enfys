@@ -1,4 +1,4 @@
-import { Component } from ".";
+import { Component } from '.';
 
 export enum LightKind {
 	Directional,
@@ -6,5 +6,5 @@ export enum LightKind {
 }
 
 export class LightComponent extends Component {
-	kind = LightKind.Directional
+	kind = LightKind.Directional;
 }
