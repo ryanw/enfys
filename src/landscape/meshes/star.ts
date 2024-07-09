@@ -1,7 +1,7 @@
 import { Gfx, calculateNormals } from 'engine';
 import { Point3 } from 'engine/math';
 import { ColorVertex, buildIcosahedron, SimpleMesh } from 'engine/mesh';
-import { StarPipeline } from './pipelines/star';
+import { StarPipeline } from '../pipelines/star';
 
 export class StarMesh extends SimpleMesh {
 	private pipeline: StarPipeline;

@@ -8,9 +8,9 @@ import { Gfx } from 'engine';
 import { Cube } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { DotMaterial } from 'engine/material';
-import { ShipMesh } from './ship_mesh';
 import { ui } from './ui';
-import { StarMesh } from './star_mesh';
+import { ShipMesh } from './meshes/ship';
+import { StarMesh } from './meshes/star';
 import { decorPrefab, freeCamPrefab, lightPrefab, orbitCamPrefab, playerPrefab, terrainPrefab, waterPrefab } from './prefabs';
 import { WorldGraphics } from 'engine/world_graphics';
 import { World } from 'engine/ecs/world';
@@ -20,9 +20,10 @@ import { PlayerInputSystem } from './systems/player_input';
 import { PhysicsSystem } from 'engine/ecs/systems/physics';
 import { RockMesh } from './meshes/rock';
 import { TreeMesh } from './meshes/tree';
-import { TuftMesh } from './meshes/tuft';
+import { TuftMesh } from './meshes/tuft'
 import { TerrainSystem } from 'engine/ecs/systems/terrain';
 import { getParam } from 'engine/helpers';
+
 /**
  * Procedurally generated alien worlds
  *
