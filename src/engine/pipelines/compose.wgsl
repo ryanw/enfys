@@ -271,21 +271,25 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 
 	// Draw water -- depth test to fix water behind fog
-	if DRAW_WATER && depth != 1.0 && renderMode == 0 && pos.y < 20.0 {
+	if DRAW_WATER && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
 		let noiseScale = 0.03;
 		let noiseOffset = vec3(u.t/37.0,u.t/24.0, u.t/47.0) * 20.0;
 		let n0 = fractalNoise((vec3(pos.x, pos.y, pos.z) + noiseOffset) * noiseScale, 3) - 0.5;
-		let waterDepth = smoothstep(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
-		if waterDepth > 0.0 {
-			let waterColor = vec4(0.1, 0.15, 0.5, 1.0);
-			let foamColor = vec4(0.8, 0.9, 1.0, 1.0);
-			color = mix(color, waterColor, clamp(waterDepth + 0.3, 0.0, 1.0));
+		let y = (-pos.y + n0 * 2.0) / 128.0;
+		if y > 0.0 {
+			let waterDepth = smoothstep(0.0, 1.5, pow(y, 0.4));
+			//let waterDepth = smoothstep(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
+			if waterDepth > 0.0 {
+				let waterColor = vec4(0.1, 0.15, 0.5, 1.0);
+				let foamColor = vec4(0.8, 0.9, 1.0, 1.0);
+				color = mix(color, waterColor, clamp(waterDepth + 0.3, 0.0, 1.0));
 
-			// Foam near the edges
-			let foamEdge = 1.0 / 50.0;
-			if (waterDepth < foamEdge) {
-				let foamFactor = 1.0 - waterDepth/foamEdge;
-				color = mix(color, foamColor, clamp(foamFactor, 0.0, 1.0));
+				// Foam near the edges
+				let foamEdge = 1.0 / 50.0;
+				if (waterDepth < foamEdge) {
+					let foamFactor = 1.0 - waterDepth/foamEdge;
+					color = mix(color, foamColor, clamp(foamFactor, 0.0, 1.0));
+				}
 			}
 		}
 	}
