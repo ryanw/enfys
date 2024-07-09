@@ -7,6 +7,7 @@ import { World } from "engine/ecs/world";
 import { PlayerComponent, TransformComponent, VelocityComponent } from "engine/ecs/components";
 import { ShipComponent, ShipMode } from "../components/ship";
 import { Entity } from "engine/ecs";
+import { ParticlesComponent } from "engine/ecs/components/particles";
 
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
@@ -14,7 +15,6 @@ export class PlayerInputSystem extends System {
 	readonly pressedKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
-	thrust: number = 0;
 	bindings: Record<string, Key> = {
 		'w': Key.Forward,
 		'a': Key.Left,
@@ -108,6 +108,7 @@ export class PlayerInputSystem extends System {
 	updateModeLand(dt: number, world: World, entity: Entity) {
 		const transform = world.getComponent(entity, TransformComponent)!;
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
+		const particles = world.getComponent(entity, ParticlesComponent);
 
 		const speed = this.heldKeys.has(Key.Boost) ? 256 : 10;
 		const rotateSpeed = 4.0;
@@ -115,7 +116,7 @@ export class PlayerInputSystem extends System {
 		let brake = 0.0;
 		let pitch = 0.0;
 		let yaw = 0.0;
-		this.thrust = 0;
+		let thrust = 0;
 
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
@@ -131,7 +132,7 @@ export class PlayerInputSystem extends System {
 					break;
 				case Key.Thrust:
 					if (Math.abs(value) > DEADZONE) {
-						this.thrust = value;
+						thrust = value;
 
 						movement[2] = value;
 					}
@@ -177,11 +178,16 @@ export class PlayerInputSystem extends System {
 			const vt = 1.0 - ((1.0 / stopTime) * brake * dt);
 			playerVelocity.velocity = scale(playerVelocity.velocity, vt);
 		}
+
+		if (particles) {
+			particles.count = 256 * thrust;
+		}
 	}
 
 	updateModeAir(dt: number, world: World, entity: Entity) {
 		const transform = world.getComponent(entity, TransformComponent)!;
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
+		const particles = world.getComponent(entity, ParticlesComponent);
 
 		const speed = this.heldKeys.has(Key.Boost) ? 256 : 16;
 		const rotateSpeed = 4.0;
@@ -189,7 +195,7 @@ export class PlayerInputSystem extends System {
 		let brake = 0.0;
 		let pitch = 0.0;
 		let yaw = 0.0;
-		this.thrust = 0;
+		let thrust = 0;
 
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
@@ -207,7 +213,7 @@ export class PlayerInputSystem extends System {
 					break;
 				case Key.Thrust:
 					if (Math.abs(value) > DEADZONE) {
-						this.thrust = value;
+						thrust = value;
 
 						movement[1] = value;
 					}
@@ -254,6 +260,10 @@ export class PlayerInputSystem extends System {
 			const stopTime = 1.0;
 			const vt = 1.0 - ((1.0 / stopTime) * brake * dt);
 			playerVelocity.velocity = scale(playerVelocity.velocity, vt);
+		}
+
+		if (particles) {
+			particles.count = 256 * thrust;
 		}
 	}
 

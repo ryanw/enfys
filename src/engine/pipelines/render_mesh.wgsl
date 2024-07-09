@@ -127,7 +127,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 
 	if camera.isShadowMap > 0 {
-		// Shadows don't do alpha
+		// Very translucent objects don't cast shadows
 		if color.a < 0.5 {
 			discard;
 		}
@@ -142,9 +142,14 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 			}
 		}
 	}
-	out.metaOutput = in.triangleId;
-	out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
-	out.normal = vec4(in.normal, 0.0);
+	if color.a == 0.0 {
+		discard;
+	}
+	if camera.isShadowMap == 0 {
+		out.metaOutput = in.triangleId;
+		out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
+		out.normal = vec4(in.normal, 0.0);
+	}
 
 
 	return out;

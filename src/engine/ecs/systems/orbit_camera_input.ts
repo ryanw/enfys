@@ -47,6 +47,7 @@ export class OrbitCameraInputSystem extends System {
 	override async tick(dt: number, world: World) {
 		this.updateGamepads();
 
+		const rotateSpeed = 4.0;
 		let pitch = 0;
 		let yaw = 0;
 		for (const [key, value] of this.axis.entries()) {
@@ -55,10 +56,10 @@ export class OrbitCameraInputSystem extends System {
 			}
 			switch (key) {
 				case XboxAxis.RightStickX:
-					yaw = value;
+					yaw = value * rotateSpeed;
 					break;
 				case XboxAxis.RightStickY:
-					pitch = value;
+					pitch = value * rotateSpeed;
 					break;
 			}
 		}

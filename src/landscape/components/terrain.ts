@@ -10,7 +10,8 @@ export class TerrainComponent extends Component {
 	chunkSize: Size = [128, 128];
 
 	constructor(
-		public seed: number,
+		public terrainSeed: number,
+		public colorSeed: number,
 		public target?: Entity,
 	) {
 		super();

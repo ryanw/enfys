@@ -58,6 +58,7 @@ export class DecorMesh extends SimpleMesh {
 	}
 
 	protected createInstanceBuffers() {
+		this.instanceCount = 0;
 		this.instanceBuffer = this.pipeline.createEmptyInstanceBuffer();
 		this.instanceBackBuffer = this.pipeline.createEmptyInstanceBuffer();
 	}
@@ -75,8 +76,8 @@ export class DecorMesh extends SimpleMesh {
 	move(x: number, y: number) {
 		const dx = Math.abs(this.position[0] - x);
 		const dy = Math.abs(this.position[1] - y);
-		const rotated = 0;
-		if (dx < 16 && dy < 16 && rotated) {
+		const rotated = 1000; // TODO
+		if (dx < 16 && dy < 16 && rotated < 10) {
 			// Haven't moved enough
 			return;
 		}

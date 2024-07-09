@@ -1,6 +1,6 @@
 
-var<private> continents_spline: array<f32, 10> = array<f32, 10>(1.0, 0.1, 0.11, 0.4, 0.42, 0.7, 0.8, 0.85, 0.9, 0.94);
-var<private> erosion_spline: array<f32, 10>    = array<f32, 10>(1.0, 0.8, 0.6, 0.7, 0.3, 0.27, 0.5, 0.47, 0.2, 0.1);
+var<private> continents_spline: array<f32, 10> = array<f32, 10>(1.0, 0.1, 0.11, 0.4, 0.42, 0.5, 0.7, 0.8, 0.9, 0.94);
+var<private> erosion_spline: array<f32, 10>    = array<f32, 10>(1.0, 0.8, 0.6, 0.7, 0.3, 0.27, 0.4, 0.31, 0.2, 0.1);
 var<private> valleys_spline: array<f32, 10>    = array<f32, 10>(0.0, 0.2, 0.4, 0.5, 0.55, 0.6, 0.7, 0.8, 0.9, 0.85);
 
 const BUILDING_CELL_SIZE: f32 = 256.0;
@@ -16,14 +16,17 @@ fn buildingCell(pp: vec2f, seed: f32) -> f32 {
 }
 
 fn landscapeNoise(p: vec3f) -> f32 {
-	var t0 = continents(p);
-	var t1 = erosion(p);
-	var t2 = valleys(p);
 
-	var worldScale = 1024.0;
-	var waterLevel = -16.0;
+	var worldScale = 2.0;
+	var worldHeight = 1024.0;
+	var waterLevel = -8.0;
+
+	var t0 = continents(p * worldScale);
+	var t1 = erosion(p * worldScale);
+	var t2 = valleys(p * worldScale);
+
 	var t = t0 * t1 * t2;
-	t *= worldScale;
+	t *= worldHeight;
 	t -= waterLevel;
 
 	return t;

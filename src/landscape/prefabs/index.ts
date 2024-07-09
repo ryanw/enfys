@@ -10,18 +10,22 @@ import { TerrainComponent } from "../components/terrain";
 import { WaterComponent } from "../components/water";
 import { ShipComponent } from "../components/ship";
 import { LightComponent } from "engine/ecs/components/light";
-import { normalize } from "engine/math/vectors";
+import { ParticlesComponent } from "engine/ecs/components/particles";
+import { PhysicsComponent } from "engine/ecs/components/physics";
+import { Planet } from "../planet";
 
 export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new LightComponent(),
-		new TransformComponent([0,0,0], rotation),
+		new TransformComponent([0, 0, 0], rotation),
 	]);
 }
 
 export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new PlayerComponent(),
+		new PhysicsComponent(),
+		new ParticlesComponent("tiny-cube"),
 		new ShipComponent(),
 		new TransformComponent(position),
 		new VelocityComponent([0, 0, 0]),
@@ -31,7 +35,7 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 
 export function orbitCamPrefab(world: World, target: Entity): Entity {
 	return world.createEntity([
-		new TransformComponent(),
+		new TransformComponent([0, 0, 0], [0.5, 0, 0]),
 		new CameraComponent(),
 		new OrbitCameraComponent(target),
 	]);
@@ -55,8 +59,10 @@ export function decorPrefab(world: World, mesh: ResourceId, seed: number, spread
 }
 
 export function terrainPrefab(world: World, seed: number, target?: Entity): Entity {
+	const { terrainSeed, terrainColors } = new Planet(seed);
+
 	return world.createEntity([
-		new TerrainComponent(seed, target),
+		new TerrainComponent(terrainSeed, terrainColors.seed, target),
 	]);
 }
 

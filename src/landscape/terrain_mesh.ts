@@ -12,16 +12,17 @@ export class TerrainMesh extends SimpleMesh {
 		gfx: Gfx,
 		readonly size: Size,
 		readonly chunkId: Point3,
-		private seed: number,
+		private terrainSeed: number,
+		colorSeed: number,
 		terrainPipeline?: TerrainPipeline,
 	) {
 		super(gfx);
-		this.terrainPipeline = terrainPipeline || new TerrainPipeline(this.gfx, new ColorScheme(0));
+		this.terrainPipeline = terrainPipeline || new TerrainPipeline(this.gfx, new ColorScheme(colorSeed));
 		this.createVertexBuffer();
 	}
 
 	private async createVertexBuffer() {
-		this.vertexBuffer = await this.terrainPipeline.createVertexBuffer(this.size, this.chunkId, this.seed);
+		this.vertexBuffer = await this.terrainPipeline.createVertexBuffer(this.size, this.chunkId, this.terrainSeed);
 		this.vertexCount = this.size[0] * this.size[1] * 6;
 	}
 }

@@ -5,8 +5,8 @@ import { TransformComponent } from "./ecs/components";
 import { CameraComponent } from "./ecs/components/camera";
 import { MeshComponent } from "./ecs/components/mesh";
 import { World } from "./ecs/world";
-import { Point3 } from "./math";
-import { multiply, rotation, translation } from "./math/transform";
+import { Point3, Vector3 } from "./math";
+import { multiply, multiplyVector, rotation, translation } from "./math/transform";
 import { SimpleMesh, buildIcosahedron, ColorVertex, CUBE_VERTS } from "./mesh";
 import { Pawn } from "./pawn";
 import { ResourceId } from "./resource";
@@ -23,6 +23,9 @@ import { DecorMesh } from "../landscape/decor_mesh";
 import { LightComponent } from "./ecs/components/light";
 import { DirectionalLight, Light } from "./light";
 import { Chunk, ChunkKey, toChunkHash } from "./terrain";
+import { ParticlesComponent } from "./ecs/components/particles";
+import { Particles } from "./particles";
+import { TerrainSeed } from "../landscape/planet";
 
 export type Resource = {};
 
@@ -30,7 +33,8 @@ let NEXT_RESOURCE_ID: number = 1000000;
 
 export type QueuedChunk = {
 	entity: Entity,
-	seed: number,
+	terrainSeed: number,
+	colorSeed: number,
 	size: Size,
 	chunk: Chunk;
 };
@@ -39,17 +43,15 @@ export class WorldGraphics {
 	private meshes: Map<Entity, Pawn<SimpleMesh>> = new Map();
 	private decors: Map<Entity, Pawn<DecorMesh>> = new Map();
 	private lights: Map<Entity, DirectionalLight> = new Map();
+	private particles: Map<Entity, Pawn<Particles>> = new Map();
 	private terrains: Map<Entity, Map<ChunkKey, Pawn<SimpleMesh>>> = new Map();
 	private cameras: Map<Entity, Camera> = new Map();
 	private resources: Map<ResourceId, Resource> = new Map();
 	private queuedTerrain: Map<ChunkKey, QueuedChunk> = new Map();
 	private activeTerrain: Map<ChunkKey, Chunk> = new Map();
-	private terrainPipeline: TerrainPipeline;
+	private terrainPipelines: Map<TerrainSeed, TerrainPipeline> = new Map();
 
 	constructor(private gfx: Gfx) {
-		// FIXME make colour scheme dynamic
-		const colorScheme = new ColorScheme(123);
-		this.terrainPipeline = new TerrainPipeline(this.gfx, colorScheme);
 	}
 
 	update(world: World, scene: Scene) {
@@ -58,6 +60,11 @@ export class WorldGraphics {
 		this.updateMeshes(world, scene);
 		this.updateTerrain(world, scene);
 		this.updateDecor(world, scene);
+		this.updateParticles(world, scene);
+		this.updateClipping(scene);
+	}
+
+	updateClipping(scene: Scene) {
 		const camera = scene.primaryCamera;
 		const planes = camera.clippingPlanes();
 		scene.frustumClip(planes);
@@ -108,6 +115,34 @@ export class WorldGraphics {
 		const removed: Array<Entity> = [...this.lights.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
 			console.warn("Not implemented: Remove light", entity);
+		}
+	}
+
+	updateParticles(world: World, scene: Scene) {
+		const entities = world.entitiesWithComponents([ParticlesComponent, TransformComponent]);
+		const saw = new Set();
+		for (const entity of entities) {
+			saw.add(entity);
+			const { meshId, count: particleCount } = world.getComponent(entity, ParticlesComponent)!;
+			const { position: emitterPosition, rotation: emitterRotation } = world.getComponent(entity, TransformComponent)!;
+
+			let particles = this.particles.get(entity);
+			if (!particles) {
+				const mesh: SimpleMesh = this.getResource(meshId);
+				particles = scene.addMesh(new Particles(this.gfx, [], 256));
+				this.particles.set(entity, particles);
+				particles.object.vertexBuffer = mesh.vertexBuffer;
+				particles.object.vertexCount = mesh.vertexCount;
+			}
+			particles.object.origin = emitterPosition;
+			particles.object.direction = multiplyVector(rotation(...emitterRotation), [0, -1, 0, 0]).slice(0,3) as Vector3;
+			particles.object.update(performance.now() / 1000.0);
+			particles.object.count = particleCount;
+		}
+
+		const removed: Array<Entity> = [...this.particles.keys()].filter(e => !saw.has(e));
+		for (const entity of removed) {
+			console.warn("Not implemented: Remove particles", entity);
 		}
 	}
 
@@ -169,7 +204,7 @@ export class WorldGraphics {
 		const entities = world.entitiesWithComponent(DecorComponent);
 		const terrainId = [...world.entitiesWithComponent(TerrainComponent)][0];
 		if (!terrainId) return;
-		const { seed: terrainSeed } = world.getComponent(terrainId, TerrainComponent)!;
+		const { terrainSeed } = world.getComponent(terrainId, TerrainComponent)!;
 		const saw = new Set();
 		for (const entity of entities) {
 			saw.add(entity);
@@ -222,7 +257,13 @@ export class WorldGraphics {
 	private updateTerrainQueue(entity: Entity, terrain: TerrainComponent) {
 		for (const [key, chunk] of terrain.chunks.entries()) {
 			if (this.activeTerrain.has(key) || this.queuedTerrain.has(key)) continue;
-			this.queuedTerrain.set(key, { entity, seed: terrain.seed, size: terrain.chunkSize, chunk });
+			this.queuedTerrain.set(key, { 
+				entity,
+				terrainSeed: terrain.terrainSeed,
+				colorSeed: terrain.colorSeed,
+				size: terrain.chunkSize,
+				chunk,
+			});
 		}
 	}
 
@@ -240,7 +281,7 @@ export class WorldGraphics {
 	}
 
 	private generateTerrainChunk(scene: Scene, queuedChunk: QueuedChunk) {
-		const { entity, size: chunkSize, seed, chunk } = queuedChunk;
+		const { entity, size: chunkSize, terrainSeed, colorSeed, chunk } = queuedChunk;
 		const scale = 1 << chunk.lod;
 		const chunkId: Point3 = [
 			chunk.position[0] / scale | 0,
@@ -259,8 +300,9 @@ export class WorldGraphics {
 				scene.gfx,
 				chunkSize,
 				chunkId,
-				seed,
-				this.terrainPipeline,
+				terrainSeed,
+				colorSeed,
+				this.getTerrainPipeline(terrainSeed),
 			),
 			translation(...position),
 		);
@@ -285,6 +327,15 @@ export class WorldGraphics {
 			scene.removePawn(pawn);
 			chunks.delete(key);
 		}
+	}
+
+	private getTerrainPipeline(seed: TerrainSeed): TerrainPipeline {
+		let pipeline = this.terrainPipelines.get(seed);
+		if (!pipeline) {
+			pipeline = new TerrainPipeline(this.gfx, new ColorScheme(seed));
+			this.terrainPipelines.set(seed, pipeline)
+		}
+		return pipeline;
 	}
 }
 
