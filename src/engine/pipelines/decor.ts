@@ -1,7 +1,6 @@
 import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
 import decorShaderSource from './decor.wgsl';
-import buildingShaderSource from './building.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 
 const WorkgroupSize = [16, 16];
@@ -152,50 +151,5 @@ export class DecorPipeline extends Pipeline {
 
 
 		return instanceCount;
-	}
-}
-
-export class BuildingPipeline extends DecorPipeline {
-	constructor(gfx: Gfx) {
-		super(gfx);
-
-		const { device } = gfx;
-
-		const shader = device.createShaderModule({ label: 'BuildingDecorPipeline Shader', code: buildingShaderSource });
-		const bindGroupLayout = device.createBindGroupLayout({
-			entries: [
-				{
-					binding: 0,
-					visibility: GPUShaderStage.COMPUTE,
-					buffer: {}
-				},
-				// Atomic counter
-				{
-					binding: 1,
-					visibility: GPUShaderStage.COMPUTE,
-					buffer: {
-						type: 'storage',
-					}
-				},
-				// Output
-				{
-					binding: 2,
-					visibility: GPUShaderStage.COMPUTE,
-					buffer: {
-						type: 'storage',
-					}
-				},
-			]
-		});
-
-		const pipelineLayout = device.createPipelineLayout({
-			bindGroupLayouts: [bindGroupLayout],
-		});
-
-		this.pipeline = gfx.device.createComputePipeline({
-			label: 'BuildingDecorPipeline',
-			layout: pipelineLayout,
-			compute: { module: shader, entryPoint: 'main' },
-		});
 	}
 }

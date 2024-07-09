@@ -4,15 +4,15 @@ import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engi
 import { MeshComponent } from "engine/ecs/components/mesh";
 import { World } from "engine/ecs/world";
 import { Point3, Vector3 } from "engine/math";
-import { DecorComponent } from "../components/decor";
 import { ResourceId } from "engine/resource";
-import { TerrainComponent } from "../components/terrain";
 import { WaterComponent } from "../components/water";
 import { ShipComponent } from "../components/ship";
 import { LightComponent } from "engine/ecs/components/light";
 import { ParticlesComponent } from "engine/ecs/components/particles";
 import { PhysicsComponent } from "engine/ecs/components/physics";
 import { Planet } from "../planet";
+import { DecorComponent } from "engine/ecs/components/decor";
+import { TerrainComponent } from "engine/ecs/components/terrain";
 
 export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	return world.createEntity([
@@ -35,7 +35,7 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 
 export function orbitCamPrefab(world: World, target: Entity): Entity {
 	return world.createEntity([
-		new TransformComponent([0, 0, 0], [0.5, 0, 0]),
+		new TransformComponent([0, 0, 0], [0.3, 0, 0]),
 		new CameraComponent(),
 		new OrbitCameraComponent(target),
 	]);

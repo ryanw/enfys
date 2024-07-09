@@ -1,6 +1,5 @@
 import { Gfx, calculateNormals } from "engine";
-import { DecorMesh } from "../decor_mesh";
-import { Point2, Point3, Vector2 } from "engine/math";
+import { Point3, Vector2 } from "engine/math";
 import { ColorVertex, SimpleMesh, buildIcosahedron } from "engine/mesh";
 import { add } from "engine/math/vectors";
 import { randomizer } from "engine/noise";

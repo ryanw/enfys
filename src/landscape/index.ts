@@ -11,20 +11,18 @@ import { DotMaterial } from 'engine/material';
 import { ShipMesh } from './ship_mesh';
 import { ui } from './ui';
 import { StarMesh } from './star_mesh';
-import { getParam } from './helpers';
 import { decorPrefab, freeCamPrefab, lightPrefab, orbitCamPrefab, playerPrefab, terrainPrefab, waterPrefab } from './prefabs';
 import { WorldGraphics } from 'engine/world_graphics';
 import { World } from 'engine/ecs/world';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
 import { OrbitCameraInputSystem } from 'engine/ecs/systems/orbit_camera_input';
-import { TerrainSystem } from './systems/terrain';
 import { PlayerInputSystem } from './systems/player_input';
 import { PhysicsSystem } from 'engine/ecs/systems/physics';
 import { RockMesh } from './meshes/rock';
 import { TreeMesh } from './meshes/tree';
-import { TransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { TuftMesh } from './meshes/tuft';
-import { Planet } from './planet';
+import { TerrainSystem } from 'engine/ecs/systems/terrain';
+import { getParam } from 'engine/helpers';
 /**
  * Procedurally generated alien worlds
  *
@@ -43,14 +41,7 @@ export async function main(el: HTMLCanvasElement) {
 	// Graphics objects
 	const scene = new Scene(gfx);
 	// Sky dome
-	const stars = scene.addMesh(new StarMesh(
-		gfx,
-		[0, 0, 0],
-		1000.0,
-		1.0,
-		seed
-	));
-	stars.material = new DotMaterial(gfx);
+	const stars = scene.addMesh(new StarMesh(gfx, [0, 0, 0], 1000.0, 1.0, seed), new DotMaterial(gfx));
 
 
 	// Sync graphics with world
@@ -63,7 +54,6 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed));
 	graphics.insertResource('decor-tufts-1', new TuftMesh(gfx, seed + 11, 3));
 	graphics.insertResource('decor-tufts-2', new TuftMesh(gfx, seed + 22, 4));
-	graphics.insertResource('decor-tufts-3', new TuftMesh(gfx, seed + 33, 6));
 	graphics.insertResource('decor-cubes', new Cube(gfx, 0.2));
 
 	// World simulation
@@ -87,8 +77,7 @@ export async function main(el: HTMLCanvasElement) {
 	const trees0 = decorPrefab(world, 'decor-trees', seed, 48, 4, orbitCam);
 	const trees1 = decorPrefab(world, 'decor-trees', seed, 96, 4, orbitCam);
 	const tufts0 = decorPrefab(world, 'decor-tufts-1', seed, 2, 7, orbitCam);
-	//const tufts1 = decorPrefab(world, 'decor-tufts-2', seed, 4, 6, orbitCam);
-	const tufts2 = decorPrefab(world, 'decor-tufts-3', seed, 6, 5, orbitCam);
+	const tufts1 = decorPrefab(world, 'decor-tufts-2', seed, 6, 5, orbitCam);
 	const terrain = terrainPrefab(world, seed, orbitCam);
 
 	world.run();

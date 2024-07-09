@@ -1,8 +1,8 @@
 import { Gfx } from 'engine';
 import { Plane, Point2 } from 'engine/math';
 import { ColorVertex, SimpleMesh } from 'engine/mesh';
-import { BuildingPipeline, DecorPipeline, DecorUniform } from './pipelines/decor';
 import { ClippingPlanes } from 'engine/camera';
+import { DecorPipeline, DecorUniform } from './pipelines/decor';
 
 const NullPlane: Plane = [[0, 0, 0], [0, 0, 0]];
 
@@ -91,22 +91,5 @@ export class DecorMesh extends SimpleMesh {
 		const back = this.instanceBackBuffer;
 		this.instanceBackBuffer = this.instanceBuffer;
 		this.instanceBuffer = back;
-	}
-}
-
-export class BuildingMesh extends DecorMesh {
-	constructor(
-		gfx: Gfx,
-		vertices: Array<ColorVertex> = [],
-		position: Point2,
-		density: number,
-		spacing: number,
-		terrainSeed: number,
-		decorSeed: number,
-		radius: number = 5,
-	) {
-		super(gfx, vertices, position, density, spacing, terrainSeed, decorSeed, radius);
-		this.pipeline = new BuildingPipeline(gfx);
-		this.createInstanceBuffers();
 	}
 }

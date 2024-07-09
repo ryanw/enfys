@@ -1,7 +1,7 @@
 import { Gfx } from 'engine';
-import { TerrainQueryPipeline } from '../landscape/pipelines/terrain_query';
 import { Point2, Point3 } from 'engine/math';
 import { Camera } from 'engine/camera';
+import { TerrainQueryPipeline } from 'engine/pipelines/terrain_query';
 
 export class PointerController {
 	readonly gfx: Gfx;

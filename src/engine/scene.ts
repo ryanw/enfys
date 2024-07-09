@@ -1,14 +1,14 @@
 import { Matrix4 } from './math';
-import { SimpleMaterial } from './material';
+import { Material, SimpleMaterial } from './material';
 import { Color, Gfx } from 'engine';
 import { Mesh, SimpleMesh } from './mesh';
 import { ShadowBuffer } from './shadow_buffer';
 import { Pawn } from './pawn';
 import { Camera, ClippingPlanes } from './camera';
-import { TerrainMesh } from '../landscape/terrain_mesh';
 import { transformPoint } from './math/transform';
 import { dot, magnitude, subtract } from './math/vectors';
 import { DirectionalLight } from './light';
+import { TerrainMesh } from './terrain_mesh';
 
 export type AddArguments = Parameters<Scene['addPawn']> | Parameters<Scene['addMesh']>;
 export type CameraId = number;
@@ -80,11 +80,11 @@ export class Scene {
 		return pawn;
 	}
 
-	addMesh<T extends Mesh<any, any>>(item: T, transform?: Matrix4): Pawn<T> {
+	addMesh<T extends Mesh<any, any>>(item: T, material?: Material, transform?: Matrix4): Pawn<T> {
 		return this.addPawn(new Pawn(
 			this.gfx,
 			item,
-			new SimpleMaterial(this.gfx, 0xffffffff),
+			material ?? new SimpleMaterial(this.gfx, 0xffffffff),
 			transform
 		));
 	}

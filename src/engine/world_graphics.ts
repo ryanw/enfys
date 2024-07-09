@@ -7,25 +7,24 @@ import { MeshComponent } from "./ecs/components/mesh";
 import { World } from "./ecs/world";
 import { Point3, Vector3 } from "./math";
 import { multiply, multiplyVector, rotation, translation } from "./math/transform";
-import { SimpleMesh, buildIcosahedron, ColorVertex, CUBE_VERTS } from "./mesh";
+import { SimpleMesh } from "./mesh";
 import { Pawn } from "./pawn";
 import { ResourceId } from "./resource";
 import { Scene } from "./scene";
 import { SimpleMaterial } from "./material";
-
-// FIXME shouldn't reference landscape from engine
-import { TerrainComponent } from "../landscape/components/terrain";
-import { TerrainMesh } from "../landscape/terrain_mesh";
-import { TerrainPipeline } from "../landscape/pipelines/terrain";
-import { ColorScheme } from "../landscape/color_scheme";
-import { DecorComponent } from "../landscape/components/decor";
-import { DecorMesh } from "../landscape/decor_mesh";
 import { LightComponent } from "./ecs/components/light";
-import { DirectionalLight, Light } from "./light";
+import { DirectionalLight } from "./light";
 import { Chunk, ChunkKey, toChunkHash } from "./terrain";
 import { ParticlesComponent } from "./ecs/components/particles";
 import { Particles } from "./particles";
-import { TerrainSeed } from "../landscape/planet";
+
+// FIXME shouldn't reference landscape from engine
+import { TerrainComponent } from "./ecs/components/terrain";
+import { TerrainMesh } from "./terrain_mesh";
+import { TerrainPipeline } from "./pipelines/terrain";
+import { ColorScheme } from "./color_scheme";
+import { DecorComponent } from "./ecs/components/decor";
+import { DecorMesh } from "./decor_mesh";
 
 export type Resource = {};
 
@@ -49,7 +48,7 @@ export class WorldGraphics {
 	private resources: Map<ResourceId, Resource> = new Map();
 	private queuedTerrain: Map<ChunkKey, QueuedChunk> = new Map();
 	private activeTerrain: Map<ChunkKey, Chunk> = new Map();
-	private terrainPipelines: Map<TerrainSeed, TerrainPipeline> = new Map();
+	private terrainPipelines: Map<number, TerrainPipeline> = new Map();
 
 	constructor(private gfx: Gfx) {
 	}
@@ -135,7 +134,7 @@ export class WorldGraphics {
 				particles.object.vertexCount = mesh.vertexCount;
 			}
 			particles.object.origin = emitterPosition;
-			particles.object.direction = multiplyVector(rotation(...emitterRotation), [0, -1, 0, 0]).slice(0,3) as Vector3;
+			particles.object.direction = multiplyVector(rotation(...emitterRotation), [0, -1, 0, 0]).slice(0, 3) as Vector3;
 			particles.object.update(performance.now() / 1000.0);
 			particles.object.count = particleCount;
 		}
@@ -164,7 +163,7 @@ export class WorldGraphics {
 				// Create
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
 				console.debug("Adding mesh for entity", entity, mesh);
-				pawn = scene.addMesh(mesh, transform);
+				pawn = scene.addMesh(mesh, new SimpleMaterial(this.gfx, 0xffffffff), transform);
 				this.meshes.set(entity, pawn);
 			}
 			// Update
@@ -257,7 +256,7 @@ export class WorldGraphics {
 	private updateTerrainQueue(entity: Entity, terrain: TerrainComponent) {
 		for (const [key, chunk] of terrain.chunks.entries()) {
 			if (this.activeTerrain.has(key) || this.queuedTerrain.has(key)) continue;
-			this.queuedTerrain.set(key, { 
+			this.queuedTerrain.set(key, {
 				entity,
 				terrainSeed: terrain.terrainSeed,
 				colorSeed: terrain.colorSeed,
@@ -304,6 +303,7 @@ export class WorldGraphics {
 				colorSeed,
 				this.getTerrainPipeline(terrainSeed),
 			),
+			new SimpleMaterial(this.gfx, 0xffffffff),
 			translation(...position),
 		);
 		if (!this.terrains.has(entity)) {
@@ -329,7 +329,7 @@ export class WorldGraphics {
 		}
 	}
 
-	private getTerrainPipeline(seed: TerrainSeed): TerrainPipeline {
+	private getTerrainPipeline(seed: number): TerrainPipeline {
 		let pipeline = this.terrainPipelines.get(seed);
 		if (!pipeline) {
 			pipeline = new TerrainPipeline(this.gfx, new ColorScheme(seed));

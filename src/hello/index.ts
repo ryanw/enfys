@@ -10,6 +10,7 @@ import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, translation } from 'engine/math/transform';
 import { FreeCameraController } from 'engine/input/free_camera';
+import { SimpleMaterial } from 'engine/material';
 
 /**
  * Start the demo
@@ -25,7 +26,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 		const x = (Math.random() - 0.5) * 100.0;
 		const y = (Math.random() - 0.5) * 100.0;
 		const z = Math.random() * 100.0;
-		return scene.addMesh(new Icosahedron(gfx), translation(x, y, z));
+		return scene.addMesh(new Icosahedron(gfx), new SimpleMaterial(gfx, 0xff0000ff), translation(x, y, z));
 	});
 
 	function update(dt: number) {

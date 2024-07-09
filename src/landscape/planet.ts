@@ -1,5 +1,5 @@
+import { ColorScheme } from "engine/color_scheme";
 import { randomizer } from "engine/noise";
-import { ColorScheme } from "./color_scheme";
 
 export type PlanetSeed = number;
 export type TerrainSeed = number;
