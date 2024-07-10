@@ -33,6 +33,15 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 	]);
 }
 
+export function animalPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
+	return world.createEntity([
+		new PhysicsComponent(),
+		new TransformComponent(position),
+		new VelocityComponent([0, 0, 0]),
+		new MeshComponent('cube'),
+	]);
+}
+
 export function orbitCamPrefab(world: World, target: Entity): Entity {
 	return world.createEntity([
 		new TransformComponent([0, 0, 0], [0.3, 0, 0]),

@@ -2,7 +2,7 @@ struct Instance {
 	// array instead of vec to avoid alignment issues
 	offset: array<f32, 3>,
 	color: u32,
-	vertexIndex: u32,
+	variantIndex: u32,
 }
 
 struct Plane {
@@ -80,6 +80,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		var color = hsl(hue, 0.6, 0.5);
 		color.a = 0.5;
 		instance.color = colorToUint(color);
+		instance.variantIndex = u32(abs(rnd3(p + vec3(31.0))) * 256.0);
 		let count = atomicAdd(&counter, 1u);
 		instances[count] = instance;
 	}

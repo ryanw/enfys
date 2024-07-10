@@ -38,6 +38,8 @@ export class Pawn<T> {
 		this.buffer = new UniformBuffer(gfx, [
 			['transform', 'mat4x4f'],
 			['id', 'u32'],
+			['vertexCount', 'u32'],
+			['variantCount', 'u32'],
 		]);
 		this.buffer.set('id', Math.random() * 0xffffffff | 0);
 		this.transform = transform;
@@ -53,6 +55,11 @@ export class Pawn<T> {
 	}
 
 	bindingResource(): GPUBindingResource {
+		// FIXME this should be automatic or moved elsewhere
+		if (isPawnOf(this, SimpleMesh)) {
+			this.buffer.set('vertexCount', this.object.vertexCount);
+			this.buffer.set('variantCount', this.object.variantCount);
+		}
 		return this.buffer.bindingResource();
 	}
 

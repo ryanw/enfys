@@ -133,6 +133,7 @@ export class WorldGraphics {
 				this.particles.set(entity, particles);
 				particles.object.vertexBuffer = mesh.vertexBuffer;
 				particles.object.vertexCount = mesh.vertexCount;
+				particles.object.variantCount = mesh.variantCount;
 			}
 			particles.object.origin = emitterPosition;
 			particles.object.direction = multiplyVector(rotation(...emitterRotation), [0, -1, 0, 0]).slice(0, 3) as Vector3;
@@ -216,6 +217,7 @@ export class WorldGraphics {
 				decor = scene.addMesh(new DecorMesh(this.gfx, [], [0, 0], 1.0, spread, terrainSeed, decorSeed, radius));
 				decor.object.vertexBuffer = mesh.vertexBuffer;
 				decor.object.vertexCount = mesh.vertexCount;
+				decor.object.variantCount = mesh.variantCount;
 				if (decor.material instanceof SimpleMaterial) {
 					decor.material.fadeout = 8 * radius * spread;
 				}

@@ -11,7 +11,7 @@ import { DotMaterial } from 'engine/material';
 import { ui } from './ui';
 import { ShipMesh } from './meshes/ship';
 import { StarMesh } from './meshes/star';
-import { decorPrefab, freeCamPrefab, lightPrefab, orbitCamPrefab, playerPrefab, terrainPrefab, waterPrefab } from './prefabs';
+import { animalPrefab, decorPrefab, freeCamPrefab, lightPrefab, orbitCamPrefab, playerPrefab, terrainPrefab, waterPrefab } from './prefabs';
 import { WorldGraphics } from 'engine/world_graphics';
 import { World } from 'engine/ecs/world';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
@@ -23,6 +23,7 @@ import { TreeMesh } from './meshes/tree';
 import { TuftMesh } from './meshes/tuft';
 import { TerrainSystem } from 'engine/ecs/systems/terrain';
 import { getParam } from 'engine/helpers';
+import { FlowersMesh } from './meshes/flowers';
 
 /**
  * Procedurally generated alien worlds
@@ -56,6 +57,8 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('decor-tufts-1', new TuftMesh(gfx, seed + 11, 3));
 	graphics.insertResource('decor-tufts-2', new TuftMesh(gfx, seed + 22, 4));
 	graphics.insertResource('decor-cubes', new Cube(gfx, 0.2));
+	graphics.insertResource('decor-flowers-1', new FlowersMesh(gfx, seed + 64));
+	graphics.insertResource('decor-flowers-2', new FlowersMesh(gfx, seed + 94));
 
 	// World simulation
 	const world = new World();
@@ -68,11 +71,12 @@ export async function main(el: HTMLCanvasElement) {
 
 	const light = lightPrefab(world, [0.7, 1.0, 0.0]);
 	const player = playerPrefab(world, [0, 3, 0]);
+	const animal0 = animalPrefab(world, [3, 3, 0]);
 	const freeCam = freeCamPrefab(world);
 	const orbitCam = orbitCamPrefab(world, player);
 	const water = waterPrefab(world);
-	const cubes0 = decorPrefab(world, 'decor-cubes', seed, 12, 3, orbitCam);
-	const cubes1 = decorPrefab(world, 'decor-cubes', seed, 24, 5, orbitCam);
+	const flowers0 = decorPrefab(world, 'decor-flowers-1', seed, 8, 3, orbitCam);
+	const flowers1 = decorPrefab(world, 'decor-flowers-2', seed, 24, 4, orbitCam);
 	const rocks0 = decorPrefab(world, 'decor-rocks', seed, 12, 3, orbitCam);
 	const rocks1 = decorPrefab(world, 'decor-rocks', seed, 24, 4, orbitCam);
 	const trees0 = decorPrefab(world, 'decor-trees', seed, 48, 4, orbitCam);

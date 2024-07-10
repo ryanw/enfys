@@ -42,7 +42,7 @@ export interface ColorVertex extends NormalVertex {
  */
 export interface OffsetInstance {
 	offset: Point3;
-	vertexIndex: number | bigint;
+	variantIndex: number | bigint;
 }
 
 export interface ColorInstance extends OffsetInstance {
@@ -64,6 +64,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	instanceBuffer!: GPUBuffer;
 	vertexCount: number = 0;
 	instanceCount: number = 0;
+	variantCount: number = 1;
 
 	/**
 	 * @param vertices Array of Vertices
@@ -123,7 +124,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
  */
 export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color'];
-	instanceOrder: Array<keyof ColorInstance> = ['offset', 'instanceColor', 'vertexIndex'];
+	instanceOrder: Array<keyof ColorInstance> = ['offset', 'instanceColor', 'variantIndex'];
 	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<ColorInstance>) {
 		super(gfx);
 		this.uploadVertices(vertices);
@@ -134,7 +135,7 @@ export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 			this.uploadInstances([{
 				offset: [0, 0, 0],
 				instanceColor: BigInt(0xffffffff),
-				vertexIndex: 0,
+				variantIndex: 0,
 			}]);
 		}
 	}

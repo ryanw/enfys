@@ -19,16 +19,16 @@ export function pcg3d(v: Vector3): Vector3 {
 	return n1;
 }
 
-export type Randomizer = (l: number, r: number) => number;
+export type Randomizer = (l?: number, r?: number) => number;
 export function randomizer(seed: number, p: Point3 = [0, 0, 0]): Randomizer {
 	let rndIdx = 100;
-	return (l: number, r: number) => {
+	return (l: number = 0, r: number = 1) => {
 		const n = rndIdx++ * 1000;
 		const coord = [
 			p[0] + n,
 			p[1] + n + seed / 10000,
 			p[2] + n
 		] as Vector3;
-		return pcg3d(coord)[0] * (r - l) + l;
+		return (pcg3d(coord)[0] % 1) * (r - l) + l;
 	};
 }

@@ -172,8 +172,8 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		pass.end();
 	}
 
-	drawBatch(encoder: GPUCommandEncoder, entities: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer) {
-		if (entities.length === 0) {
+	drawBatch(encoder: GPUCommandEncoder, pawns: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer) {
+		if (pawns.length === 0) {
 			return;
 		}
 		const { device } = this.gfx;
@@ -183,7 +183,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const metaView = target.meta.createView();
 		const depthView = target.depth.createView();
 		// FIXME assumes all entities use same material
-		const writeDepth = entities[0].material.writeDepth;
+		const writeDepth = pawns[0].material.writeDepth;
 
 		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
 			clearValue: [0, 0, 0, 0],
@@ -205,8 +205,8 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const pass = encoder.beginRenderPass(passDescriptor);
 		pass.setPipeline(writeDepth ? this.pipeline : this.pipelineNoDepth);
 
-		for (const src of entities) {
-			if (!src.visible || src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+		for (const pawn of pawns) {
+			if (!pawn.visible || pawn.object.vertexCount === 0 || pawn.object.instanceCount === 0) {
 				continue;
 			}
 			const bindGroup = device.createBindGroup({
@@ -214,14 +214,14 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				layout: this.pipeline.getBindGroupLayout(0),
 				entries: [
 					{ binding: 0, resource: camera.uniform.bindingResource() },
-					{ binding: 1, resource: src.bindingResource() },
-					{ binding: 2, resource: src.material.bindingResource() },
-					{ binding: 3, resource: { buffer: src.object.vertexBuffer } },
+					{ binding: 1, resource: pawn.bindingResource() },
+					{ binding: 2, resource: pawn.material.bindingResource() },
+					{ binding: 3, resource: { buffer: pawn.object.vertexBuffer } },
 				],
 			});
 			pass.setBindGroup(0, bindGroup);
-			pass.setVertexBuffer(0, src.object.instanceBuffer);
-			pass.draw(src.object.vertexCount, src.object.instanceCount);
+			pass.setVertexBuffer(0, pawn.object.instanceBuffer);
+			pass.draw(pawn.object.vertexCount, pawn.object.instanceCount);
 		}
 		pass.end();
 	}

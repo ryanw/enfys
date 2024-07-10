@@ -17,7 +17,7 @@ struct VertexIn {
 	// Instance
 	@location(3) offset: vec3f,
 	@location(4) instanceColor: u32,
-	@location(5) vertexIndex: u32,
+	@location(5) variantIndex: u32,
 }
 
 struct VertexOut {
@@ -44,9 +44,11 @@ struct Camera {
 	isShadowMap: u32,
 }
 
-struct Entity {
+struct Pawn {
 	model: mat4x4f,
 	id: u32,
+	vertexCount: u32,
+	variantCount: u32,
 }
 
 struct Material {
@@ -77,7 +79,7 @@ const ditherMatrix = mat4x4(
 var<uniform> camera: Camera;
 
 @group(0) @binding(1)
-var<uniform> entity: Entity;
+var<uniform> pawn: Pawn;
 
 @group(0) @binding(2)
 var<uniform> material: Material;
@@ -88,7 +90,8 @@ var<storage, read> vertices: array<PackedVertex>;
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
-	let idx = in.id + in.vertexIndex;
+	let vertexOffset = (in.variantIndex % pawn.variantCount) * pawn.vertexCount;
+	let idx = in.id + vertexOffset;
 	let packedVertex = vertices[idx];
 	let v = Vertex(
 		vec3(packedVertex.position[0], packedVertex.position[1], packedVertex.position[2]),
@@ -96,7 +99,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		packedVertex.color,
 	);
 
-	let offsetModel = translate(in.offset) * entity.model;
+	let offsetModel = translate(in.offset) * pawn.model;
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * mv;
 	out.position = mvp * vec4(v.position, 1.0);
@@ -108,7 +111,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		out.normal = vec3(0.0);
 	}
 	else {
-		out.normal = (entity.model * vec4(normalize(v.normal), 0.0)).xyz;
+		out.normal = (pawn.model * vec4(normalize(v.normal), 0.0)).xyz;
 	}
 
 	let modelPosition = offsetModel * vec4(v.position, 1.0);
@@ -124,7 +127,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	else {
 		out.color = vertexColor * materialColor;
 	}
-	out.triangleId = (rnd3uu(vec3(triangleId + entity.id))) % 0xff;
+	out.triangleId = (rnd3uu(vec3(triangleId + pawn.id))) % 0xff;
 
 	return out;
 }
