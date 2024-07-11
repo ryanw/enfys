@@ -1,14 +1,22 @@
-import { Gfx, calculateNormals } from 'engine';
-import { ColorVertex, SimpleMesh, buildIcosahedron } from 'engine/mesh';
+import { calculateNormals } from 'engine';
+import { ColorVertex, buildIcosphere } from 'engine/mesh';
+import { jiggleVertices } from '.';
+import { VariantMesh } from './variant';
+import { scale } from 'engine/math/vectors';
+import { randomizer } from 'engine/noise';
 
-export class RockMesh extends SimpleMesh {
-	constructor(gfx: Gfx) {
-		const vertices = buildIcosahedron(p => ({
-			position: [...p],
+export class RockMesh extends VariantMesh {
+	override generateVariant(i: number): Array<ColorVertex> {
+		const seed = this.seed + i * 342;
+		const rnd = randomizer(seed);
+		const rockSize = rnd(0.2, 1.0);
+		const vertices = buildIcosphere(2, p => ({
+			position: scale(p, rockSize),
 			normal: [0, 0, 0],
 			color: BigInt(0xff445566),
 		} as ColorVertex));
+		jiggleVertices(vertices, 3 * rockSize, seed);
 		calculateNormals(vertices);
-		super(gfx, vertices);
+		return vertices;
 	}
 }

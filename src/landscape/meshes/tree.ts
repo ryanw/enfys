@@ -1,53 +1,50 @@
-import { Gfx, calculateNormals } from 'engine';
+import { calculateNormals } from 'engine';
 import { Point3, Vector2 } from 'engine/math';
-import { ColorVertex, SimpleMesh, buildIcosahedron } from 'engine/mesh';
+import { ColorVertex, buildIcosahedron, buildIcosphere } from 'engine/mesh';
 import { add } from 'engine/math/vectors';
 import { randomizer } from 'engine/noise';
+import { VariantMesh } from './variant';
+import { jiggleVertices } from '.';
 
-export class TreeMesh extends SimpleMesh {
-	constructor(gfx: Gfx, seed: number) {
-		const { cos, sin } = Math;
+export class TreeMesh extends VariantMesh {
+	override generateVariant(i: number): Array<ColorVertex> {
+		const seed = this.seed + i * 3121;
+		const rnd = randomizer(seed);
 		let vertices: ColorVertex[] = [];
 
-		// wobble
-		//const offset = [4 * Math.random(), 0];
-
-		const trunkHeight = 5;
+		const trunkThickness = rnd(1.0, 1.3);
+		const trunkHeight = 8;
 		const trunkRad = 0.5;
 		const trunkDiv = [7, 8] as [number, number];
 		const trunk = buildCylinder(trunkHeight, trunkRad, trunkDiv).map(position => {
-			const rnd = randomizer(seed, position);
-			const angle = rnd(0, Math.PI * 2);
-			const dist = rnd(0, 0.2);
-
-			const rnd2 = randomizer(seed, [10, position[1], 10]);
-			const thick = rnd2(1.0, 1.3);
-			const offset = [cos(angle) * dist, trunkHeight / 2.2, sin(angle) * dist];
+			const offset = [0, trunkHeight / 2.2, 0];
 			const p = add(position, offset);
-			p[0] *= thick;
-			p[2] *= thick;
+			p[0] *= trunkThickness;
+			p[2] *= trunkThickness;
 			return {
 				position: p,
 				normal: [0, 0, 0],
 				color: BigInt(0xff20689a),
 			} as ColorVertex;
 		});
-		const bush = buildBush().map(position => {
+		jiggleVertices(trunk, 2, seed);
+		const bush = buildBush().map((position: Point3) => {
 			return {
 				position,
 				normal: [0, 0, 0],
 				color: BigInt(0xff209a68),
 			} as ColorVertex;
 		});
-		vertices = [...vertices, ...trunk, ...bush];
+		jiggleVertices(bush, 16, seed);
+		vertices = [...trunk, ...bush];
 
 		calculateNormals(vertices);
-		super(gfx, vertices);
+		return vertices;
 	}
 }
 
-function buildBush() {
-	const bush: Point3[] = buildIcosahedron(p => [
+function buildBush(): Array<Point3> {
+	const bush: Point3[] = buildIcosphere(1, (p: Point3) => [
 		p[0] * 5.0,
 		p[1] * 5.0 + 9.0,
 		p[2] * 5.0,

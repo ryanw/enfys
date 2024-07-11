@@ -1,6 +1,6 @@
-import { Gfx, Size, calculateNormals } from 'engine';
+import { Gfx, Size, Triangle, calculateNormals } from 'engine';
 import { PHI, Point2, Point3, Vector3, Vector4 } from './math';
-import { add, normalize } from './math/vectors';
+import { add, normalize, scale } from './math/vectors';
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
@@ -110,6 +110,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 
 		// Vertex count can be lower if we have multiple variants in the same buffer
 		this.vertexCount = vertexCount ?? vertices.length;
+		this.variantCount = vertices.length / this.vertexCount;
 		this.vertexBuffer = vertexBuffer;
 	}
 
@@ -289,6 +290,37 @@ export function buildIcosahedron<T>(callback: (position: Point3, index: number) 
 				callback(normalize(ICOSAHEDRON_VERTICES[v]), i)
 		)
 	).flat();
+}
+
+export function buildIcosphere<T>(divisions: number, callback: (position: Point3, index: number) => T): Array<T> {
+	const vertices = ICOSAHEDRON_TRIS.map(
+		([v0, v1, v2]) => {
+			const p0 = ICOSAHEDRON_VERTICES[v0];
+			const p1 = ICOSAHEDRON_VERTICES[v1];
+			const p2 = ICOSAHEDRON_VERTICES[v2];
+			return subdivideFace([p0, p1, p2], divisions)
+				.map(face => face
+					.map((p, i) =>
+						callback(normalize(p), i)
+					)
+				);
+		}).flat().flat();
+
+	return vertices;
+}
+
+
+export function subdivideFace(face: Triangle, divisions: number): Array<Triangle> {
+	if (divisions == 0) {
+		return [face];
+	}
+	const [a, b, c] = face;
+	const d: Point3 = scale(add(a, b), 0.5);
+	const e: Point3 = scale(add(b, c), 0.5);
+	const f: Point3 = scale(add(c, a), 0.5);
+
+	let faces: Array<Triangle> = [[a, d, f], [d, b, e], [f, e, c], [f, d, e]];
+	return faces.flatMap(face => subdivideFace(face, divisions - 1))
 }
 
 export const CUBE_VERTS: Array<Point3> = [

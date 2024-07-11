@@ -160,7 +160,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		//let lightPos = u.light.xyz;
 		//let lightDir = normalize(pos - lightPos);
 		let lightDir = u.light.xyz;
-		let shade = 0.5 - (dot(normal, lightDir) * 0.5);
+		let shade = dot(normal, lightDir) * 0.5 + 0.5;
 
 
 
@@ -169,10 +169,10 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			let div = f32(u.ditherSize);
 			let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
 			let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
-			brightness = clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
+			brightness = 1.0 - clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
 		}
 		else {
-			brightness = shade;
+			brightness = 1.0 - shade;
 		}
 
 		// Calculate fog for later
@@ -185,10 +185,10 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 	var color = vec4(0.0);
 	if BLEND_TO_ALPHA {
-		color = albedo * pow(brightness, 2.2);
+		color = albedo * brightness;
 	}
 	else {
-		color = vec4(albedo.rgb * pow(brightness, 2.2), 1.0) * albedo.a;
+		color = vec4(albedo.rgb * brightness, 1.0) * albedo.a;
 	}
 
 	var renderMode = u.renderMode;
@@ -254,7 +254,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 	if DRAW_SHADOWS {
 		let shadowSize = vec2f(textureDimensions(shadowTex));
-		let shadowPos = u.lightVp * vec4(pos + normal * 0.01, 1.0);
+		let shadowPos = u.lightVp * vec4(pos + normal*0.02, 1.0);
 		let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;
 		let coords = vec2u(vec2(suv.x, 1.0-suv.y) * shadowSize);
 		let shadowDepth = textureLoad(shadowTex, coords, 0).r;
@@ -265,7 +265,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 		else if shadowPos.z < 1.0 && shadowPos.z > shadowDepth {
 			// In shadow
-			color = vec4(color.rgb*0.5, color.a);
+			color = vec4(color.rgb*0.6, color.a);
 		}
 	}
 
