@@ -13,8 +13,7 @@ struct VertexOut {
 struct Uniforms {
 	invMvp: mat4x4f,
 	light: vec4f,
-	lightVp: mat4x4f,
-	invLightVp: mat4x4f,
+	lightVp: array<mat4x4f, 6>,
 	playerPosition: vec3f,
 	ditherSize: i32,
 	ditherDepth: i32,
@@ -43,7 +42,7 @@ var depthTex: texture_2d<f32>;
 var metaTex: texture_2d<u32>;
 
 @group(0) @binding(6)
-var shadowTex: texture_2d<f32>;
+var shadowTex: texture_2d_array<f32>;
 
 const ditherMatrix = mat4x4(
 	0.0000, 0.5000, 0.1250, 0.6250,
@@ -252,21 +251,25 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	if DRAW_SHADOWS {
-		let shadowSize = vec2f(textureDimensions(shadowTex));
-		let shadowPos = u.lightVp * vec4(pos + normal*0.02, 1.0);
-		let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;
-		let coords = vec2u(vec2(suv.x, 1.0-suv.y) * shadowSize);
-		let shadowDepth = textureLoad(shadowTex, coords, 0).r;
-		if suv.x < 0.0 || suv.x >= 1.0 || suv.y < 0.0 || suv.y >= 1.0 {
-			if DEBUG_SHADOW_MAP {
-				color = mix(color, vec4(1.0, 0.0, 0.0, 1.0), 0.8);
+	if DRAW_SHADOWS && renderMode == 0 {
+		let sp = 0.03;
+		let n = normal*0.02;
+		let shadowSamples: array<bool, 5> = array(
+			isInShadow(pos + n),
+			isInShadow(pos + vec3(sp, 0.0, 0.0) + n),
+			isInShadow(pos + vec3(0.0, 0.0, sp) + n),
+			isInShadow(pos - vec3(sp, 0.0, 0.0) + n),
+			isInShadow(pos - vec3(0.0, 0.0, sp) + n),
+		);
+
+		var shadow = 0.0;
+		for (var i = 0; i < 5; i++) {
+			if (shadowSamples[i]) {
+				shadow += 1.0;
 			}
 		}
-		else if shadowPos.z < 1.0 && shadowPos.z > shadowDepth {
-			// In shadow
-			color = vec4(color.rgb*0.6, color.a);
-		}
+		var lightness = 1.0 - shadow/5.0 / 2;
+		color = vec4(color.rgb*lightness, color.a);
 	}
 
 
@@ -300,13 +303,60 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if DEBUG_SHADOW_MAP {
-		color = drawShadowMap(in.uv, color);
+		color = drawShadowMap(in.uv, color, 0);
 	}
 
 	return color;
 }
 
-fn drawShadowMap(uv: vec2f, color: vec4f) -> vec4f {
+fn isInShadow(p: vec3f) -> bool {
+	for (var i = 0; i < 6; i++) {
+		var d = depthInShadowLayer(p, i);
+		if d < 0.0 {
+			continue;
+		}
+		return d > 0.0;
+	}
+	return false;
+}
+
+fn depthInShadowLayer(p: vec3f, shadowLayer: i32) -> f32 {
+	let shadowSize = vec2f(textureDimensions(shadowTex));
+	let shadowPos = u.lightVp[shadowLayer] * vec4(p, 1.0);
+	let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;
+	if suv.x < 0.0 || suv.x >= 1.0 || suv.y < 0.0 || suv.y >= 1.0 {
+		return -1.0;
+	}
+
+	let coords = vec2u(vec2(suv.x, 1.0-suv.y) * shadowSize);
+	let shadowDepth = textureLoad(shadowTex, coords, shadowLayer, 0).r;
+	if shadowPos.z >= 1.0 {
+		return -1.0;
+	}
+	if shadowPos.z > shadowDepth {
+		return shadowPos.z - shadowDepth;
+	}
+	return 0.0;
+}
+
+fn isInShadowLayer(p: vec3f, shadowLayer: i32) -> bool {
+	let shadowSize = vec2f(textureDimensions(shadowTex));
+	let shadowPos = u.lightVp[shadowLayer] * vec4(p, 1.0);
+	let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;
+	if suv.x < 0.0 || suv.x >= 1.0 || suv.y < 0.0 || suv.y >= 1.0 {
+		return false;
+	}
+	
+
+	let coords = vec2u(vec2(suv.x, 1.0-suv.y) * shadowSize);
+	let shadowDepth = textureLoad(shadowTex, coords, shadowLayer, 0).r;
+	if shadowPos.z < 1.0 && shadowPos.z > shadowDepth {
+		return true;
+	}
+	return false;
+}
+
+fn drawShadowMap(uv: vec2f, color: vec4f, shadowLayer: i32) -> vec4f {
 	let size = vec2(0.3);
 	if uv.x > size.x || uv.y > size.y {
 		return color;
@@ -314,8 +364,8 @@ fn drawShadowMap(uv: vec2f, color: vec4f) -> vec4f {
 	let suv = vec2(uv.x / size.x, 1.0 - (uv.y / size.y));
 	let shadowSize = vec2f(textureDimensions(shadowTex));
 	let coords = vec2u(suv * shadowSize);
-	let pixel = textureLoad(shadowTex, coords, 0).rrr;
-	let pos = worldFromScreen(suv, pixel.r, u.lightVp);
+	let pixel = textureLoad(shadowTex, coords, shadowLayer, 0).rrr;
+	let pos = worldFromScreen(suv, pixel.r, u.lightVp[shadowLayer]);
 	return mix(vec4(suv, 0.0, 1.0), vec4(pixel, 1.0), 0.9);
 }
 

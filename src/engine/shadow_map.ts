@@ -1,22 +1,26 @@
-import { Gfx, Size } from 'engine';
-import { identity } from './math/transform';
-import { Matrix4 } from './math';
+import { Gfx } from 'engine';
+import { Vector3 } from './math';
 
 export class ShadowMap {
 	/**
 	 * Texture to store the shadow map
 	 */
 	texture: GPUTexture;
-	private _size: Size = [512, 512];
-	private _viewProjection: Matrix4;
+	private _size: Vector3;
 
-	get size(): [number, number] {
+	get size(): Vector3 {
 		return [...this._size];
 	}
 
-	constructor(readonly gfx: Gfx, size: Size = [512, 512]) {
+	constructor(readonly gfx: Gfx, size: Vector3) {
+		const { device } = gfx;
 		this._size = size;
-		this._viewProjection = identity();
-		this.texture = gfx.createTexture('depth32float', size, 'ShadowMap Texture');
+		this.texture = device.createTexture({
+			label: 'ShadowMap Texture',
+			format: 'depth32float',
+			size,
+			dimension: '2d',
+			usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+		});
 	}
 }

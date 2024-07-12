@@ -61,7 +61,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const pipelineDescriptor: GPURenderPipelineDescriptor = {
 			label: 'RenderMeshPipeline',
 			layout: pipelineLayout,
-			vertex: { 
+			vertex: {
 				module: shader,
 				entryPoint: 'vs_main',
 				buffers: [offsetInstanceLayout]
@@ -109,7 +109,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		const pipelineShadowDescriptor: GPURenderPipelineDescriptor = {
 			label: 'RenderMeshPipeline ShadowMap',
 			layout: pipelineLayout,
-			vertex: { 
+			vertex: {
 				module: shader,
 				entryPoint: 'vs_main',
 				buffers: [offsetInstanceLayout],
@@ -137,39 +137,49 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		}
 		const { device } = this.gfx;
 
-		const depthView = target.texture.createView();
-
-		const passDescriptor: GPURenderPassDescriptor = {
-			colorAttachments: [ ],
-			depthStencilAttachment: { 
-				view: depthView,
-				depthLoadOp: 'load',
-				depthStoreOp: 'store',
-			}
-		};
-
-		const pass = encoder.beginRenderPass(passDescriptor);
-		pass.setPipeline(this.pipelineShadowMap);
-
-		for (const src of entities) {
-			if (!src.visible || src.object.vertexCount === 0 || src.object.instanceCount === 0) {
-				continue;
-			}
-			const bindGroup = device.createBindGroup({
-				label: 'RenderMeshPipeline Pass ShadowMap Bind Group',
-				layout: this.pipeline.getBindGroupLayout(0),
-				entries: [
-					{ binding: 0, resource: light.uniform.bindingResource() },
-					{ binding: 1, resource: src.bindingResource() },
-					{ binding: 2, resource: src.material.bindingResource() },
-					{ binding: 3, resource: { buffer: src.object.vertexBuffer } },
-				],
+		const shadowLayerCount = light.layers.length;
+		for (let i = 0; i < shadowLayerCount; i++) {
+			const depthView = target.texture.createView({
+				label: `RenderMeshPipeline ShadowMap[${i}] DepthView`,
+				dimension: '2d-array',
+				baseArrayLayer: i,
+				arrayLayerCount: 1,
 			});
-			pass.setBindGroup(0, bindGroup);
-			pass.setVertexBuffer(0, src.object.instanceBuffer);
-			pass.draw(src.object.vertexCount, src.object.instanceCount);
+
+			const passDescriptor: GPURenderPassDescriptor = {
+				label: `RenderMeshPipeline ShadowMap[${i}] Render Pass`,
+				colorAttachments: [],
+				depthStencilAttachment: {
+					view: depthView,
+					depthLoadOp: 'load',
+					depthStoreOp: 'store',
+				}
+			};
+
+			const pass = encoder.beginRenderPass(passDescriptor);
+			pass.setPipeline(this.pipelineShadowMap);
+
+			for (const src of entities) {
+				if (!src.visible || src.object.vertexCount === 0 || src.object.instanceCount === 0) {
+					continue;
+				}
+				const bindGroup = device.createBindGroup({
+					label: `RenderMeshPipeline ShadowMap[${i}] Bind Group`,
+					layout: this.pipeline.getBindGroupLayout(0),
+					entries: [
+						// @ts-ignore
+						{ binding: 0, resource: ('uniforms' in light ? light.uniforms[i] : light.uniform).bindingResource() },
+						{ binding: 1, resource: src.bindingResource() },
+						{ binding: 2, resource: src.material.bindingResource() },
+						{ binding: 3, resource: { buffer: src.object.vertexBuffer } },
+					],
+				});
+				pass.setBindGroup(0, bindGroup);
+				pass.setVertexBuffer(0, src.object.instanceBuffer);
+				pass.draw(src.object.vertexCount, src.object.instanceCount);
+			}
+			pass.end();
 		}
-		pass.end();
 	}
 
 	drawBatch(encoder: GPUCommandEncoder, pawns: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer) {

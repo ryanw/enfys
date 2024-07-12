@@ -106,7 +106,7 @@ export class Gfx {
 			alphaMode: 'premultiplied',
 		});
 
-		this.shadowMap = new ShadowMap(this, [4096, 4096]);
+		this.shadowMap = new ShadowMap(this, [1536, 1536, 6]);
 		this.gbuffer = new GBuffer(this);
 		this.updateSize();
 
@@ -215,7 +215,7 @@ export class Gfx {
 	 */
 	async encode(callback: (encoder: GPUCommandEncoder) => Promise<void>) {
 		const { device } = this;
-		const encoder = device.createCommandEncoder();
+		const encoder = device.createCommandEncoder({ label: "Root Encoder" });
 		await callback(encoder);
 		if (this.gbuffer.size.join(',') !== this.framebufferSize.join(',')) {
 			// Canvas resized during render, ignore this draw

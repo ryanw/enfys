@@ -311,7 +311,7 @@ export function buildIcosphere<T>(divisions: number, callback: (position: Point3
 
 
 export function subdivideFace(face: Triangle, divisions: number): Array<Triangle> {
-	if (divisions == 0) {
+	if (divisions <= 0) {
 		return [face];
 	}
 	const [a, b, c] = face;
@@ -319,7 +319,7 @@ export function subdivideFace(face: Triangle, divisions: number): Array<Triangle
 	const e: Point3 = scale(add(b, c), 0.5);
 	const f: Point3 = scale(add(c, a), 0.5);
 
-	let faces: Array<Triangle> = [[a, d, f], [d, b, e], [f, e, c], [f, d, e]];
+	const faces: Array<Triangle> = [[a, d, f], [d, b, e], [f, e, c], [f, d, e]];
 	return faces.flatMap(face => subdivideFace(face, divisions - 1))
 }
 

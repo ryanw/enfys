@@ -53,12 +53,12 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('cube', new Cube(gfx, 0.5));
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
 	graphics.insertResource('decor-rocks', new RockMesh(gfx, seed + 41, 8));
-	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 128));
+	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 32));
 	graphics.insertResource('decor-tufts-1', new TuftMesh(gfx, seed + 11, 8));
 	graphics.insertResource('decor-tufts-2', new TuftMesh(gfx, seed + 22, 8));
 	graphics.insertResource('decor-cubes', new Cube(gfx, 0.2));
-	graphics.insertResource('decor-flowers-1', new FlowersMesh(gfx, seed + 64, 64));
-	graphics.insertResource('decor-flowers-2', new FlowersMesh(gfx, seed + 94, 64));
+	graphics.insertResource('decor-flowers-1', new FlowersMesh(gfx, seed + 64, 32));
+	graphics.insertResource('decor-flowers-2', new FlowersMesh(gfx, seed + 94, 32));
 
 	// World simulation
 	const world = new World();

@@ -8,6 +8,7 @@ export type UniformOffsets = Record<string, [WgslType, number]>;
 export type ByteSize = number;
 export type Alignment = number;
 
+export type UniformRecord = Record<string, boolean | number | Array<number>>;
 
 /**
  * Storage for a struct inside a {@link GPUBuffer} which can be bound as a uniform in shaders.
@@ -47,7 +48,7 @@ export class UniformBuffer {
 	/**
 	 * Replace the entire uniform with new data. You must provide every field.
 	 */
-	replace(fields: Record<string, boolean | number | Array<number>>) {
+	replace(fields: UniformRecord) {
 		const theirKeys = new Set(Object.keys(fields));
 		const ourKeys = new Set(Object.keys(this.offsets));
 		// @ts-expect-error FIXME symmetricDifference isn't in the types
@@ -165,7 +166,7 @@ function calculateBufferSize(offsets: UniformOffsets): number {
 		total += size;
 	}
 
-	return Math.max(total, 256);
+	return Math.max(Math.ceil(total / 16) * 16, 256);
 }
 
 function calculateOffsets(mapping: UniformMapping): UniformOffsets {

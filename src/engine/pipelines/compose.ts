@@ -2,7 +2,7 @@ import { Color, Config, Gfx } from 'engine';
 import { Pipeline } from './';
 import shaderSource from './compose.wgsl';
 import { GBuffer } from 'engine/gbuffer';
-import { UniformBuffer } from 'engine/uniform_buffer';
+import { UniformBuffer, UniformRecord } from 'engine/uniform_buffer';
 import { identity, inverse, multiply } from 'engine/math/transform';
 import { Camera } from 'engine/camera';
 import { Point3 } from 'engine/math';
@@ -71,7 +71,7 @@ export class ComposePipeline extends Pipeline {
 				{
 					binding: 6,
 					visibility: GPUShaderStage.FRAGMENT,
-					texture: { sampleType: 'unfilterable-float' }
+					texture: { viewDimension: '2d-array', sampleType: 'unfilterable-float' }
 				},
 			]
 		});
@@ -105,8 +105,12 @@ export class ComposePipeline extends Pipeline {
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['invMvp', 'mat4x4f'],
 			['light', 'vec4f'],
-			['lightVp', 'mat4x4f'],
-			['invLightVp', 'mat4x4f'],
+			['lightVp[0]', 'mat4x4f'],
+			['lightVp[1]', 'mat4x4f'],
+			['lightVp[2]', 'mat4x4f'],
+			['lightVp[3]', 'mat4x4f'],
+			['lightVp[4]', 'mat4x4f'],
+			['lightVp[5]', 'mat4x4f'],
 			['playerPosition', 'vec3f'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
@@ -142,11 +146,9 @@ export class ComposePipeline extends Pipeline {
 		const targetView = target.createView();
 
 		const cameraInvMvp = inverse(multiply(camera.projection, camera.view));
-		this.uniformBuffer.replace({
+		const uniformData: UniformRecord = {
 			invMvp: cameraInvMvp || identity(),
 			light: [...light.direction, 0],
-			lightVp: multiply(light.projection, light.view),
-			invLightVp: inverse(multiply(light.projection, light.view))!,
 			playerPosition: camera.position,
 			ditherSize: this.config.ditherSize,
 			ditherDepth: this.config.ditherDepth,
@@ -154,7 +156,14 @@ export class ComposePipeline extends Pipeline {
 			renderMode: this.config.renderMode,
 			fog: this.config.fog,
 			t: performance.now() / 1000.0,
-		});
+		};
+
+		for (let i = 0; i < light.layers.length; i++) {
+			const layer = light.layers[i];
+			uniformData[`lightVp[${i}]`] = multiply(layer.projection, layer.view);
+		}
+
+		this.uniformBuffer.replace(uniformData);
 
 		const clearValue = clear.map(v => v / 255);
 		const passDescriptor: GPURenderPassDescriptor = {

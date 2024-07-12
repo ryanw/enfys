@@ -99,14 +99,12 @@ export class WorldGraphics {
 
 			let light = this.lights.get(entity);
 			if (!light) {
-				scene.light = new DirectionalLight(this.gfx);
+				scene.light = new DirectionalLight(this.gfx, 6);
 				light = scene.light;
 				this.lights.set(entity, light);
 			}
-			light.position = lightPosition;
 			light.rotation = lightRotation;
-			const camera = scene.primaryCamera;
-			light.updateForCamera(camera);
+			light.updateForCamera(scene.primaryCamera);
 		}
 
 		const removed: Array<Entity> = [...this.lights.keys()].filter(e => !saw.has(e));

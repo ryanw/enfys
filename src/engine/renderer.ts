@@ -118,16 +118,23 @@ export class Renderer {
 	}
 
 	clearShadows(encoder: GPUCommandEncoder, target: ShadowMap) {
-		const depthView = target.texture.createView();
-		encoder.beginRenderPass({
-			colorAttachments: [
-			],
-			depthStencilAttachment: {
-				view: depthView,
-				depthClearValue: 1.0,
-				depthLoadOp: 'clear',
-				depthStoreOp: 'store',
-			}
-		}).end();
+		const layerCount = target.texture.depthOrArrayLayers;
+		for (let i = 0; i < layerCount; i++) {
+			const depthView = target.texture.createView({
+				dimension: '2d-array',
+				baseArrayLayer: i,
+				arrayLayerCount: 1,
+			});
+			encoder.beginRenderPass({
+				label: 'Clear Shadows Pass',
+				colorAttachments: [],
+				depthStencilAttachment: {
+					view: depthView,
+					depthClearValue: 1.0,
+					depthLoadOp: 'clear',
+					depthStoreOp: 'store',
+				}
+			}).end();
+		}
 	}
 }

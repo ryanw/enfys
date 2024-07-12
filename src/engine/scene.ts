@@ -28,7 +28,6 @@ export class Scene {
 	constructor(readonly gfx: Gfx) {
 		this.addCamera(new Camera(gfx));
 		this.light = new DirectionalLight(gfx);
-		this.light.position = [0, 0, 0];
 		this.shadowBuffer = new ShadowBuffer(gfx, 32);
 		this.light.rotate(0.2, -0.3);
 		this.shadowBuffer.push({

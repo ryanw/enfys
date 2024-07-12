@@ -5,135 +5,87 @@ import { identity, inverse, multiply, multiplyVector, orthographicProjection, pe
 import { add, normalize, scale, subtract } from './math/vectors';
 import { Camera } from './camera';
 
+export type LightLayer = {
+	position: Point3,
+	size: Vector3,
+	view: Matrix4,
+	projection: Matrix4,
+};
+
 export class Light {
-	readonly uniform: UniformBuffer;
-	private _position: Point3 = [0.0, 0.0, 0.0];
+	readonly uniforms: Array<UniformBuffer> = [];
+	readonly layers: Array<LightLayer> = [];
 	private _rotation: Vector3 = [0.0, 0.0, 0.0];
-	private _view: Matrix4 = identity();
-	private _projection: Matrix4 = identity();
-	private _aspect: number = 1.0;
-	private _fov: number = 45.0;
-	private _near: number = 1.0;
-	private _far: number = 20000.0;
-	private _size: Vector3 = [1, 1, 1];
 
-	constructor(readonly gfx: Gfx) {
-		// FIXME must match Camera's uniform structure
-		this.uniform = new UniformBuffer(gfx, [
-			['view', 'mat4x4f'],
-			['projection', 'mat4x4f'],
-			['resolution', 'vec2f'],
-			['t', 'f32'],
-			['isShadowMap', 'u32'],
-		]);
-		this.rebuildProjection();
-		this.updateView();
-	}
-
-	get position(): Point3 {
-		return [...this._position];
+	constructor(readonly gfx: Gfx, readonly shadowMapCount: number = 1) {
+		for (let i = 0; i < shadowMapCount; i++) {
+			this.layers.push({
+				position: [0, 0, 0],
+				size: [1, 1, 1],
+				view: identity(),
+				projection: identity(),
+			});
+			// Must match Camera's uniform structure
+			this.uniforms.push(new UniformBuffer(gfx, [
+				['view', 'mat4x4f'],
+				['projection', 'mat4x4f'],
+				['resolution', 'vec2f'],
+				['t', 'f32'],
+				['isShadowMap', 'u32'],
+			]));
+		}
+		this.rebuildProjections();
 	}
 
 	get rotation(): Vector3 {
 		return [...this._rotation];
 	}
 
-	get size(): Vector3 {
-		return [...this._size];
-	}
-
-	set position(position: Point3) {
-		this._position = [...position];
-		this.updateView();
-	}
-
 	set rotation(rotation: Vector3) {
 		this._rotation = [...rotation];
-		this.updateView();
+		this.updateViews();
 	}
 
-	set size(size: Vector3) {
-		this._size = [...size];
-		this.rebuildProjection();
+	rebuildProjections() {
+		for (const layer of this.layers) {
+			layer.projection = orthographicProjection(
+				-layer.size[0] / 2,
+				layer.size[0] / 2,
+				-layer.size[1] / 2,
+				layer.size[1] / 2,
+				layer.size[2] + layer.size[2] / 2,
+				-layer.size[2] + layer.size[2] / 2,
+			);
+		}
+		this.updateViews();
 	}
 
-	get view(): Matrix4 {
-		return [...this._view];
+	updateUniforms() {
+		for (let i = 0; i < this.layers.length; i++) {
+			const layer = this.layers[i];
+			this.uniforms[i].replace({
+				view: layer.view,
+				projection: layer.projection,
+				resolution: [32, 32],
+				t: performance.now() / 1000,
+				isShadowMap: true,
+			});
+		}
 	}
 
-	get projection(): Matrix4 {
-		return [...this._projection];
-	}
-
-	get aspect(): number {
-		return this._aspect;
-	}
-
-	set aspect(a: number) {
-		this._aspect = a;
-		this.rebuildProjection();
-	}
-
-	get near(): number {
-		return this._near;
-	}
-
-	set near(near: number) {
-		this._near = near;
-		this.rebuildProjection();
-	}
-
-	get far(): number {
-		return this._far;
-	}
-
-	set far(far: number) {
-		this._far = far;
-		this.rebuildProjection();
-	}
-
-	get fov(): number {
-		return this._fov;
-	}
-
-	set fov(fov: number) {
-		this._fov = fov;
-		this.rebuildProjection();
-	}
-
-	rebuildProjection() {
-		this._projection = orthographicProjection(
-			-this._size[0] / 2,
-			this._size[0] / 2,
-			-this._size[1] / 2,
-			this._size[1] / 2,
-			this._size[2] + this._size[2]/2,
-			-this._size[2] + this._size[2]/2,
-		);
-		this.updateView();
-	}
-
-	updateUniform() {
-		this.uniform.replace({
-			view: this.view,
-			projection: this.projection,
-			resolution: [32, 32],
-			t: performance.now() / 1000,
-			isShadowMap: true,
-		});
-	}
-
-	updateView() {
+	updateViews() {
 		const rot = this.rotationMatrix();
-		const tra = translation(...this._position);
-		const view = multiply(tra, rot);
-		this._view = inverse(view)!;
-		this.updateUniform();
+		for (const layer of this.layers) {
+			const tra = translation(...layer.position);
+			const view = multiply(tra, rot);
+			layer.view = inverse(view)!;
+		}
+		this.updateUniforms();
 	}
 
 	/**
 	 * Move the light relative to its current position
-	 * @param direction Direction and amount to move the camera
+	 * @param direction Direction and amount to move the light
 	 */
 	translate(direction: Vector3) {
 		const trans = translation(...direction);
@@ -142,9 +94,11 @@ export class Light {
 			rotation(this._rotation[0], 0, 0),
 		);
 		const invRot = inverse(rot)!;
-		const pos = transformPoint(multiply(trans, invRot), this._position);
-		this._position = transformPoint(rot, pos);
-		this.updateView();
+		for (const layer of this.layers) {
+			const pos = transformPoint(multiply(trans, invRot), layer.position);
+			layer.position = transformPoint(rot, pos);
+		}
+		this.updateViews();
 	}
 
 	/**
@@ -158,12 +112,7 @@ export class Light {
 		this._rotation[0] += Math.PI * pitch;
 		this._rotation[1] += Math.PI * yaw;
 		this._rotation[2] += Math.PI * roll;
-		this.updateView();
-	}
-
-	rotationVector(): Vector3 {
-		const vec = multiplyVector(this._view, [0.0, 0.0, 1.0, 0.0]);
-		return [vec[0], vec[1], vec[2]];
+		this.updateViews();
 	}
 
 	rotationMatrix(): Matrix4 {
@@ -179,8 +128,8 @@ export class PointLight extends Light {
 }
 
 export class DirectionalLight extends Light {
-	constructor(gfx: Gfx) {
-		super(gfx);
+	constructor(gfx: Gfx, layerCount: number = 1) {
+		super(gfx, layerCount);
 	}
 
 	get direction(): Vector3 {
@@ -188,18 +137,23 @@ export class DirectionalLight extends Light {
 	}
 
 	/**
-	 * Moves the direction light so it surrounds a camera's view frustum
+	 * Moves a directional light so it surrounds a camera's view frustum
 	 */
 	updateForCamera(camera: Camera) {
-		const shadowVolume = buildLightVolume(camera, this, 0.97);
-		this.size = shadowVolume.size;
-		this.position = shadowVolume.position;
+		const rot = this.rotationMatrix();
+		let depth = 0.90;
+		for (const layer of this.layers) {
+			const shadowVolume = buildLightVolume(camera, rot, depth);
+			layer.size = shadowVolume.size;
+			layer.position = shadowVolume.position;
+			depth += (1.0 - depth) * 0.5;
+		}
+		this.rebuildProjections();
 	}
 }
 
-function buildLightVolume(camera: Camera, light: Light, maxDist: number = 1.0): Volume {
-	const lightTransform = light.rotationMatrix();
-	const invLightTransform = inverse(lightTransform)!;
+function buildLightVolume(camera: Camera, lightRotation: Matrix4, maxDist: number = 1.0): Volume {
+	const invLightRotation = inverse(lightRotation)!;
 	const vp = inverse(multiply(camera.projection, camera.view))!;
 	let frustum: Array<Point3> = [
 		// Left, Bottom, Near
@@ -223,7 +177,7 @@ function buildLightVolume(camera: Camera, light: Light, maxDist: number = 1.0): 
 	frustum = frustum.map(p => transformPoint(vp, p));
 
 	// Transfrom from world to lightspace
-	const points = frustum.map(p => transformPoint(invLightTransform, p));
+	const points = frustum.map(p => transformPoint(invLightRotation, p));
 
 	// Find bounding box in light space
 	const minCoord = [...points[0]];
@@ -248,8 +202,8 @@ function buildLightVolume(camera: Camera, light: Light, maxDist: number = 1.0): 
 		0.5,
 	) as Point3;
 
-	const transform = lightTransform;
-	const origin = transformPoint(lightTransform, centre);
+	const transform = lightRotation;
+	const origin = transformPoint(lightRotation, centre);
 
 	return { position: origin, size, rotation: transform };
 }
