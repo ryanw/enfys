@@ -137,7 +137,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		}
 		const { device } = this.gfx;
 
-		const shadowLayerCount = light.layers.length;
+		const shadowLayerCount = light.cascades.length;
 		for (let i = 0; i < shadowLayerCount; i++) {
 			const depthView = target.texture.createView({
 				label: `RenderMeshPipeline ShadowMap[${i}] DepthView`,

@@ -1,4 +1,4 @@
-@import "engine/shaders/noise.wgsl";
+const DITHER_SHADOWS: bool = true;
 
 struct PackedVertex {
 	position: array<f32, 3>,
@@ -149,7 +149,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		color *= 1.0 - depth;
 	}
 
-	if camera.isShadowMap > 0 {
+	if !DITHER_SHADOWS && camera.isShadowMap > 0 {
 		// Very translucent objects don't cast shadows
 		if color.a < 0.5 {
 			discard;
@@ -191,3 +191,5 @@ fn sdPentagon(q: vec2f, r: f32) -> f32 {
 
 @import "engine/shaders/helpers.wgsl";
 @import "engine/shaders/color.wgsl";
+@import "engine/shaders/noise.wgsl";
+

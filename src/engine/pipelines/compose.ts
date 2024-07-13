@@ -109,8 +109,6 @@ export class ComposePipeline extends Pipeline {
 			['lightVp[1]', 'mat4x4f'],
 			['lightVp[2]', 'mat4x4f'],
 			['lightVp[3]', 'mat4x4f'],
-			['lightVp[4]', 'mat4x4f'],
-			['lightVp[5]', 'mat4x4f'],
 			['playerPosition', 'vec3f'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
@@ -158,8 +156,8 @@ export class ComposePipeline extends Pipeline {
 			t: performance.now() / 1000.0,
 		};
 
-		for (let i = 0; i < light.layers.length; i++) {
-			const layer = light.layers[i];
+		for (let i = 0; i < light.cascades.length; i++) {
+			const layer = light.cascades[i];
 			uniformData[`lightVp[${i}]`] = multiply(layer.projection, layer.view);
 		}
 

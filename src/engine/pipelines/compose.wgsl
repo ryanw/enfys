@@ -3,7 +3,7 @@ const DRAW_SHADOWS: bool = true;
 const DRAW_WATER: bool = true;
 const DRAW_FOG: bool = true;
 const EDGE_MODE: i32 = 2;
-const DEBUG_SHADOW_MAP: bool = false;
+const DEBUG_SHADOW_MAP: i32 = -1;
 
 struct VertexOut {
 	@builtin(position) position: vec4f,
@@ -13,7 +13,7 @@ struct VertexOut {
 struct Uniforms {
 	invMvp: mat4x4f,
 	light: vec4f,
-	lightVp: array<mat4x4f, 6>,
+	lightVp: array<mat4x4f, 4>,
 	playerPosition: vec3f,
 	ditherSize: i32,
 	ditherDepth: i32,
@@ -255,11 +255,11 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		let sp = 0.03;
 		let n = normal*0.02;
 		let shadowSamples: array<bool, 5> = array(
-			isInShadow(pos + n),
-			isInShadow(pos + vec3(sp, 0.0, 0.0) + n),
-			isInShadow(pos + vec3(0.0, 0.0, sp) + n),
-			isInShadow(pos - vec3(sp, 0.0, 0.0) + n),
-			isInShadow(pos - vec3(0.0, 0.0, sp) + n),
+			isInShadow(pos, normal),
+			isInShadow(pos + vec3(sp, 0.0, 0.0), normal),
+			isInShadow(pos + vec3(0.0, 0.0, sp), normal),
+			isInShadow(pos - vec3(sp, 0.0, 0.0), normal),
+			isInShadow(pos - vec3(0.0, 0.0, sp), normal),
 		);
 
 		var shadow = 0.0;
@@ -302,16 +302,17 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		color = mix(color, fogColor, fogFactor);
 	}
 
-	if DEBUG_SHADOW_MAP {
-		color = drawShadowMap(in.uv, color, 0);
+	if DEBUG_SHADOW_MAP > -1 {
+		color = drawShadowMap(in.uv, color, DEBUG_SHADOW_MAP);
 	}
 
 	return color;
 }
 
-fn isInShadow(p: vec3f) -> bool {
-	for (var i = 0; i < 6; i++) {
-		var d = depthInShadowLayer(p, i);
+fn isInShadow(p: vec3f, normal: vec3f) -> bool {
+	for (var i = 0; i < 4; i++) {
+		let n = normal * 0.07 * f32(i + 1);
+		var d = depthInShadowCascade(p + n, i);
 		if d < 0.0 {
 			continue;
 		}
@@ -320,7 +321,7 @@ fn isInShadow(p: vec3f) -> bool {
 	return false;
 }
 
-fn depthInShadowLayer(p: vec3f, shadowLayer: i32) -> f32 {
+fn depthInShadowCascade(p: vec3f, shadowLayer: i32) -> f32 {
 	let shadowSize = vec2f(textureDimensions(shadowTex));
 	let shadowPos = u.lightVp[shadowLayer] * vec4(p, 1.0);
 	let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;
@@ -339,7 +340,7 @@ fn depthInShadowLayer(p: vec3f, shadowLayer: i32) -> f32 {
 	return 0.0;
 }
 
-fn isInShadowLayer(p: vec3f, shadowLayer: i32) -> bool {
+fn isInShadowCascade(p: vec3f, shadowLayer: i32) -> bool {
 	let shadowSize = vec2f(textureDimensions(shadowTex));
 	let shadowPos = u.lightVp[shadowLayer] * vec4(p, 1.0);
 	let suv = (shadowPos.xy/shadowPos.w) * 0.5 + 0.5;

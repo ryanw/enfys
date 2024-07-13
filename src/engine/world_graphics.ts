@@ -99,7 +99,7 @@ export class WorldGraphics {
 
 			let light = this.lights.get(entity);
 			if (!light) {
-				scene.light = new DirectionalLight(this.gfx, 6);
+				scene.light = new DirectionalLight(this.gfx, 4);
 				light = scene.light;
 				this.lights.set(entity, light);
 			}

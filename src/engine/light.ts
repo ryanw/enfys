@@ -5,7 +5,7 @@ import { identity, inverse, multiply, multiplyVector, orthographicProjection, pe
 import { add, normalize, scale, subtract } from './math/vectors';
 import { Camera } from './camera';
 
-export type LightLayer = {
+export type LightCascade = {
 	position: Point3,
 	size: Vector3,
 	view: Matrix4,
@@ -14,12 +14,12 @@ export type LightLayer = {
 
 export class Light {
 	readonly uniforms: Array<UniformBuffer> = [];
-	readonly layers: Array<LightLayer> = [];
+	readonly cascades: Array<LightCascade> = [];
 	private _rotation: Vector3 = [0.0, 0.0, 0.0];
 
-	constructor(readonly gfx: Gfx, readonly shadowMapCount: number = 1) {
-		for (let i = 0; i < shadowMapCount; i++) {
-			this.layers.push({
+	constructor(readonly gfx: Gfx, readonly cascadeCount: number = 1) {
+		for (let i = 0; i < cascadeCount; i++) {
+			this.cascades.push({
 				position: [0, 0, 0],
 				size: [1, 1, 1],
 				view: identity(),
@@ -47,25 +47,25 @@ export class Light {
 	}
 
 	rebuildProjections() {
-		for (const layer of this.layers) {
-			layer.projection = orthographicProjection(
-				-layer.size[0] / 2,
-				layer.size[0] / 2,
-				-layer.size[1] / 2,
-				layer.size[1] / 2,
-				layer.size[2] + layer.size[2] / 2,
-				-layer.size[2] + layer.size[2] / 2,
+		for (const cascade of this.cascades) {
+			cascade.projection = orthographicProjection(
+				-cascade.size[0] / 2,
+				cascade.size[0] / 2,
+				-cascade.size[1] / 2,
+				cascade.size[1] / 2,
+				cascade.size[2] + cascade.size[2] / 2,
+				-cascade.size[2] + cascade.size[2] / 2,
 			);
 		}
 		this.updateViews();
 	}
 
 	updateUniforms() {
-		for (let i = 0; i < this.layers.length; i++) {
-			const layer = this.layers[i];
+		for (let i = 0; i < this.cascades.length; i++) {
+			const cascade = this.cascades[i];
 			this.uniforms[i].replace({
-				view: layer.view,
-				projection: layer.projection,
+				view: cascade.view,
+				projection: cascade.projection,
 				resolution: [32, 32],
 				t: performance.now() / 1000,
 				isShadowMap: true,
@@ -75,10 +75,10 @@ export class Light {
 
 	updateViews() {
 		const rot = this.rotationMatrix();
-		for (const layer of this.layers) {
-			const tra = translation(...layer.position);
+		for (const cascade of this.cascades) {
+			const tra = translation(...cascade.position);
 			const view = multiply(tra, rot);
-			layer.view = inverse(view)!;
+			cascade.view = inverse(view)!;
 		}
 		this.updateUniforms();
 	}
@@ -94,9 +94,9 @@ export class Light {
 			rotation(this._rotation[0], 0, 0),
 		);
 		const invRot = inverse(rot)!;
-		for (const layer of this.layers) {
-			const pos = transformPoint(multiply(trans, invRot), layer.position);
-			layer.position = transformPoint(rot, pos);
+		for (const cascade of this.cascades) {
+			const pos = transformPoint(multiply(trans, invRot), cascade.position);
+			cascade.position = transformPoint(rot, pos);
 		}
 		this.updateViews();
 	}
@@ -128,8 +128,8 @@ export class PointLight extends Light {
 }
 
 export class DirectionalLight extends Light {
-	constructor(gfx: Gfx, layerCount: number = 1) {
-		super(gfx, layerCount);
+	constructor(gfx: Gfx, cascadeCount: number = 1) {
+		super(gfx, cascadeCount);
 	}
 
 	get direction(): Vector3 {
@@ -141,29 +141,36 @@ export class DirectionalLight extends Light {
 	 */
 	updateForCamera(camera: Camera) {
 		const rot = this.rotationMatrix();
-		let depth = 0.90;
-		for (const layer of this.layers) {
-			const shadowVolume = buildLightVolume(camera, rot, depth);
-			layer.size = shadowVolume.size;
-			layer.position = shadowVolume.position;
-			depth += (1.0 - depth) * 0.5;
+		let minDepth = 0.0;
+		let maxDepth = 0.96;
+		for (let i = 0; i < this.cascades.length; i++) {
+			if (i === this.cascades.length - 1) {
+				// Last one is always (almost) the whole view frustum
+				maxDepth = 0.9997;
+			}
+			const cascade = this.cascades[i];
+			const shadowVolume = buildLightVolume(camera, rot, minDepth, maxDepth);
+			cascade.size = shadowVolume.size;
+			cascade.position = shadowVolume.position;
+			minDepth = maxDepth;
+			maxDepth += (1.0 - maxDepth) * 0.75;
 		}
 		this.rebuildProjections();
 	}
 }
 
-function buildLightVolume(camera: Camera, lightRotation: Matrix4, maxDist: number = 1.0): Volume {
+function buildLightVolume(camera: Camera, lightRotation: Matrix4, minDist: number = 0.0, maxDist: number = 1.0): Volume {
 	const invLightRotation = inverse(lightRotation)!;
 	const vp = inverse(multiply(camera.projection, camera.view))!;
 	let frustum: Array<Point3> = [
 		// Left, Bottom, Near
-		[-1, -1, 0],
+		[-1, -1, minDist],
 		// Right, Bottom, Near
-		[1, -1, 0],
+		[1, -1, minDist],
 		// Left, Top, Near
-		[-1, 1, 0],
+		[-1, 1, minDist],
 		// Right, Top, Near
-		[1, 1, 0],
+		[1, 1, minDist],
 		// Left, Bottom, Far
 		[-1, -1, maxDist],
 		// Right, Bottom, Far
