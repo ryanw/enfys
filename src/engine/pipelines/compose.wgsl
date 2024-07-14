@@ -86,9 +86,15 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		uv.y = uv.y + n1;
 	}
 
-	let ripDepthCoord = vec2u(depthSize * uv);
-	let ripDepth = textureLoad(depthTex, depthCoord, 0).r;
-	let ripPos = worldFromScreen(uv, depth, u.invMvp);
+	var ripDepthCoord = vec2u(depthSize * uv);
+	var ripDepth = textureLoad(depthTex, ripDepthCoord, 0).r;
+	var ripPos = worldFromScreen(uv, ripDepth, u.invMvp);
+	// Don't show objects outside of the water as shimmering inside
+	if pos.y < 0.0 && ripPos.y >= 0.0 {
+		uv = in.uv;
+		ripDepth = depth;
+		ripPos = pos;
+	}
 
 	let albedo = textureSample(albedoTex, colorSampler, uv);
 
