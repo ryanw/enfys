@@ -76,8 +76,8 @@ export class Renderer {
 		}
 	}
 
-	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, light: DirectionalLight, shadows: ShadowMap, target: GPUTexture, clear?: Color) {
-		this.pipelines.compose.compose(encoder, src, camera, light, shadows, target, clear);
+	compose(encoder: GPUCommandEncoder, src: GBuffer, camera: Camera, light: DirectionalLight, shadows: ShadowMap, target: GPUTexture, waterColor: Color | number, clear?: Color) {
+		this.pipelines.compose.compose(encoder, src, camera, light, shadows, target, waterColor, clear);
 	}
 
 	clear(encoder: GPUCommandEncoder, target: GBuffer) {

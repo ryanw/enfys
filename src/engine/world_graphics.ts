@@ -187,6 +187,8 @@ export class WorldGraphics {
 			saw.add(entity);
 
 			const terrain = world.getComponent(entity, TerrainComponent)!;
+			const colors = new ColorScheme(terrain.colorSeed);
+			scene.waterColor = [...colors.scheme.water];
 			this.updateTerrainQueue(entity, terrain);
 			if (this.queuedTerrain.size === 0) {
 				this.removeExpiredTerrainChunks(entity, terrain, scene);

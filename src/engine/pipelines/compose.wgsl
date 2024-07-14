@@ -16,6 +16,7 @@ struct Uniforms {
 	light: vec4f,
 	lightVp: array<mat4x4f, 4>,
 	playerPosition: vec3f,
+	waterColor: u32,
 	ditherSize: i32,
 	ditherDepth: i32,
 	drawEdges: i32,
@@ -303,9 +304,11 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			let waterDepth = smoothstep(0.0, 1.5, pow(y, 0.4));
 			//let waterDepth = smoothstep(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
 			if waterDepth > 0.0 {
-				let waterColor = vec4(0.1, 0.15, 0.5, 1.0);
+				var waterColor = uintToColor(u.waterColor);
 				let foamColor = vec4(0.8, 0.9, 1.0, 1.0);
-				color = mix(color, waterColor, clamp(waterDepth + 0.3, 0.0, 1.0));
+				let a = waterColor.a;
+				waterColor.a = 1.0;
+				color = mix(color, waterColor, clamp(waterDepth + a, 0.0, 1.0));
 
 				// Foam near the edges
 				let foamEdge = 1.0 / 50.0;
@@ -406,3 +409,4 @@ fn intToColor(u: u32) -> vec4<f32> {
 
 @import "engine/shaders/helpers.wgsl";
 @import "engine/shaders/noise.wgsl";
+@import "engine/shaders/color.wgsl";

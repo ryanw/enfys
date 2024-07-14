@@ -8,6 +8,7 @@ import { Camera } from 'engine/camera';
 import { Point3 } from 'engine/math';
 import { DirectionalLight, Light } from 'engine/light';
 import { ShadowMap } from 'engine/shadow_map';
+import { colorToInt } from 'engine/color';
 
 /**
  * Composes a {@link GBuffer} onto a single {@link GPUTexture}
@@ -110,6 +111,7 @@ export class ComposePipeline extends Pipeline {
 			['lightVp[2]', 'mat4x4f'],
 			['lightVp[3]', 'mat4x4f'],
 			['playerPosition', 'vec3f'],
+			['waterColor', 'u32'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
 			['drawEdges', 'i32'],
@@ -137,6 +139,7 @@ export class ComposePipeline extends Pipeline {
 		light: DirectionalLight,
 		shadows: ShadowMap,
 		target: GPUTexture,
+		waterColor: Color | number,
 		clear: Color = [0, 0, 0, 0],
 	) {
 		const { device } = this.gfx;
@@ -148,6 +151,9 @@ export class ComposePipeline extends Pipeline {
 			invMvp: cameraInvMvp || identity(),
 			light: [...light.direction, 0],
 			playerPosition: camera.position,
+			waterColor: typeof waterColor === 'number'
+				? waterColor
+				: colorToInt(waterColor),
 			ditherSize: this.config.ditherSize,
 			ditherDepth: this.config.ditherDepth,
 			drawEdges: this.config.drawEdges,

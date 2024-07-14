@@ -2,9 +2,21 @@ import { Color } from 'engine';
 import { hsl } from 'engine/color';
 import { randomizer, Randomizer } from 'engine/noise';
 
+export type ColorList = {
+	water: Color;
+	beach: Color;
+	lush: Color;
+	dry: Color;
+	soil: Color;
+	sand: Color;
+	rock: Color;
+	snow: Color;
+}
+
 export class ColorScheme {
 	private rnd: Randomizer;
 	private _colors: Array<Color>;
+	scheme: ColorList;
 
 	constructor(
 		public seed: number,
@@ -15,6 +27,7 @@ export class ColorScheme {
 
 
 		const water = rndColor(0.6, 0.3);
+		water[3] = rnd(70, 150) | 0;
 		const beach = rndColor(0.3, 0.6);
 		const lush = rndColor(0.6, 0.5);
 		const dry = rndColor(0.3, 0.5);
@@ -23,6 +36,7 @@ export class ColorScheme {
 		const rock = rndColor(0.2, 0.7);
 		const snow = rndColor(0.1, 0.9);
 
+		this.scheme = { water, beach, lush, dry, soil, sand, rock, snow };
 		this._colors = [
 			beach,
 			beach,

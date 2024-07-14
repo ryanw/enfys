@@ -205,6 +205,7 @@ export class Gfx {
 				scene.light,
 				this.shadowMap,
 				this.currentTexture,
+				scene.waterColor,
 				scene.clearColor,
 			);
 		});
