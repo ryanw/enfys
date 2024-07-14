@@ -10,7 +10,7 @@ export class RockMesh extends VariantMesh {
 		const seed = this.seed + i * 342;
 		const rnd = randomizer(seed);
 		const rockSize = rnd(0.2, 1.0);
-		const vertices = buildIcosphere(2, p => ({
+		const vertices = buildIcosphere(1, p => ({
 			position: scale(p, rockSize),
 			normal: [0, 0, 0],
 			color: BigInt(0xff445566),

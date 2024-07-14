@@ -24,6 +24,7 @@ import { TuftMesh } from './meshes/tuft';
 import { TerrainSystem } from 'engine/ecs/systems/terrain';
 import { getParam } from 'engine/helpers';
 import { FlowersMesh } from './meshes/flowers';
+import { LSystem } from './lsystem';
 
 /**
  * Procedurally generated alien worlds
@@ -40,6 +41,7 @@ export async function main(el: HTMLCanvasElement) {
 	// Add the HTML UI stuff
 	ui(el.parentElement!, gfx, seed);
 
+
 	// Graphics objects
 	const scene = new Scene(gfx);
 	// Sky dome
@@ -52,10 +54,10 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('small-cube', new Cube(gfx, 0.1));
 	graphics.insertResource('cube', new Cube(gfx, 0.5));
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
-	graphics.insertResource('decor-rocks', new RockMesh(gfx, seed + 41, 8));
-	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 32));
-	graphics.insertResource('decor-tufts-1', new TuftMesh(gfx, seed + 11, 8));
-	graphics.insertResource('decor-tufts-2', new TuftMesh(gfx, seed + 22, 8));
+	graphics.insertResource('decor-rocks', new RockMesh(gfx, seed + 41, 4));
+	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 16));
+	graphics.insertResource('decor-tufts-1', new TuftMesh(gfx, seed + 11, 5));
+	graphics.insertResource('decor-tufts-2', new TuftMesh(gfx, seed + 22, 5));
 	graphics.insertResource('decor-cubes', new Cube(gfx, 0.2));
 	graphics.insertResource('decor-flowers-1', new FlowersMesh(gfx, seed + 64, 32));
 	graphics.insertResource('decor-flowers-2', new FlowersMesh(gfx, seed + 94, 32));
@@ -67,7 +69,6 @@ export async function main(el: HTMLCanvasElement) {
 	world.addSystem(new FreeCameraInputSystem(el));
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new TerrainSystem(gfx));
-	console.log('GO!', world, graphics);
 
 	const light = lightPrefab(world, [0.5, 0.7, 0.0]);
 	const player = playerPrefab(world, [0, 3, 0]);
@@ -81,8 +82,8 @@ export async function main(el: HTMLCanvasElement) {
 	const rocks1 = decorPrefab(world, 'decor-rocks', seed, 24, 4, orbitCam);
 	const trees0 = decorPrefab(world, 'decor-trees', seed, 48, 4, orbitCam);
 	const trees1 = decorPrefab(world, 'decor-trees', seed, 96, 4, orbitCam);
-	const tufts0 = decorPrefab(world, 'decor-tufts-1', seed, 2, 7, orbitCam);
-	const tufts1 = decorPrefab(world, 'decor-tufts-2', seed, 6, 5, orbitCam);
+	const tufts0 = decorPrefab(world, 'decor-tufts-1', seed, 3, 5, orbitCam);
+	const tufts1 = decorPrefab(world, 'decor-tufts-2', seed, 7, 4, orbitCam);
 	const terrain = terrainPrefab(world, seed, orbitCam);
 
 	world.run();

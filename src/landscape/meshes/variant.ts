@@ -8,15 +8,23 @@ export abstract class VariantMesh extends SimpleMesh {
 
 		for (let i = 0; i < variantCount; i++) {
 			const model = this.generateVariant(i);
-			if (i > 0 && model.length !== models[0].length) {
-				throw new Error("All variants must have the same number of vertices");
-			}
 			models.push(model);
 		}
 
+		console.log("GO", this);
+		padModels(models);
 		this.uploadVertices(models.flat(), models[0].length);
 	}
 
 	abstract generateVariant(i: number): Array<ColorVertex>;
 }
 
+function padModels(models: Array<Array<ColorVertex>>): Array<Array<ColorVertex>> {
+	const biggest = models.reduce((p, model) => Math.max(p, model.length), 0)
+	for (const model of models) {
+		while (model.length < biggest) {
+			model.push(model[0]);
+		}
+	}
+	return models;
+}

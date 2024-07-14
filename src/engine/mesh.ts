@@ -1,5 +1,5 @@
 import { Gfx, Size, Triangle, calculateNormals } from 'engine';
-import { PHI, Point2, Point3, Vector3, Vector4 } from './math';
+import { PHI, Point2, Point3, Vector2, Vector3, Vector4 } from './math';
 import { add, normalize, scale } from './math/vectors';
 
 /**
@@ -410,3 +410,71 @@ const ICOSAHEDRON_TRIS: Array<[number, number, number]> = [
 	[8, 6, 7],
 	[9, 8, 1],
 ];
+
+export function buildCylinder(
+	length: number,
+	radius: number,
+	divisions: [number, number],
+): Array<Point3> {
+	const [rd, hd] = divisions;
+
+	const topCap = buildDisc(radius, rd).map<Point3>(p => add(p, [0, 0.5, 0]));
+	const botCap = flipFaces(buildDisc(radius, rd).map<Point3>(p => add(p, [0, -0.5, 0])));
+
+	const vertices = [...topCap, ...botCap];
+
+	for (let i = 0; i < rd; i++) {
+		const x = i * 3;
+		const y = x + 1;
+		const d: Vector2 = [
+			(topCap[x][1] - botCap[y][1]) / hd,
+			(topCap[y][1] - botCap[x][1]) / hd,
+		];
+		for (let j = 0; j < hd; j++) {
+			const oy = (1 / hd) * j;
+
+			const tri0: Point3[] = [
+				add(botCap[x], [0, d[1] + oy, 0]),
+				add(botCap[y], [0, d[0] + oy, 0]),
+				add(botCap[x], [0, oy, 0]),
+			];
+			const tri1: Point3[] = [
+				add(botCap[y], [0, d[0] + oy, 0]),
+				add(botCap[y], [0, oy, 0]),
+				add(botCap[x], [0, oy, 0]),
+			];
+
+			vertices.push(...tri0);
+			vertices.push(...tri1);
+		}
+	}
+
+
+	return vertices.map(p => [p[0], p[1] * length, p[2]]);
+}
+
+export function buildDisc(radius: number, divisions: number): Point3[] {
+	const { cos, sin } = Math;
+
+	const vertices: Point3[] = [];
+	const div = (Math.PI * 2) / divisions;
+	for (let i = 0; i < divisions + 1; i++) {
+		const a0 = div * i;
+		const a1 = div * (i + 1);
+		const p0: Point3 = [cos(a1) * radius, 0, sin(a1) * radius];
+		const p1: Point3 = [cos(a0) * radius, 0, sin(a0) * radius];
+		const p2: Point3 = [0, 0, 0];
+		vertices.push(p0, p1, p2);
+	}
+	return vertices;
+}
+
+export function flipFaces(faces: Point3[]): Point3[] {
+	const flipped = new Array(faces.length);
+	for (let i = 0; i < faces.length - 2; i += 3) {
+		flipped[i + 0] = (faces[i + 1]);
+		flipped[i + 1] = (faces[i + 0]);
+		flipped[i + 2] = (faces[i + 2]);
+	}
+	return flipped;
+}

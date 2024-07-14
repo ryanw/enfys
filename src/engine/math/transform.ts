@@ -159,15 +159,15 @@ export function multiply(...mats: Array<Matrix4>): Matrix4 {
 	return result;
 }
 
-export function multiplyVector(m: Matrix4, v: Vector4): Vector4 {
-	const [x, y, z, w] = columns(m).map((c, i) => vec.scale(c, v[i]));
+export function multiplyVector<T extends Vector3 | Vector4>(m: Matrix4, v: T): T {
+	const [x, y, z, w] = columns(m).map((c, i) => vec.scale(c, v[i] || 0));
 
 	return [
 		x[0] + y[0] + z[0] + w[0],
 		x[1] + y[1] + z[1] + w[1],
 		x[2] + y[2] + z[2] + w[2],
 		x[3] + y[3] + z[3] + w[3],
-	];
+	].slice(0, v.length) as T;
 }
 
 export function transformPoint<P extends Point3 | Point4>(trans: Matrix4, p: P): P {
@@ -327,8 +327,38 @@ export function inverse(m: Matrix4): Matrix4 | null {
 	return inv;
 }
 
+export function lookAt(eye: Point3, target: Point3, up: Vector3 = [0, 1, 0]): Matrix4 {
+	const forward = normalize(vec.subtract(eye, target));
+	const right = normalize(vec.cross(forward, up));
+	const nup = vec.cross(right, forward);
+	return [
+		...vec.scale(right, 1), 0,
+		...vec.scale(nup, 1), 0,
+		...vec.scale(forward, -1), 0,
+		0, 0, 0, 1
+	];
+}
+
 export function rotationFromVector(direction: Vector3, forward: Vector3 = [0, 0, 1]): Matrix4 {
-	const angle = Math.acos(dot(normalize(forward), normalize(direction)));
+	const v = normalize(direction);
+	const w = normalize(forward);
+	const axis = cross(v, w);
+	const c = dot(v, w);
+	const s = vec.magnitude(axis);
+	if (s < 1e-6) {
+		return identity();
+	}
+	const [x, y, z] = normalize(axis);
+	const t = 1.0 - c;
+	return [
+		t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
+		t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
+		t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
+		0, 0, 0, 1
+	];
+}
+export function oldrotationFromVector(direction: Vector3, forward: Vector3 = [0, 0, 1]): Matrix4 {
+	const angle = -Math.acos(dot(normalize(forward), normalize(direction)));
 	const c = Math.cos(angle);
 	const s = Math.sin(angle);
 	const t = 1 - c;

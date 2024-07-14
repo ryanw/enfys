@@ -24,7 +24,7 @@ html, body {
 }
 #settings {
 	transition: opacity 1000ms;
-	opacity: 0.2;
+	opacity: 0.5;
 	width: 250px;
 	position: fixed;
 	z-index: 1000;
