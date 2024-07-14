@@ -1,6 +1,7 @@
 const BLEND_TO_ALPHA: bool = false;
 const DRAW_SHADOWS: bool = true;
 const DRAW_WATER: bool = true;
+const DISTORT_WATER: bool = true;
 const DRAW_FOG: bool = true;
 const EDGE_MODE: i32 = 2;
 const DEBUG_SHADOW_MAP: i32 = -1;
@@ -71,21 +72,34 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
-	let albedo = textureSample(albedoTex, colorSampler, in.uv);
-
-
-	let normalSize = vec2f(textureDimensions(normalTex));
-	let normalCoord = vec2u(normalSize * in.uv);
-	let normal = normalize(textureLoad(normalTex, normalCoord, 0).xyz);
+	var uv = in.uv;
 
 	let depthSize = vec2f(textureDimensions(depthTex));
-	let depthCoord = vec2u(depthSize * in.uv);
+	let depthCoord = vec2u(depthSize * uv);
 	let depth = textureLoad(depthTex, depthCoord, 0).r;
+	let pos = worldFromScreen(uv, depth, u.invMvp);
 
-	let pos = worldFromScreen(in.uv, depth, u.invMvp);
+	if DISTORT_WATER && pos.y < 0.0 {
+		let n0 = (fractalNoise(pos/64.0 + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
+		let n1 = (fractalNoise(pos/64.0 + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
+		uv.x = uv.x + n0;
+		uv.y = uv.y + n1;
+	}
+
+	let ripDepthCoord = vec2u(depthSize * uv);
+	let ripDepth = textureLoad(depthTex, depthCoord, 0).r;
+	let ripPos = worldFromScreen(uv, depth, u.invMvp);
+
+	let albedo = textureSample(albedoTex, colorSampler, uv);
+
+	let normalSize = vec2f(textureDimensions(normalTex));
+	let normalCoord = vec2u(normalSize * uv);
+	let normal = normalize(textureLoad(normalTex, normalCoord, 0).xyz);
+
+
 
 	let metaSize = vec2f(textureDimensions(metaTex));
-	let metaCoord = vec2u(metaSize * in.uv);
+	let metaCoord = vec2u(metaSize * uv);
 	let metaVal = textureLoad(metaTex, metaCoord, 0).r;
 
 	var isEdge = false;
@@ -100,7 +114,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 				for (var x = 0u; x < 2u; x++) {
 					let i = x + y * 2u;
 					let offset = vec2(i32(x), i32(y)) - 1;
-					let coord = vec2i(normalSize * in.uv) + offset;
+					let coord = vec2i(normalSize * uv) + offset;
 					let n = textureLoad(normalTex, coord, 0).xyz;
 					metas[i] = n;
 				}
@@ -193,8 +207,8 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	var renderMode = u.renderMode;
 	if renderMode == 1 {
 		// GBuffer split view
-		if in.uv.y < 0.5 {
-			if in.uv.x < 0.5 {
+		if uv.y < 0.5 {
+			if uv.x < 0.5 {
 				renderMode = 3;
 			}
 			else {
@@ -202,7 +216,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			}
 		}
 		else {
-			if in.uv.x < 0.5 {
+			if uv.x < 0.5 {
 				renderMode = 6;
 			}
 			else {
@@ -255,11 +269,11 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		let sp = 0.03;
 		let n = normal*0.02;
 		let shadowSamples: array<bool, 5> = array(
-			isInShadow(pos, normal),
-			isInShadow(pos + vec3(sp, 0.0, 0.0), normal),
-			isInShadow(pos + vec3(0.0, 0.0, sp), normal),
-			isInShadow(pos - vec3(sp, 0.0, 0.0), normal),
-			isInShadow(pos - vec3(0.0, 0.0, sp), normal),
+			isInShadow(ripPos, normal),
+			isInShadow(ripPos + vec3(sp, 0.0, 0.0), normal),
+			isInShadow(ripPos + vec3(0.0, 0.0, sp), normal),
+			isInShadow(ripPos - vec3(sp, 0.0, 0.0), normal),
+			isInShadow(ripPos - vec3(0.0, 0.0, sp), normal),
 		);
 
 		var shadow = 0.0;
@@ -303,7 +317,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	if DEBUG_SHADOW_MAP > -1 {
-		color = drawShadowMap(in.uv, color, DEBUG_SHADOW_MAP);
+		color = drawShadowMap(uv, color, DEBUG_SHADOW_MAP);
 	}
 
 	return color;
