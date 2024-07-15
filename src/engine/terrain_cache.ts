@@ -46,7 +46,7 @@ export class TerrainCache {
 					}, 1);
 				});
 			} else {
-				console.info('Building chunk', id);
+				console.debug('Building chunk', id);
 				this.chunks.set(id, null);
 				chunk = await this.buildChunk(coord);
 				this.chunks.set(id, chunk);

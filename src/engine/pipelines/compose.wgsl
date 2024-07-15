@@ -14,8 +14,9 @@ struct VertexOut {
 struct Uniforms {
 	invMvp: mat4x4f,
 	light: vec4f,
-	lightVp: array<mat4x4f, 4>,
+	lightVp: array<mat4x4f, 8>,
 	playerPosition: vec3f,
+	lightCascadeCount: i32,
 	waterColor: u32,
 	ditherSize: i32,
 	ditherDepth: i32,
@@ -333,7 +334,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 }
 
 fn isInShadow(p: vec3f, normal: vec3f) -> bool {
-	for (var i = 0; i < 4; i++) {
+	for (var i = 0; i < u.lightCascadeCount; i++) {
 		let n = normal * 0.07 * f32(i + 1);
 		var d = depthInShadowCascade(p + n, i);
 		if d < 0.0 {

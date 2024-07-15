@@ -110,7 +110,12 @@ export class ComposePipeline extends Pipeline {
 			['lightVp[1]', 'mat4x4f'],
 			['lightVp[2]', 'mat4x4f'],
 			['lightVp[3]', 'mat4x4f'],
+			['lightVp[4]', 'mat4x4f'],
+			['lightVp[5]', 'mat4x4f'],
+			['lightVp[6]', 'mat4x4f'],
+			['lightVp[7]', 'mat4x4f'],
 			['playerPosition', 'vec3f'],
+			['lightCascadeCount', 'i32'],
 			['waterColor', 'u32'],
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
@@ -151,6 +156,7 @@ export class ComposePipeline extends Pipeline {
 			invMvp: cameraInvMvp || identity(),
 			light: [...light.direction, 0],
 			playerPosition: camera.position,
+			lightCascadeCount: light.cascadeCount,
 			waterColor: typeof waterColor === 'number'
 				? waterColor
 				: colorToInt(waterColor),
@@ -162,8 +168,8 @@ export class ComposePipeline extends Pipeline {
 			t: performance.now() / 1000.0,
 		};
 
-		for (let i = 0; i < light.cascades.length; i++) {
-			const layer = light.cascades[i];
+		for (let i = 0; i < 8; i++) {
+			const layer = light.cascades[i] || light.cascades[0];
 			uniformData[`lightVp[${i}]`] = multiply(layer.projection, layer.view);
 		}
 

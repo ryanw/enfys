@@ -14,6 +14,7 @@ export class ShadowMap {
 
 	constructor(readonly gfx: Gfx, size: Vector3) {
 		const { device } = gfx;
+		console.debug("Shadow Map texture size: %dMB", size[0] * size[1] * size[2] * 4 / 1024 / 1024 | 0);
 		this._size = size;
 		this.texture = device.createTexture({
 			label: 'ShadowMap Texture',

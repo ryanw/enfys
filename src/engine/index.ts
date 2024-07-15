@@ -106,7 +106,7 @@ export class Gfx {
 			alphaMode: 'premultiplied',
 		});
 
-		this.shadowMap = new ShadowMap(this, [2048, 2048, 4]);
+		this.shadowMap = new ShadowMap(this, [2048, 2048, 8]);
 		this.gbuffer = new GBuffer(this);
 		this.updateSize();
 
