@@ -1,6 +1,8 @@
 import { Gfx, calculateNormals } from 'engine';
 import { PHI, Point3 } from 'engine/math';
 import { ColorVertex, SimpleMesh } from 'engine/mesh';
+import { jiggleVertices } from '.';
+import { scale } from 'engine/math/vectors';
 
 const { cos, sin } = Math;
 
@@ -10,7 +12,7 @@ export class ShipMesh extends SimpleMesh {
 			let color = 0xff0000ff;
 			// Every even triangle is on the top
 			const isTop = (i / 3 | 0) % 2 == 0;
-			if (i < 2) {
+			if (isTop && i < 12) {
 				// First tri is the window
 				color = 0xff000000;
 			}
@@ -34,7 +36,7 @@ export class ShipMesh extends SimpleMesh {
 function buildNGon(sides: number, size: number = 1): Array<Point3> {
 	const vertices: Point3[] = [];
 	for (let i = 0; i < sides; i++) {
-		const a = 2 * (Math.PI / sides) * i - Math.PI / sides;
+		const a = 2 * (Math.PI / sides) * i - Math.PI / sides * 2;
 		const x = sin(a);
 		const y = cos(a);
 		vertices.push([x * size, 0, y * size]);
@@ -58,6 +60,10 @@ function buildNGon(sides: number, size: number = 1): Array<Point3> {
 }
 
 export function buildShipMesh<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	const hull = buildNGon(5, 0.5);
-	return hull.map(callback);
+	const hull = buildNGon(7, 0.666);
+	return hull.map((p, i) => {
+		const s = 1.0 - (0.3 + p[2]);
+		const q = scale(p, [s, 1, 1]);
+		return callback(q, i);
+	});
 }
