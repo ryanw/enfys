@@ -24,7 +24,6 @@ import { TuftMesh } from './meshes/tuft';
 import { TerrainSystem } from 'engine/ecs/systems/terrain';
 import { getParam } from 'engine/helpers';
 import { FlowersMesh } from './meshes/flowers';
-import { LSystem } from './lsystem';
 import { InsectsMesh } from './meshes/insects';
 import { InsectAISystem } from './systems/insect_ai';
 import { randomizer } from 'engine/noise';
@@ -91,8 +90,8 @@ export async function main(el: HTMLCanvasElement) {
 	const tufts1 = decorPrefab(world, 'decor-tufts-2', seed, 7, 4, orbitCam);
 	const terrain = terrainPrefab(world, seed, orbitCam);
 
-	for (let i = 0; i< 50; i++) {
-		const animal = animalPrefab(world, [rnd(-40, 40), 3, rnd(-40, 40)]);
+	for (let i = 0; i< 100; i++) {
+		const animal = animalPrefab(world, [rnd(-100, 100), 3, rnd(-100, 100)]);
 	}
 
 	world.run();

@@ -6,6 +6,7 @@ import { PhysicsSystem } from './systems/physics';
 type Timeout = ReturnType<typeof setTimeout>;
 export class World {
 	private entityComponents: Map<Entity, Array<Component>> = new Map();
+	private componentsByEntity: Map<Entity, Map<ComponentConstructor, Component>> = new Map();
 	private entitiesByComponent: Map<ComponentConstructor, Set<Entity>> = new Map();
 	private systems: Array<System> = [];
 	private prevEntity: Entity = 0;
@@ -59,11 +60,18 @@ export class World {
 		if (!this.entityComponents.has(entity)) {
 			this.entityComponents.set(entity, []);
 		}
+		if (!this.componentsByEntity.has(entity)) {
+			this.componentsByEntity.set(entity, new Map());
+		}
+
 		const components = this.entityComponents.get(entity)!;
 		components.push(component);
 
 		const entitiesByComponent = this.entitiesByComponent.get(Constr)!;
 		entitiesByComponent.add(entity);
+
+		const componentsByEntity = this.componentsByEntity.get(entity)!;
+		componentsByEntity.set(Constr, component);
 	}
 
 	private updateComponent(entity: Entity, component: Component) {
@@ -87,12 +95,8 @@ export class World {
 	}
 
 	getComponent<T extends Component>(entity: Entity, typ: ComponentConstructor<T>): T | undefined {
-		const components = this.entityComponents.get(entity) || [];
-		for (const comp of components) {
-			if (comp instanceof typ) {
-				return comp;
-			}
-		}
+		const components = this.componentsByEntity.get(entity) || new Map();
+		return components.get(typ);
 	}
 
 	entitiesWithComponent(typ: ComponentConstructor): Set<Entity> {
