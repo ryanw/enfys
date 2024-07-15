@@ -60,7 +60,12 @@ export class PhysicsSystem extends System {
 				}
 
 				if (tra.position[1] <= surfaceHeight) {
-					tra.position[1] = surfaceHeight;
+					const diff = surfaceHeight - tra.position[1];
+					if (diff < 0.1 || diff > 10.0) {
+						tra.position[1] = surfaceHeight;
+					} else {
+						tra.position[1] += Math.min(diff, diff * dt * 10.0);
+					}
 					// Stop if falling
 					if (vel.velocity[1] < 0.0) {
 						vel.velocity[1] = 0.0;

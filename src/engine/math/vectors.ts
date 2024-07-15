@@ -1,7 +1,8 @@
 import { Plane, Point3, Vector2, Vector3, Vector4 } from '.';
 
-export function scale<T extends Vector2 | Vector3 | Vector4>(v: T, scale: number): T {
-	return v.map((n: number) => n * scale) as T;
+export function scale<T extends Vector2 | Vector3 | Vector4>(v: T, scale: number | T): T {
+	const scaleVec = typeof scale === 'number' ? v.map(_ => scale) as T : scale;
+	return v.map((n, i) => n * scaleVec[i]) as T;
 }
 
 export function magnitude<T extends number[]>(v: T): number {

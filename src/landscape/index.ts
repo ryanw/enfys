@@ -5,7 +5,7 @@
  */
 
 import { Gfx } from 'engine';
-import { Cube } from 'engine/mesh';
+import { Cube, Icosahedron } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { DotMaterial } from 'engine/material';
 import { ui } from './ui';
@@ -25,6 +25,9 @@ import { TerrainSystem } from 'engine/ecs/systems/terrain';
 import { getParam } from 'engine/helpers';
 import { FlowersMesh } from './meshes/flowers';
 import { LSystem } from './lsystem';
+import { InsectsMesh } from './meshes/insects';
+import { InsectAISystem } from './systems/insect_ai';
+import { randomizer } from 'engine/noise';
 
 /**
  * Procedurally generated alien worlds
@@ -37,6 +40,7 @@ export async function main(el: HTMLCanvasElement) {
 		gfx.framecap = 60;
 	}
 	const seed = getSeed();
+	const rnd = randomizer(seed + 645);
 
 	// Add the HTML UI stuff
 	ui(el.parentElement!, gfx, seed);
@@ -54,6 +58,7 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('small-cube', new Cube(gfx, 0.1));
 	graphics.insertResource('cube', new Cube(gfx, 0.5));
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
+	graphics.insertResource('animal-placeholder', new InsectsMesh(gfx, seed + 55, 32));
 	graphics.insertResource('decor-rocks', new RockMesh(gfx, seed + 41, 4));
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 16));
 	graphics.insertResource('decor-tufts-1', new TuftMesh(gfx, seed + 11, 5));
@@ -69,10 +74,10 @@ export async function main(el: HTMLCanvasElement) {
 	world.addSystem(new FreeCameraInputSystem(el));
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new TerrainSystem(gfx));
+	world.addSystem(new InsectAISystem());
 
 	const light = lightPrefab(world, [0.5, 0.7, 0.0]);
 	const player = playerPrefab(world, [0, 3, 0]);
-	const animal0 = animalPrefab(world, [3, 3, 0]);
 	const freeCam = freeCamPrefab(world);
 	const orbitCam = orbitCamPrefab(world, player);
 	const water = waterPrefab(world);
@@ -85,6 +90,10 @@ export async function main(el: HTMLCanvasElement) {
 	const tufts0 = decorPrefab(world, 'decor-tufts-1', seed, 3, 5, orbitCam);
 	const tufts1 = decorPrefab(world, 'decor-tufts-2', seed, 7, 4, orbitCam);
 	const terrain = terrainPrefab(world, seed, orbitCam);
+
+	for (let i = 0; i< 50; i++) {
+		const animal = animalPrefab(world, [rnd(-40, 40), 3, rnd(-40, 40)]);
+	}
 
 	world.run();
 

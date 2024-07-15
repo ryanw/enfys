@@ -49,6 +49,7 @@ struct Pawn {
 	id: u32,
 	vertexCount: u32,
 	variantCount: u32,
+	variantIndex: u32,
 }
 
 struct Material {
@@ -90,7 +91,9 @@ var<storage, read> vertices: array<PackedVertex>;
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
-	let vertexOffset = (in.variantIndex % pawn.variantCount) * pawn.vertexCount;
+	let variantIndex = in.variantIndex + pawn.variantIndex;
+	//let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
+	let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
 	let idx = in.id + vertexOffset;
 	let packedVertex = vertices[idx];
 	let v = Vertex(

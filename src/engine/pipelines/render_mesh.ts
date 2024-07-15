@@ -131,8 +131,8 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		this.pipelineShadowMap = device.createRenderPipeline(pipelineShadowDescriptor);
 	}
 
-	drawShadowMapBatch(encoder: GPUCommandEncoder, entities: Array<Pawn<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
-		if (entities.length === 0) {
+	drawShadowMapBatch(encoder: GPUCommandEncoder, pawns: Array<Pawn<SimpleMesh>>, light: DirectionalLight, target: ShadowMap) {
+		if (pawns.length === 0) {
 			return;
 		}
 		const { device } = this.gfx;
@@ -159,7 +159,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 			const pass = encoder.beginRenderPass(passDescriptor);
 			pass.setPipeline(this.pipelineShadowMap);
 
-			for (const src of entities) {
+			for (const src of pawns) {
 				if (!src.visible || src.object.vertexCount === 0 || src.object.instanceCount === 0) {
 					continue;
 				}

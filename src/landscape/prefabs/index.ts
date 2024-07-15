@@ -13,6 +13,7 @@ import { PhysicsComponent } from 'engine/ecs/components/physics';
 import { Planet } from '../planet';
 import { DecorComponent } from 'engine/ecs/components/decor';
 import { TerrainComponent } from 'engine/ecs/components/terrain';
+import { InsectComponent } from '../components/insect';
 
 export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	return world.createEntity([
@@ -36,9 +37,10 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 export function animalPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new PhysicsComponent(),
+		new InsectComponent(),
 		new TransformComponent(position),
 		new VelocityComponent([0, 0, 0]),
-		new MeshComponent('cube'),
+		new MeshComponent('animal-placeholder'),
 	]);
 }
 

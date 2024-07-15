@@ -28,6 +28,10 @@ export function colorToInt(color: Color): number {
 	const [r, g, b, a] = color;
 	return (a << 24) | (b << 16) | (g << 8) | r;
 }
+export function colorToBigInt(color: Color): bigint {
+	const [r, g, b, a] = color;
+	return (BigInt(a|0) << BigInt(24)) | (BigInt(b|0) << BigInt(16)) | (BigInt(g|0) << BigInt(8)) | BigInt(r|0);
+}
 
 function hueToRGB(p: number, q: number, ot: number): number {
 	let t = ot;

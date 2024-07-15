@@ -28,6 +28,7 @@ export class Pawn<T> {
 	public visible = true;
 	private buffer: UniformBuffer;
 	private _transform: Matrix4 = identity();
+	public _variantIndex = 0;
 
 	constructor(
 		gfx: Gfx,
@@ -40,6 +41,7 @@ export class Pawn<T> {
 			['id', 'u32'],
 			['vertexCount', 'u32'],
 			['variantCount', 'u32'],
+			['variantIndex', 'u32'],
 		]);
 		this.buffer.set('id', Math.random() * 0xffffffff | 0);
 		this.transform = transform;
@@ -52,6 +54,15 @@ export class Pawn<T> {
 	set transform(transform: Matrix4) {
 		this._transform = [...transform];
 		this.buffer.set('transform', transform);
+	}
+
+	get variantIndex(): number {
+		return this._variantIndex;
+	}
+
+	set variantIndex(index: number) {
+		this._variantIndex = index;
+		this.buffer.set('variantIndex', index);
 	}
 
 	bindingResource(): GPUBindingResource {

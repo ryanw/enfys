@@ -7,7 +7,7 @@ import { MeshComponent } from './ecs/components/mesh';
 import { World } from './ecs/world';
 import { Point3, Vector3 } from './math';
 import { multiply, multiplyVector, rotation, translation } from './math/transform';
-import { SimpleMesh } from './mesh';
+import { ColorInstance, SimpleMesh } from './mesh';
 import { Pawn } from './pawn';
 import { ResourceId } from './resource';
 import { Scene } from './scene';
@@ -23,6 +23,7 @@ import { TerrainPipeline } from './pipelines/terrain';
 import { ColorScheme } from './color_scheme';
 import { DecorComponent } from './ecs/components/decor';
 import { DecorMesh } from './decor_mesh';
+import { VariantMesh } from '../landscape/meshes/variant';
 
 export type Resource = {};
 
@@ -162,8 +163,8 @@ export class WorldGraphics {
 			if (!pawn) {
 				// Create
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
-				console.debug('Adding mesh for entity', entity, mesh);
 				pawn = scene.addMesh(mesh, new SimpleMaterial(this.gfx, 0xffffffff), transform);
+				pawn.variantIndex = Math.random() * mesh.variantCount | 0;
 				this.meshes.set(entity, pawn);
 			}
 			// Update

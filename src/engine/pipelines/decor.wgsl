@@ -51,6 +51,12 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 			//return;
 		}
 
+		let nn = fractalNoise(dp/128.0+vec3(u.decorSeed/10000.0), 2);
+		if nn < 0.6 {
+			return;
+		}
+
+
 		var n0 = (rnd3(dp + vec3(123.0)) - 0.5) * u.spacing.x;
 		var n1 = (rnd3(dp + vec3(323.0)) - 0.5) * u.spacing.y;
 		var instance: Instance;

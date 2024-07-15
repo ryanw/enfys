@@ -4,9 +4,8 @@ import { ColorVertex, buildCylinder, buildIcosahedron, buildIcosphere } from 'en
 import { add, dot, magnitude, normalize, scale, subtract } from 'engine/math/vectors';
 import { randomizer } from 'engine/noise';
 import { VariantMesh } from './variant';
-import { jiggleVertices } from '.';
 import { LSystem } from '../lsystem';
-import { inverse, lookAt, multiply, multiplyVector, rotation, rotationFromVector, transformPoint, translation } from 'engine/math/transform';
+import { multiply, multiplyVector, rotation, rotationFromVector, transformPoint, translation } from 'engine/math/transform';
 import { colorToInt, hsl } from 'engine/color';
 
 function buildBranch(p0: Point3, p1: Point3, radius: number = 1.0): Array<ColorVertex> {
