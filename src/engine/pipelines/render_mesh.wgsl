@@ -25,9 +25,10 @@ struct VertexOut {
 	@location(0) uv: vec2f,
 	@location(1) normal: vec3f,
 	@location(2) color: vec4f,
-	@location(3) modelPosition: vec3f,
-	@location(4) modelNormal: vec3f,
-	@location(5) @interpolate(flat) triangleId: u32,
+	@location(3) originalPosition: vec3f,
+	@location(4) modelPosition: vec3f,
+	@location(5) modelNormal: vec3f,
+	@location(6) @interpolate(flat) triangleId: u32,
 }
 
 struct FragmentOut {
@@ -117,6 +118,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		out.normal = (pawn.model * vec4(normalize(v.normal), 0.0)).xyz;
 	}
 
+	out.originalPosition = v.position;
 	let modelPosition = offsetModel * vec4(v.position, 1.0);
 	out.modelPosition = modelPosition.xyz / modelPosition.w;
 	out.modelNormal = (mv * vec4(v.normal, 0.0)).xyz;
@@ -174,7 +176,12 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	if camera.isShadowMap == 0 {
 		out.metaOutput = in.triangleId;
 		out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
-		out.normal = vec4(in.normal, 0.0);
+
+		var nn = vec3(0.0);
+		if length(in.normal) > 0.0 {
+			nn.x = abs(fractalNoise(in.modelPosition/8.0, 2) - 0.5) *1.2;
+		}
+		out.normal = vec4(normalize(in.normal + nn), 0.0);
 	}
 
 
@@ -195,4 +202,3 @@ fn sdPentagon(q: vec2f, r: f32) -> f32 {
 @import "engine/shaders/helpers.wgsl";
 @import "engine/shaders/color.wgsl";
 @import "engine/shaders/noise.wgsl";
-
