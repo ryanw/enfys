@@ -187,7 +187,14 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 		var nn = vec3(0.0);
 		if length(in.normal) > 0.0 {
-			nn.x = abs(fractalNoise(in.modelPosition/8.0, 2) - 0.5) *1.2;
+			var s0 = 0.1;
+			var s1 = 1.0;
+			var nl = fractalNoise(s1 * in.modelPosition + vec3(-s0, 0.0, 0.0), 3) - 0.5;
+			var nr = fractalNoise(s1 * in.modelPosition + vec3(s0, 0.0, 0.0), 3) - 0.5;
+			var nd = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, -s0), 3) - 0.5;
+			var nu = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, s0), 3) - 0.5;
+			var grad = vec3(nl - nr, 0.5, nd - nu);
+			nn = normalize(grad);
 		}
 		out.normal = vec4(normalize(in.normal + nn), 0.0);
 	}
