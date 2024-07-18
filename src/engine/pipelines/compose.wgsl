@@ -1,5 +1,5 @@
 const BLEND_TO_ALPHA: bool = false;
-const DRAW_SHADOWS: bool = false;
+const DRAW_SHADOWS: bool = true;
 const DRAW_WATER: bool = true;
 const DISTORT_WATER: bool = true;
 const DRAW_FOG: bool = true;
@@ -175,7 +175,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	var brightness = 1.0;
-	var fogFactor = 0.0;
 
 	if length(normal) > 0.0 {
 		//let lightPos = u.light.xyz;
@@ -194,14 +193,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 		else {
 			brightness = 1.0 - shade;
-		}
-
-		// Calculate fog for later
-		if u.fog > 0.02 {
-			let density = 1.0;
-			let fogDepth = 1.0 - (length(pos - u.playerPosition) / 17000.0);
-			let dd = smoothstep(1.0 / 8.0 / u.fog, 1.0 / 16.0 / u.fog, fogDepth);
-			fogFactor = dd;
 		}
 	}
 	var color = vec4(0.0);
@@ -266,7 +257,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			}
 			// Fog
 			case 8: {
-				color = vec4(vec3(fogFactor), 1.0);
+				//color = vec4(vec3(fogFactor), 1.0);
 				return color;
 			}
 			default: {}
@@ -321,9 +312,13 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	if DRAW_FOG {
-		let fogColor = vec4(0.0);
-		color = mix(color, fogColor, fogFactor);
+	if DRAW_FOG && u.fog > 0.0 {
+		if depth >= 0.999 && pos.y < 4000.0 {
+			let fogColor = vec4(0.7, 0.4, 0.8, 1.0);
+			var fogFactor = smoothstep(4000.0, 0.0, pos.y);
+			fogFactor *= smoothstep(0.9995, 1.0, depth);
+			color = mix(color, fogColor, fogFactor);
+		}
 	}
 
 	if DEBUG_SHADOW_MAP > -1 {
