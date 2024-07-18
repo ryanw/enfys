@@ -1,5 +1,5 @@
 struct Instance {
-	offset: array<f32, 3>,
+	transform: array<f32, 16>,
 	color: u32,
 	vertexIndex: u32,
 }
@@ -46,7 +46,15 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	var isPending = age < timeOffset;
 	var isLive = idx < u.count;
 
-	var p = vec3(instance.offset[0], instance.offset[1], instance.offset[2]);
+	let it = instance.transform;
+	let transform = mat4x4(
+		it[0], it[1], it[2], it[3],
+		it[4], it[5], it[6], it[7],
+		it[8], it[9], it[10], it[11],
+		it[12], it[13], it[14], it[15],
+	);
+	var ph = transform * vec4(0.0, 0.0, 0.0, 1.0);
+	var p = ph.xyz/ph.w;
 	var velocity = vec3(particle.velocity[0], particle.velocity[1], particle.velocity[2]);
 
 	let n0 = rnd3(particle.birth + vec3(f32(idx))) - 0.5;
@@ -107,10 +115,16 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 
 	instance.color = colorToUint(color);
 	particle.velocity = array(velocity.x, velocity.y, velocity.z);
-	instance.offset = array(p.x, p.y, p.z);
+	instance.transform = array(
+		1.0, 0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		p.x, p.y, p.z, 1.0,
+	);
 	instances[idx] = instance;
 	particles[idx] = particle;
 }
 
 @import "engine/shaders/color.wgsl";
 @import "engine/shaders/noise.wgsl";
+@import "engine/shaders/helpers.wgsl";

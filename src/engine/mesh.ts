@@ -1,6 +1,7 @@
 import { Gfx, Size, Triangle, calculateNormals } from 'engine';
-import { PHI, Point2, Point3, Vector2, Vector3, Vector4 } from './math';
+import { Matrix4, PHI, Point2, Point3, Vector2, Vector3, Vector4 } from './math';
 import { add, normalize, scale } from './math/vectors';
+import { identity } from './math/transform';
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
@@ -38,14 +39,14 @@ export interface ColorVertex extends NormalVertex {
 }
 
 /**
- * Vertex with an offset
+ * Vertex with an transform
  */
-export interface OffsetInstance {
-	offset: Point3;
+export interface TransformInstance {
+	transform: Matrix4;
 	variantIndex: number | bigint;
 }
 
-export interface ColorInstance extends OffsetInstance {
+export interface ColorInstance extends TransformInstance {
 	// 32bit rgba color
 	instanceColor: number | bigint;
 }
@@ -65,6 +66,8 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	vertexCount: number = 0;
 	instanceCount: number = 0;
 	variantCount: number = 1;
+	instanceSize: number = 0;
+	private instanceCapacity: number = 2;
 
 	/**
 	 * @param vertices Array of Vertices
@@ -75,22 +78,77 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		this.uploadInstances(instances);
 	}
 
+	async resizeInstanceCapacity(capacity: number) {
+		if (this.instanceCapacity === capacity) return;
+		const { device } = this.gfx;
+		const { min, ceil } = Math;
+
+		const change = capacity / this.instanceCapacity;
+		this.instanceCapacity = capacity;
+
+		const oldInstanceBuffer = this.instanceBuffer;
+		console.debug("Resizing Instance buffer %d bytes", ceil(oldInstanceBuffer.size * change));
+		const newInstanceBuffer = device.createBuffer({
+			label: 'Mesh Instance Buffer',
+			size: ceil(oldInstanceBuffer.size * change),
+			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+		});
+		this.instanceBuffer = newInstanceBuffer;
+
+		// Copy old buffer into new buffer
+		await this.gfx.encode(async enc => {
+			enc.copyBufferToBuffer(
+				oldInstanceBuffer, 0,
+				newInstanceBuffer, 0,
+				min(oldInstanceBuffer.size, newInstanceBuffer.size)
+			);
+		});
+	}
+
 	uploadInstances(instances: Array<I>) {
 		const { device } = this.gfx;
+		const capacity = Math.max(this.instanceCapacity, instances.length);
+		this.instanceSize = instances.length > 0 ? calcVertexSize(instances[0]) : this.instanceSize;
 		const keys = this.instanceOrder.length === 0 && instances.length > 0
 			? Object.keys(instances[0]).sort() as Array<keyof I>
 			: this.instanceOrder;
 		// Write instances
 		const instanceData = toArrayBuffer(instances, keys);
+		console.debug("Creating Instance buffer %d bytes", capacity * this.instanceSize);
 		const instanceBuffer = device.createBuffer({
 			label: 'Mesh Instance Buffer',
-			size: instanceData.byteLength,
-			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+			size: capacity * this.instanceSize,
+			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
 		device.queue.writeBuffer(instanceBuffer, 0, instanceData);
 
 		this.instanceCount = instances.length;
 		this.instanceBuffer = instanceBuffer;
+	}
+
+	get hasCapacity(): boolean {
+		return this.instanceCount < this.instanceCapacity;
+	}
+
+	writeInstance(idx: number, instance: I) {
+		const { device } = this.gfx;
+		const instanceData = toArrayBuffer([instance], this.instanceOrder);
+		const byteOffset = instanceData.byteLength * idx;
+		device.queue.writeBuffer(this.instanceBuffer, byteOffset, instanceData);
+	}
+
+	pushInstance(instance: I): number {
+		if (!this.hasCapacity) {
+			console.error(`Instance Buffer is full. ${this.instanceCount + 1} instances, ${this.instanceCapacity} capacity`, this, instance);
+			throw new Error(`Instance Buffer is full. ${this.instanceCount + 1} instances, ${this.instanceCapacity} capacity`);
+		}
+		const { device } = this.gfx;
+		const instanceData = toArrayBuffer([instance], this.instanceOrder);
+		const byteOffset = instanceData.byteLength * this.instanceCount;
+		device.queue.writeBuffer(this.instanceBuffer, byteOffset, instanceData);
+
+		this.instanceCount += 1;
+		return this.instanceCount;
 	}
 
 	uploadVertices(vertices: Array<V>, vertexCount?: number) {
@@ -125,7 +183,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
  */
 export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color'];
-	instanceOrder: Array<keyof ColorInstance> = ['offset', 'instanceColor', 'variantIndex'];
+	instanceOrder: Array<keyof ColorInstance> = ['transform', 'instanceColor', 'variantIndex'];
 	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<ColorInstance>) {
 		super(gfx);
 		this.uploadVertices(vertices);
@@ -134,14 +192,27 @@ export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 		}
 		else {
 			this.uploadInstances([{
-				offset: [0, 0, 0],
+				transform: identity(),
 				instanceColor: BigInt(0xffffffff),
-				variantIndex: 0,
+				variantIndex: BigInt(0x0),
 			}]);
 		}
 	}
 }
 
+function calcVertexSize<V extends Vertex<V>>(proto: V): number {
+	let vertexSize = 0;
+	for (const key in proto) {
+		const prop = proto[key];
+		if (Array.isArray(prop)) {
+			vertexSize += (prop as Array<number>).length;
+		}
+		else {
+			vertexSize += 1;
+		}
+	}
+	return vertexSize * 4;
+}
 
 
 /**
@@ -152,19 +223,9 @@ export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Array<keyof V>): ArrayBuffer {
 	if (vertices.length === 0) return new Float32Array();
 
-	let vertexSize = 0;
-	const proto = vertices[0];
-	for (const key of attributes) {
-		const prop = proto[key];
-		if (Array.isArray(prop)) {
-			vertexSize += (prop as Array<number>).length;
-		}
-		else {
-			vertexSize += 1;
-		}
-	}
-	const size = vertexSize * vertices.length;
-	const bytes = new ArrayBuffer(size * 4);
+	const vertexSize = calcVertexSize(vertices[0]);
+	const byteSize = vertexSize * vertices.length;
+	const bytes = new ArrayBuffer(byteSize);
 	const floatData = new Float32Array(bytes);
 	const intData = new Uint32Array(bytes);
 
@@ -177,7 +238,10 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 		}
 		for (const key of attributes) {
 			const prop = vertex[key];
-			if (!prop) continue;
+			if (prop == null) {
+				console.warn("Missing field in vertex buffer", key);
+				continue;
+			}
 
 			if (Array.isArray(prop)) {
 				// FIXME tsc is ignoring `isArray`

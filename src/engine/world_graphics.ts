@@ -38,7 +38,8 @@ export type QueuedChunk = {
 };
 
 export class WorldGraphics {
-	private meshes: Map<Entity, Pawn<SimpleMesh>> = new Map();
+	private meshes: Map<Entity, [number, Pawn<SimpleMesh>]> = new Map();
+	private instanceMeshes: Map<SimpleMesh, Pawn<SimpleMesh>> = new Map();
 	private decors: Map<Entity, Pawn<DecorMesh>> = new Map();
 	private lights: Map<Entity, DirectionalLight> = new Map();
 	private particles: Map<Entity, Pawn<Particles>> = new Map();
@@ -100,7 +101,7 @@ export class WorldGraphics {
 
 			let light = this.lights.get(entity);
 			if (!light) {
-				scene.light = new DirectionalLight(this.gfx, 4);
+				scene.light = new DirectionalLight(this.gfx, 2);
 				light = scene.light;
 				this.lights.set(entity, light);
 			}
@@ -147,6 +148,7 @@ export class WorldGraphics {
 	}
 
 	updateMeshes(world: World, scene: Scene) {
+		const { device } = this.gfx;
 		const entities = world.entitiesWithComponents([MeshComponent, TransformComponent]);
 		const saw = new Set();
 		for (const entity of entities) {
@@ -159,20 +161,31 @@ export class WorldGraphics {
 				rotation(rot[0], rot[1], 0),
 			);
 
-			let pawn = this.meshes.get(entity);
-			if (!pawn) {
+			let [idx, pawn] = this.meshes.get(entity) || [];
+			if (!pawn || !idx) {
 				// Create
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
-				pawn = scene.addMesh(mesh, new SimpleMaterial(this.gfx, 0xffffffff), transform);
-				pawn.variantIndex = Math.random() * mesh.variantCount | 0;
-				this.meshes.set(entity, pawn);
+				pawn = this.instanceMeshes.get(mesh);
+				if (!pawn) {
+					pawn = scene.addMesh(mesh, new SimpleMaterial(this.gfx, 0xffffffff));
+					this.instanceMeshes.set(mesh, pawn);
+				}
+				const variantIndex = Math.random() * mesh.variantCount | 0;
+				idx = mesh.pushInstance({
+					transform,
+					instanceColor: 0,
+					variantIndex: BigInt(variantIndex),
+				}) - 1;
+				this.meshes.set(entity, [idx, pawn]);
 			}
-			// Update
-			pawn.transform = transform;
+
+			// Update the transform of the instance
+			// FIXME better field updating
+			device.queue.writeBuffer(pawn.object.instanceBuffer, idx * pawn.object.instanceSize, new Float32Array(transform));
 		}
 		const removed: Array<Entity> = [...this.meshes.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
-			const pawn = this.meshes.get(entity);
+			const [_idx, pawn] = this.meshes.get(entity) || [];
 			this.meshes.delete(entity);
 			if (pawn) {
 				// Delete
@@ -220,6 +233,7 @@ export class WorldGraphics {
 				decor.object.vertexCount = mesh.vertexCount;
 				decor.object.variantCount = mesh.variantCount;
 				if (decor.material instanceof SimpleMaterial) {
+					// Fade out decor int he distance
 					decor.material.fadeout = 8 * radius * spread;
 				}
 				this.decors.set(entity, decor);

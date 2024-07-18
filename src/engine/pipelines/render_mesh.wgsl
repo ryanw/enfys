@@ -15,9 +15,12 @@ struct Vertex {
 struct VertexIn {
 	@builtin(vertex_index) id: u32,
 	// Instance
-	@location(3) offset: vec3f,
-	@location(4) instanceColor: u32,
-	@location(5) variantIndex: u32,
+	@location(3) transform0: vec4f,
+	@location(4) transform1: vec4f,
+	@location(5) transform2: vec4f,
+	@location(6) transform3: vec4f,
+	@location(7) instanceColor: u32,
+	@location(8) variantIndex: u32,
 }
 
 struct VertexOut {
@@ -93,7 +96,6 @@ var<storage, read> vertices: array<PackedVertex>;
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
 	let variantIndex = in.variantIndex + pawn.variantIndex;
-	//let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
 	let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
 	let idx = in.id + vertexOffset;
 	let packedVertex = vertices[idx];
@@ -103,7 +105,13 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		packedVertex.color,
 	);
 
-	let offsetModel = translate(in.offset) * pawn.model;
+	let transform = mat4x4(
+		in.transform0,
+		in.transform1,
+		in.transform2,
+		in.transform3
+	);
+	let offsetModel = pawn.model * transform;
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * mv;
 	out.position = mvp * vec4(v.position, 1.0);
@@ -115,7 +123,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		out.normal = vec3(0.0);
 	}
 	else {
-		out.normal = (pawn.model * vec4(normalize(v.normal), 0.0)).xyz;
+		out.normal = (offsetModel * vec4(normalize(v.normal), 0.0)).xyz;
 	}
 
 	out.originalPosition = v.position;

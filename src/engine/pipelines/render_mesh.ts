@@ -237,48 +237,18 @@ export class RenderMeshPipeline extends MaterialPipeline {
 	}
 }
 
-const pointVertexLayout: GPUVertexBufferLayout = {
-	stepMode: 'vertex',
-	attributes: [{
-		// Position
-		shaderLocation: 0,
-		offset: 0,
-		format: 'float32x3'
-	}, {
-		// Normal
-		shaderLocation: 1,
-		offset: 12,
-		format: 'float32x3'
-	}, {
-		// Color
-		shaderLocation: 2,
-		offset: 24,
-		format: 'uint32'
-	}],
-	arrayStride: 28,
-};
-
 const offsetInstanceLayout: GPUVertexBufferLayout = {
 	stepMode: 'instance',
 	attributes: [
-		{
-			// Offset
-			shaderLocation: 3,
-			offset: 0,
-			format: 'float32x3',
-		},
-		{
-			// Instance Color
-			shaderLocation: 4,
-			offset: 12,
-			format: 'uint32'
-		},
-		{
-			// Vertex Index
-			shaderLocation: 5,
-			offset: 16,
-			format: 'uint32'
-		},
+		// Transform
+		{ shaderLocation: 3, offset: 0, format: 'float32x4' },
+		{ shaderLocation: 4, offset: 16, format: 'float32x4' },
+		{ shaderLocation: 5, offset: 32, format: 'float32x4' },
+		{ shaderLocation: 6, offset: 48, format: 'float32x4' },
+		// Instance Color
+		{ shaderLocation: 7, offset: 64, format: 'uint32' },
+		// Vertex Index
+		{ shaderLocation: 8, offset: 68, format: 'uint32' },
 	],
-	arrayStride: 20,
+	arrayStride: 72,
 };

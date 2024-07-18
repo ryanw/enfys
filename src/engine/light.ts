@@ -146,7 +146,7 @@ export class DirectionalLight extends Light {
 		for (let i = 0; i < this.cascades.length; i++) {
 			if (i === this.cascades.length - 1) {
 				// Last one is always (almost) the whole view frustum
-				maxDepth = 0.9998;
+				maxDepth = 0.99;
 			}
 			const cascade = this.cascades[i];
 			const shadowVolume = buildLightVolume(camera, rot, minDepth, maxDepth);

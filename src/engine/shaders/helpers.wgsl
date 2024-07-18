@@ -14,3 +14,8 @@ fn translate(offset: vec3f) -> mat4x4f {
 		offset.x, offset.y, offset.z, 1.0,
 	);
 }
+
+
+fn identity() -> mat4x4f {
+	return translate(vec3(0.0));
+}

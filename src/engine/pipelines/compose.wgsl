@@ -1,5 +1,5 @@
 const BLEND_TO_ALPHA: bool = false;
-const DRAW_SHADOWS: bool = true;
+const DRAW_SHADOWS: bool = false;
 const DRAW_WATER: bool = true;
 const DISTORT_WATER: bool = true;
 const DRAW_FOG: bool = true;

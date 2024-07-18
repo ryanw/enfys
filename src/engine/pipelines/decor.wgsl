@@ -1,6 +1,5 @@
 struct Instance {
-	// array instead of vec to avoid alignment issues
-	offset: array<f32, 3>,
+	transform: array<f32, 16>,
 	color: u32,
 	variantIndex: u32,
 }
@@ -59,7 +58,6 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 
 		var n0 = (rnd3(dp + vec3(123.0)) - 0.5) * u.spacing.x;
 		var n1 = (rnd3(dp + vec3(323.0)) - 0.5) * u.spacing.y;
-		var instance: Instance;
 		p.x += n0;
 		p.z += n1;
 		p.y = landHeight(p, u.terrainSeed);
@@ -80,11 +78,18 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		if length(p.xz) < 3.0 {
 			//return;
 		}
-		instance.offset = array(p.x, p.y, p.z);
 
 		let hue = rnd3(dp + vec3(43.0));
 		var color = hsl(hue, 0.6, 0.5);
 		color.a = 0.5;
+
+		var instance: Instance;
+		instance.transform = array(
+			1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			p.x, p.y, p.z, 1.0,
+		);
 		instance.color = colorToUint(color);
 		instance.variantIndex = u32(abs(rnd3(p + vec3(31.0))) * 256.0);
 		let count = atomicAdd(&counter, 1u);
@@ -94,3 +99,4 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 
 @import "./terrain_height.wgsl";
 @import "engine/shaders/color.wgsl";
+@import "engine/shaders/helpers.wgsl";

@@ -54,7 +54,7 @@ var<uniform> material: Material;
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
 
-	let offsetModel = translate(in.offset) * entity.model;
+	let offsetModel =  entity.model * translate(in.offset);
 	var view = camera.view;
 	// Remove translation
 	view[3].x = 0.0;

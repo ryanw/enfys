@@ -1,16 +1,16 @@
 import { Gfx, calculateNormals } from 'engine';
-import { colorToBigInt, colorToInt, hsl } from 'engine/color';
+import { colorToBigInt, hsl } from 'engine/color';
 import { Point3 } from 'engine/math';
-import { rotation, transformPoint } from 'engine/math/transform';
 import { add, scale } from 'engine/math/vectors';
-import { ColorVertex, CUBE_VERTS, buildIcosahedron, PointVertex, buildIcosphere } from 'engine/mesh';
-import { pcg3d, random, randomizer } from 'engine/noise';
+import { ColorVertex, buildIcosphere } from 'engine/mesh';
+import { random, randomizer } from 'engine/noise';
 import { VariantMesh } from './variant';
 import { buildSegment, jiggleVertices } from '.';
 
 export class InsectsMesh extends VariantMesh {
 	constructor(gfx: Gfx, readonly seed: number, variantCount: number = 32) {
 		super(gfx, seed, variantCount);
+		this.resizeInstanceCapacity(4096);
 	}
 
 	generateVariant(i: number): Array<ColorVertex> {

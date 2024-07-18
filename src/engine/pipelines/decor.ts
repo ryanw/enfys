@@ -6,7 +6,7 @@ import { UniformBuffer } from 'engine/uniform_buffer';
 const WorkgroupSize = [16, 16];
 const WorkgroupCount = [64, 64];
 const MaxInstances = WorkgroupSize[0] * WorkgroupSize[1] * WorkgroupCount[0] * WorkgroupCount[1];
-const InstanceByteSize = 4 * 4;// FIXME vec3f + u32 + u32 derive from type? OffsetInstance
+const InstanceByteSize = (16 + 1 + 1) * 4;// FIXME mat4x4f + u32 + u32 derive from type? OffsetInstance
 console.debug('Decor buffer size:', InstanceByteSize * MaxInstances);
 
 export class DecorUniform extends UniformBuffer {
@@ -90,7 +90,7 @@ export class DecorPipeline extends Pipeline {
 
 
 		const buffer = device.createBuffer({
-			label: 'DecorMesh Attribute Buffer',
+			label: 'DecorMesh Instance Buffer',
 			size: MaxInstances * InstanceByteSize,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
