@@ -48,12 +48,10 @@ fn rnd2(seed: vec2<f32>) -> f32 {
 }
 
 fn fade(t: f32) -> f32 {
-	//return t;
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
 }
 
 fn smoothNoise(v: vec3f) -> f32 {
-	//var lv = smoothVec(fract(v));
 	var lv = fract(v);
 	var id = floor(v);
 
@@ -88,7 +86,7 @@ fn fractalNoise(p: vec3<f32>, octaves: i32) -> f32 {
 	var total = 0.0;
 	var freq = 4.0;
 	for (var i: i32 = 0; i < octaves; i++) {
-		c += smoothNoise(p * freq + vec3(971.0)) * amp;
+		c += smoothNoise(p * freq + vec3(f32(i*1000))) * amp;
 		total += amp;
 		freq *= 3.0;
 		amp /= 2.0;

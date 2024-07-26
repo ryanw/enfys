@@ -222,10 +222,11 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		if noisy && length(in.normal) > 0.0 {
 			var s0 = 0.1;
 			var s1 = material.noise.x;
-			var nl = fractalNoise(s1 * in.modelPosition + vec3(-s0, 0.0, 0.0), 2) - 0.5;
-			var nr = fractalNoise(s1 * in.modelPosition + vec3(s0, 0.0, 0.0), 2) - 0.5;
-			var nd = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, -s0), 2) - 0.5;
-			var nu = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, s0), 2) - 0.5;
+			var oc = 2;
+			var nl = fractalNoise(s1 * in.modelPosition + vec3(-s0, 0.0, 0.0), oc) - 0.5;
+			var nr = fractalNoise(s1 * in.modelPosition + vec3(s0, 0.0, 0.0), oc) - 0.5;
+			var nd = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, -s0), oc) - 0.5;
+			var nu = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, s0), oc) - 0.5;
 			var grad = vec3(nl - nr, material.noise.y, nd - nu);
 			nn = normalize(grad);
 		}

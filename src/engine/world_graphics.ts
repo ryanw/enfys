@@ -209,6 +209,7 @@ export class WorldGraphics {
 			saw.add(entity);
 
 			const terrain = world.getComponent(entity, TerrainComponent)!;
+
 			const colors = new ColorScheme(terrain.colorSeed);
 			scene.waterColor = [...colors.scheme.water];
 			this.updateTerrainQueue(entity, terrain);
@@ -320,6 +321,8 @@ export class WorldGraphics {
 		];
 		const key = toChunkHash(chunk);
 		this.activeTerrain.set(key, chunk);
+		const terrainMaterial = new SimpleMaterial(this.gfx, 0xffffffff);
+		terrainMaterial.noise = [0.5, 0.7, 0.0, 0.0];
 		const terrain = scene.addMesh(
 			new TerrainMesh(
 				scene.gfx,
@@ -329,7 +332,7 @@ export class WorldGraphics {
 				colorSeed,
 				this.getTerrainPipeline(terrainSeed),
 			),
-			new SimpleMaterial(this.gfx, 0xffffffff),
+			terrainMaterial,
 			translation(...position),
 		);
 		if (!this.terrains.has(entity)) {

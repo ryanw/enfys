@@ -14,6 +14,7 @@ import { Planet } from '../planet';
 import { DecorComponent } from 'engine/ecs/components/decor';
 import { TerrainComponent } from 'engine/ecs/components/terrain';
 import { InsectComponent } from '../components/insect';
+import { MaterialComponent } from 'engine/ecs/components/material';
 
 export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	return world.createEntity([
@@ -74,6 +75,7 @@ export function terrainPrefab(world: World, seed: number, target?: Entity): Enti
 
 	return world.createEntity([
 		new TerrainComponent(terrainSeed, terrainColors.seed, target),
+		new MaterialComponent({ noise: [2.0, 0.6, 0.0, 0.0] }),
 	]);
 }
 
