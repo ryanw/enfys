@@ -3,6 +3,7 @@ struct Vertex {
 	position: array<f32, 3>,
 	normal: array<f32, 3>,
 	color: u32,
+	softness: f32,
 }
 
 struct Triangle {

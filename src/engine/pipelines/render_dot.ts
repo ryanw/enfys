@@ -146,30 +146,40 @@ export class RenderDotPipeline extends MaterialPipeline {
 
 const pointVertexLayout: GPUVertexBufferLayout = {
 	stepMode: 'vertex',
-	attributes: [{
-		// Position
-		shaderLocation: 0,
-		offset: 0,
-		format: 'float32x3'
-	}, {
-		// Normal
-		shaderLocation: 1,
-		offset: 12,
-		format: 'float32x3'
-	}, {
-		// Color
-		shaderLocation: 2,
-		offset: 24,
-		format: 'uint32'
-	}],
-	arrayStride: 28,
+	attributes: [
+		{
+			// Position
+			shaderLocation: 0,
+			offset: 0,
+			format: 'float32x3'
+		},
+		{
+			// Normal
+			shaderLocation: 1,
+			offset: 12,
+			format: 'float32x3'
+		},
+		{
+			// Color
+			shaderLocation: 2,
+			offset: 24,
+			format: 'uint32'
+		},
+		{
+			// Softness
+			shaderLocation: 3,
+			offset: 28,
+			format: 'float32'
+		}
+	],
+	arrayStride: 32,
 };
 
 const offsetInstanceLayout: GPUVertexBufferLayout = {
 	stepMode: 'instance',
 	attributes: [{
 		// Offset
-		shaderLocation: 3,
+		shaderLocation: 4,
 		offset: 0,
 		format: 'float32x3'
 	}],

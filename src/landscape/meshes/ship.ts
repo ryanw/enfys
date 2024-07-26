@@ -23,6 +23,7 @@ export class ShipMesh extends SimpleMesh {
 				color = 0xff4dB2ff;
 			}
 			return {
+				softness: 0,
 				position: [...position],
 				normal: [0, 0, 0],
 				color: BigInt(color),

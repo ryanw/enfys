@@ -10,12 +10,14 @@ struct PackedVertex {
 	position: array<f32, 3>,
 	normal: array<f32, 3>,
 	color: u32,
+	softness: f32,
 }
 
 struct Vertex {
 	position: vec3f,
 	normal: vec3f,
 	color: u32,
+	softness: f32,
 }
 
 struct VertexIn {
@@ -114,6 +116,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		vec3(packedVertex.position[0], packedVertex.position[1], packedVertex.position[2]),
 		vec3(packedVertex.normal[0], packedVertex.normal[1], packedVertex.normal[2]),
 		packedVertex.color,
+		packedVertex.softness,
 	);
 
 	let transform = mat4x4(
@@ -126,15 +129,15 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * camera.view;
 	var p = offsetModel * vec4(v.position, 1.0);
-	if JIGGLY && in.instance > 0u {
-		let j0 = fractalNoise((p.xyz/p.w) / 4.0 + vec3(1000.0, camera.t * 1.0, 0.0), 1) - 0.5;
-		let j1 = fractalNoise((p.xyz/p.w) / 4.0 + vec3(2000.0, camera.t * 1.0, 0.0), 1) - 0.5;
-		let j2 = fractalNoise((p.xyz/p.w) / 4.0 + vec3(3000.0, camera.t * 1.0, 0.0), 1) - 0.5;
-		let jigFactor = clamp(smoothstep(0.0, 3.0, p.y - 1.0), 0.0, 1.0);
+	if JIGGLY && v.softness > 0.0 {
+		let j0 = fractalNoise((p.xyz/p.w) / 32.0 + vec3(100.0) + vec3(camera.t) * vec3(0.2, 0.01, 0.1), 2) - 0.5;
+		let j1 = fractalNoise((p.xyz/p.w) / 32.0 + vec3(200.0) + vec3(camera.t) * vec3(0.2, 0.01, 0.1), 2) - 0.5;
+		let j2 = fractalNoise((p.xyz/p.w) / 32.0 + vec3(300.0) + vec3(camera.t) * vec3(0.2, 0.01, 0.1), 2) - 0.5;
+		let jigFactor = clamp(smoothstep(0.0, 3.0, p.y - 1.0), 0.0, 1.0) * v.softness / 2.0;
 		let jig = vec3(j0, 0.0, j2) * jigFactor;
 		p.x += jig.x;
 		p.y += jig.y;
-		p.y += jig.y;
+		p.z += jig.z;
 	}
 	var position = mvp * p;
 

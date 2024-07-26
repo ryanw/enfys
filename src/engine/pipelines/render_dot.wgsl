@@ -1,12 +1,11 @@
-@import "engine/shaders/noise.wgsl";
-
 struct VertexIn {
 	@builtin(vertex_index) id: u32,
 	@location(0) position: vec3f,
 	@location(1) normal: vec3f,
 	@location(2) color: u32,
+	@location(3) softness: f32,
 	// Instance
-	@location(3) offset: vec3f,
+	@location(4) offset: vec3f,
 }
 
 struct VertexOut {
@@ -107,3 +106,5 @@ fn sdPentagon(q: vec2f, r: f32) -> f32 {
 
 @import "engine/shaders/helpers.wgsl";
 @import "engine/shaders/color.wgsl";
+@import "engine/shaders/noise.wgsl";
+

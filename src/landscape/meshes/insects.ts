@@ -28,18 +28,21 @@ export class InsectsMesh extends VariantMesh {
 		};
 
 		const toHeadVertex = (position: Point3): ColorVertex => ({
+			softness: 0,
 			position,
 			normal: [0, 0, 0],
 			color: rndColor(headHue, position),
 		});
 
 		const toBodyVertex = (position: Point3): ColorVertex => ({
+			softness: 0,
 			position,
 			normal: [0, 0, 0],
 			color: rndColor(bodyHue, position),
 		});
 
 		const toLegsVertex = (position: Point3): ColorVertex => ({
+			softness: 0,
 			position,
 			normal: [0, 0, 0],
 			color: rndColor(legsHue, position),

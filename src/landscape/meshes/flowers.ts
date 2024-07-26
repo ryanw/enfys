@@ -29,26 +29,40 @@ export class FlowersMesh extends VariantMesh {
 		const diskColor = BigInt(colorToInt(hsl(diskHue, 0.7, 0.5)));
 		const stalkColor = BigInt(colorToInt(hsl(stalkHue, 0.7, 0.5)));
 
-		const stalk = buildCylinder(stalkHeight, stalkWidth, [4, 4]).map(position => ({
-			position: add(position, [0,stalkHeight/2,0]),
-			normal: [0, 0, 0],
-			color: stalkColor,
-		} as ColorVertex));
+		const getSoftness = (p: Point3) => Math.pow(p[1], 2);
 
-		const disk = buildIcosahedron(p => ({
-			position: add(scale(p, diskRad), [0, stalkHeight, 0]),
-			normal: [0, 0, 0],
-			color: diskColor,
-		} as ColorVertex));
+		const stalk = buildCylinder(stalkHeight, stalkWidth, [4, 4]).map(p => {
+			const position = add<Point3>(p, [0, stalkHeight / 2, 0]);
+			return ({
+				position,
+				softness: getSoftness(position),
+				normal: [0, 0, 0],
+				color: stalkColor,
+			} as ColorVertex)
+		});
 
-		const petal = buildIcosahedron(p => ({
-			position: add(
+		const disk = buildIcosahedron(p => {
+			const position = add<Point3>(scale(p, diskRad), [0, stalkHeight, 0]);
+			return ({
+				softness: getSoftness(position),
+				position,
+				normal: [0, 0, 0],
+				color: diskColor,
+			} as ColorVertex)
+		});
+
+		const petal = buildIcosahedron(p => {
+			const position = add<Point3>(
 				[p[0] * petalRad, p[1] / 10, p[2] * petalRad / 2],
 				[petalRad, stalkHeight, 0],
-			),
-			normal: [0, 0, 0],
-			color: petalColor,
-		} as ColorVertex));
+			);
+			return ({
+				softness: getSoftness(position),
+				position,
+				normal: [0, 0, 0],
+				color: petalColor,
+			} as ColorVertex)
+		});
 
 		const vertices = [...stalk, ...disk];
 
@@ -57,9 +71,11 @@ export class FlowersMesh extends VariantMesh {
 		for (let i = 0; i < maxPetalCount; i++) {
 			const rot = rotation(0, a * i, 0);
 			for (const vertex of petal) {
+				const position = i < petalCount ? transformPoint(rot, vertex.position) : nullPoint;
 				vertices.push({
 					...vertex,
-					position: i < petalCount ? transformPoint(rot, vertex.position) : nullPoint,
+					softness: getSoftness(position),
+					position,
 				});
 			}
 		}

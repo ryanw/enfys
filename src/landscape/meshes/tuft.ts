@@ -5,6 +5,7 @@ import { VariantMesh } from './variant';
 import { jiggleVertices } from '.';
 import { add } from 'engine/math/vectors';
 import { colorToInt, hsl } from 'engine/color';
+import { Point3 } from 'engine/math';
 
 export class TuftMesh extends VariantMesh {
 	override generateVariant(i: number): Array<ColorVertex> {
@@ -14,6 +15,7 @@ export class TuftMesh extends VariantMesh {
 		const bladeCount = 3;
 
 		const color = colorToInt(hsl(rnd(), rnd(0.4, 0.7), rnd(0.4, 0.7)));
+		const getSoftness = (p: Point3) => Math.pow(p[1], 2);
 
 		let vertices: Array<ColorVertex> = [];
 		for (let i = 0; i < bladeCount; i++) {
@@ -24,11 +26,15 @@ export class TuftMesh extends VariantMesh {
 			const y = height / 2 - 0.3;
 			const z = rnd(-spread, spread);
 
-			const blade: Array<ColorVertex> = buildCylinder(height, radius, [3, 4]).map(position => ({
-				position: add(position, [x, y, z]),
-				normal: [0, 0, 0],
-				color: BigInt(color),
-			}));
+			const blade: Array<ColorVertex> = buildCylinder(height, radius, [3, 4]).map(p => {
+				const position = add<Point3>(p, [x, y, z]);
+				return ({
+					softness: getSoftness(position),
+					position,
+					normal: [0, 0, 0],
+					color: BigInt(color),
+				})
+			});
 
 			vertices = [...vertices, ...blade];
 		}

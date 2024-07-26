@@ -14,6 +14,7 @@ export class StarMesh extends SimpleMesh {
 		readonly seed: number,
 	) {
 		const vertices = buildIcosahedron(position => ({
+			softness: 0,
 			position: position.map(v => v * 2),
 			normal: [0, 0, 0],
 			color: BigInt(0xffffffff),

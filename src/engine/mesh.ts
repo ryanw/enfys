@@ -36,6 +36,7 @@ export interface TextureVertex extends NormalVertex {
  */
 export interface ColorVertex extends NormalVertex {
 	color: number | bigint,
+	softness: number,
 }
 
 /**
@@ -182,7 +183,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
  * Instanced Mesh made of {@link ColorVertex} vertices
  */
 export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
-	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color'];
+	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color', 'softness'];
 	instanceOrder: Array<keyof ColorInstance> = ['transform', 'instanceColor', 'variantIndex'];
 	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<ColorInstance>) {
 		super(gfx);
@@ -264,6 +265,7 @@ function toArrayBuffer<V extends Vertex<V>>(vertices: Array<V>, attributes: Arra
 
 function toVertex(position: Point3): ColorVertex {
 	return {
+		softness: 0.0,
 		position: [...position],
 		normal: [0, 1, 0],
 		color: BigInt(0xffffffff),
@@ -337,6 +339,7 @@ export class Cube extends SimpleMesh {
 export class Icosahedron extends SimpleMesh {
 	constructor(gfx: Gfx, instances?: Array<ColorInstance>) {
 		const vertices = buildIcosahedron(position => ({
+			softness: 0.0,
 			position: [...position],
 			normal: [0, 0, 0],
 			color: BigInt(0xff00ddff),

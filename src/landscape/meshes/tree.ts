@@ -18,6 +18,7 @@ function buildBranch(p0: Point3, p1: Point3, radius: number = 1.0): Array<ColorV
 	return buildCylinder(h, radius, [4, 1]).map(position => {
 		const p = transformPoint(transform, position);
 		return {
+			softness: 0,
 			position: p,
 			normal: [0, 0, 0],
 			color: BigInt(0xff20689a),
@@ -27,6 +28,7 @@ function buildBranch(p0: Point3, p1: Point3, radius: number = 1.0): Array<ColorV
 
 function buildBush(position: Point3, radius: number = 1, color: number = 0xff209a68): Array<ColorVertex> {
 	return buildIcosphere(0, p => ({
+		softness: 0.4,
 		position: add(scale(p, radius), position),
 		normal: [0, 0, 0],
 		color: BigInt(color),
@@ -37,6 +39,11 @@ export class TreeMesh extends VariantMesh {
 	override generateVariant(i: number): Array<ColorVertex> {
 		const seed = this.seed + i * 3121;
 		const rnd = randomizer(seed);
+		const getSoftness = (p: Point3) => {
+			const { pow, min, max } = Math;
+			return pow(min(1, max(0, p[1] - 3.0)), 0.8);
+		};
+
 		let vertices: ColorVertex[] = [];
 
 		const l = new LSystem({ F: 'FF+[+F-F-F]-[-F+F+F]' });
@@ -103,6 +110,8 @@ export class TreeMesh extends VariantMesh {
 					break;
 			}
 		}
+
+		//vertices.forEach(v => v.softness = getSoftness(v.position));
 
 		calculateNormals(vertices);
 		return vertices;

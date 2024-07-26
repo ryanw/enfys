@@ -1,7 +1,7 @@
 const BLEND_TO_ALPHA: bool = false;
 const DRAW_SHADOWS: bool = true;
 const DRAW_WATER: bool = true;
-const DISTORT_WATER: vec2f = vec2(12.0, 0.1);
+const DISTORT_WATER: vec2f = vec2(32.0, 0.3);
 const DRAW_FOG: bool = true;
 const EDGE_MODE: i32 = 3;
 const DITHER_SHADOWS: bool = false;

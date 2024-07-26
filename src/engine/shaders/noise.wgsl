@@ -47,31 +47,37 @@ fn rnd2(seed: vec2<f32>) -> f32 {
 	return rnd3u(useed.xyy);
 }
 
-fn smoothNoise(v: vec3<f32>) -> f32 {
-	var lv = smoothVec(fract(v));
+fn fade(t: f32) -> f32 {
+	//return t;
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
+fn smoothNoise(v: vec3f) -> f32 {
+	//var lv = smoothVec(fract(v));
+	var lv = fract(v);
 	var id = floor(v);
 
-	var bnl = rnd3(id + vec3<f32>(0.0, 0.0, 0.0));
-	var bnr = rnd3(id + vec3<f32>(1.0, 0.0, 0.0));
-	var bn = mix(bnl, bnr, lv.x);
+	var bnl = rnd3(id + vec3f(0.0, 0.0, 0.0));
+	var bnr = rnd3(id + vec3f(1.0, 0.0, 0.0));
+	var bn = mix(bnl, bnr, fade(lv.x));
 
-	var bfl = rnd3(id + vec3<f32>(0.0, 0.0, 1.0));
-	var bfr = rnd3(id + vec3<f32>(1.0, 0.0, 1.0));
-	var bf = mix(bfl, bfr, lv.x);
+	var bfl = rnd3(id + vec3f(0.0, 0.0, 1.0));
+	var bfr = rnd3(id + vec3f(1.0, 0.0, 1.0));
+	var bf = mix(bfl, bfr, fade(lv.x));
 
-	var b = mix(bn, bf, lv.z);
+	var b = mix(bn, bf, fade(lv.z));
 
-	var tnl = rnd3(id + vec3<f32>(0.0, 1.0, 0.0));
-	var tnr = rnd3(id + vec3<f32>(1.0, 1.0, 0.0));
-	var tn = mix(tnl, tnr, lv.x);
+	var tnl = rnd3(id + vec3f(0.0, 1.0, 0.0));
+	var tnr = rnd3(id + vec3f(1.0, 1.0, 0.0));
+	var tn = mix(tnl, tnr, fade(lv.x));
 
-	var tfl = rnd3(id + vec3<f32>(0.0, 1.0, 1.0));
-	var tfr = rnd3(id + vec3<f32>(1.0, 1.0, 1.0));
-	var tf = mix(tfl, tfr, lv.x);
+	var tfl = rnd3(id + vec3f(0.0, 1.0, 1.0));
+	var tfr = rnd3(id + vec3f(1.0, 1.0, 1.0));
+	var tf = mix(tfl, tfr, fade(lv.x));
 
-	var t = mix(tn, tf, lv.z);
+	var t = mix(tn, tf, fade(lv.z));
 
-	var c = mix(b, t, lv.y);
+	var c = mix(b, t, fade(lv.y));
 
 	return c;
 }
@@ -82,7 +88,7 @@ fn fractalNoise(p: vec3<f32>, octaves: i32) -> f32 {
 	var total = 0.0;
 	var freq = 4.0;
 	for (var i: i32 = 0; i < octaves; i++) {
-		c += smoothNoise(p * freq) * amp;
+		c += smoothNoise(p * freq + vec3(971.0)) * amp;
 		total += amp;
 		freq *= 3.0;
 		amp /= 2.0;

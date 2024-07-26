@@ -342,6 +342,7 @@ export class WorldGraphics {
 	private removeExpiredTerrainChunks(entity: Entity, terrain: TerrainComponent, scene: Scene) {
 		const chunks = this.terrains.get(entity);
 		if (!chunks) return;
+		let limit = 4;
 		for (const [key, _chunk] of this.activeTerrain.entries()) {
 			// It's still live, skip it
 			if (terrain.chunks.has(key)) continue;
@@ -352,6 +353,9 @@ export class WorldGraphics {
 			// Terrain has expired, remove it
 			scene.removePawn(pawn);
 			chunks.delete(key);
+			if (--limit < 0) {
+				break;
+			}
 		}
 	}
 
