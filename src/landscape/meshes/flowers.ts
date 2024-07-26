@@ -3,7 +3,7 @@ import { colorToInt, hsl } from 'engine/color';
 import { Point3 } from 'engine/math';
 import { rotation, transformPoint } from 'engine/math/transform';
 import { add, scale } from 'engine/math/vectors';
-import { ColorVertex, CUBE_VERTS, buildIcosahedron, PointVertex } from 'engine/mesh';
+import { ColorVertex, buildCylinder, CUBE_VERTS, buildIcosahedron, PointVertex } from 'engine/mesh';
 import { randomizer } from 'engine/noise';
 import { VariantMesh } from './variant';
 import { jiggleVertices } from '.';
@@ -23,18 +23,14 @@ export class FlowersMesh extends VariantMesh {
 		const diskRad = rnd(0.1, 0.3);
 		const petalRad = diskRad + rnd(0.1, 0.3);
 		const stalkWidth = rnd(min(0.03, diskRad / 4), diskRad / 4);
-		const stalkHeight = rnd(0.3, 1.2);
+		const stalkHeight = rnd(0.6, 1.2);
 
 		const petalColor = BigInt(colorToInt(hsl(petalHue, 0.7, 0.5)));
 		const diskColor = BigInt(colorToInt(hsl(diskHue, 0.7, 0.5)));
 		const stalkColor = BigInt(colorToInt(hsl(stalkHue, 0.7, 0.5)));
 
-		const stalk = CUBE_VERTS.map(p => ({
-			position: [
-				p[0] * stalkWidth,
-				p[1] * stalkHeight,
-				p[2] * stalkWidth,
-			],
+		const stalk = buildCylinder(stalkHeight, stalkWidth, [4, 4]).map(position => ({
+			position: add(position, [0,stalkHeight/2,0]),
 			normal: [0, 0, 0],
 			color: stalkColor,
 		} as ColorVertex));

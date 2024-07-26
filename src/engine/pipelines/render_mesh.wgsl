@@ -1,4 +1,10 @@
 const DITHER_SHADOWS: bool = true;
+const DRAW_BUMPS: bool = false;
+const JIGGLY: bool = true;
+
+const SKIN_MATTE: u32 = 1u << 0u;
+const SKIN_EMISSIVE: u32 = 1u << 1u;
+const SKIN_NOISE: u32 = 1u << 2u;
 
 struct PackedVertex {
 	position: array<f32, 3>,
@@ -14,6 +20,7 @@ struct Vertex {
 
 struct VertexIn {
 	@builtin(vertex_index) id: u32,
+	@builtin(instance_index) instance: u32,
 	// Instance
 	@location(3) transform0: vec4f,
 	@location(4) transform1: vec4f,
@@ -32,6 +39,7 @@ struct VertexOut {
 	@location(4) modelPosition: vec3f,
 	@location(5) modelNormal: vec3f,
 	@location(6) @interpolate(flat) triangleId: u32,
+	@location(7) @interpolate(flat) quadId: u32,
 }
 
 struct FragmentOut {
@@ -59,9 +67,10 @@ struct Pawn {
 struct Material {
 	color: u32,
 	dither: u32,
-	emissive: u32,
-	receiveShadows: u32,
 	fadeout: f32,
+	skin: u32,
+	noise: vec4<f32>,
+	receiveShadows: u32,
 }
 
 struct Shadow {
@@ -95,6 +104,8 @@ var<storage, read> vertices: array<PackedVertex>;
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
+	let emissive = (material.skin & SKIN_EMISSIVE) != 0;
+
 	let variantIndex = in.variantIndex + pawn.variantIndex;
 	let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
 	let idx = in.id + vertexOffset;
@@ -113,13 +124,28 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	);
 	let offsetModel = pawn.model * transform;
 	let mv = camera.view * offsetModel;
-	let mvp = camera.projection * mv;
-	out.position = mvp * vec4(v.position, 1.0);
+	let mvp = camera.projection * camera.view;
+	var p = offsetModel * vec4(v.position, 1.0);
+	if JIGGLY && in.instance > 0u {
+		let j0 = fractalNoise((p.xyz/p.w) / 4.0 + vec3(1000.0, camera.t * 1.0, 0.0), 1) - 0.5;
+		let j1 = fractalNoise((p.xyz/p.w) / 4.0 + vec3(2000.0, camera.t * 1.0, 0.0), 1) - 0.5;
+		let j2 = fractalNoise((p.xyz/p.w) / 4.0 + vec3(3000.0, camera.t * 1.0, 0.0), 1) - 0.5;
+		let jigFactor = clamp(smoothstep(0.0, 3.0, p.y - 1.0), 0.0, 1.0);
+		let jig = vec3(j0, 0.0, j2) * jigFactor;
+		p.x += jig.x;
+		p.y += jig.y;
+		p.y += jig.y;
+	}
+	var position = mvp * p;
+
+
+	out.position = position;
 	out.uv = v.position.xy * 0.5 + 0.5;
 
 
 	let triangleId = in.id / 3;
-	if material.emissive > 0 {
+	let quadId = in.id / 6;
+	if emissive {
 		out.normal = vec3(0.0);
 	}
 	else {
@@ -140,7 +166,9 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	else {
 		out.color = vertexColor * materialColor;
 	}
-	out.triangleId = (rnd3uu(vec3(triangleId + pawn.id))) % 0xff;
+
+	out.triangleId = (rnd3uu(vec3(4 + triangleId, 0, 9 + pawn.id))) % 0xff;
+	out.quadId = (rnd3uu(vec3(4 + quadId, 0, 9 + pawn.id))) % 0xff;
 
 	return out;
 }
@@ -153,6 +181,8 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	if color.a == 0.0 {
 		discard;
 	}
+
+	let noisy = material.noise.x > 0.0;
 
 	var shade = 0.0;
 	var shadowCount = 8u;
@@ -182,18 +212,18 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		discard;
 	}
 	if camera.isShadowMap == 0 {
-		out.metaOutput = in.triangleId;
+		out.metaOutput = in.quadId;
 		out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
 
 		var nn = vec3(0.0);
-		if length(in.normal) > 0.0 {
+		if noisy && length(in.normal) > 0.0 {
 			var s0 = 0.1;
-			var s1 = 1.0;
-			var nl = fractalNoise(s1 * in.modelPosition + vec3(-s0, 0.0, 0.0), 3) - 0.5;
-			var nr = fractalNoise(s1 * in.modelPosition + vec3(s0, 0.0, 0.0), 3) - 0.5;
-			var nd = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, -s0), 3) - 0.5;
-			var nu = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, s0), 3) - 0.5;
-			var grad = vec3(nl - nr, 0.5, nd - nu);
+			var s1 = material.noise.x;
+			var nl = fractalNoise(s1 * in.modelPosition + vec3(-s0, 0.0, 0.0), 2) - 0.5;
+			var nr = fractalNoise(s1 * in.modelPosition + vec3(s0, 0.0, 0.0), 2) - 0.5;
+			var nd = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, -s0), 2) - 0.5;
+			var nu = fractalNoise(s1 * in.modelPosition + vec3(0.0, 0.0, s0), 2) - 0.5;
+			var grad = vec3(nl - nr, material.noise.y, nd - nu);
 			nn = normalize(grad);
 		}
 		out.normal = vec4(normalize(in.normal + nn), 0.0);

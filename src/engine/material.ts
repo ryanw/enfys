@@ -1,5 +1,12 @@
 import { Color, Gfx } from 'engine';
 import { UniformBuffer } from './uniform_buffer';
+import { Vector4 } from './math';
+
+export enum Skin {
+	Matte = 1 << 0,
+	Emissive = 1 << 1,
+	Noise = 1 << 2,
+}
 
 /**
  * Material defines the properties of the rendered mesh
@@ -23,7 +30,7 @@ export class DotMaterial extends Material {
 		this.uniform = new UniformBuffer(gfx, [
 			['color', 'vec4f'],
 		]);
-		this.uniform.set('color', this.color.map(v => v/255));
+		this.uniform.set('color', this.color.map(v => v / 255));
 	}
 
 	bindingResource(): GPUBindingResource {
@@ -39,7 +46,8 @@ export class SimpleMaterial extends Material {
 	private _color: bigint;
 	private _receiveShadows = true;
 	private _fadeout = 0.0;
-	private _emissive: boolean = false;
+	private _skin = Skin.Matte;
+	private _noise: Vector4 = [0, 0, 0, 0];
 
 	constructor(
 		readonly gfx: Gfx,
@@ -51,9 +59,10 @@ export class SimpleMaterial extends Material {
 		this.uniform = new UniformBuffer(gfx, [
 			['color', 'u32'],
 			['dither', 'u32'],
-			['emissive', 'u32'],
-			['receiveShadows', 'u32'],
 			['fadeout', 'f32'],
+			['skin', 'u32'],
+			['noise', 'vec4f'],
+			['receiveShadows', 'u32'],
 		]);
 		this.updateUniform();
 	}
@@ -86,11 +95,24 @@ export class SimpleMaterial extends Material {
 	}
 
 	get emissive(): boolean {
-		return this._emissive;
+		return (this._skin & Skin.Emissive) !== 0;
 	}
 
 	set emissive(emissive: boolean) {
-		this._emissive = emissive;
+		if (emissive) {
+			this._skin |= Skin.Emissive;
+		} else {
+			this._skin &= ~Skin.Emissive;
+		}
+		this.updateUniform();
+	}
+
+	get noise(): Vector4 {
+		return [...this._noise];
+	}
+
+	set noise(noise: Vector4) {
+		this._noise = [...noise];
 		this.updateUniform();
 	}
 
@@ -102,6 +124,7 @@ export class SimpleMaterial extends Material {
 		this.uniform.set('fadeout', this._fadeout);
 		this.uniform.set('receiveShadows', this._receiveShadows);
 		this.uniform.set('color', this._color);
-		this.uniform.set('emissive', this._emissive);
+		this.uniform.set('skin', this._skin);
+		this.uniform.set('noise', this._noise);
 	}
 }

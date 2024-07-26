@@ -20,6 +20,7 @@ export interface Config {
 	ditherSize: number;
 	ditherDepth: number;
 	drawEdges: boolean;
+	drawShadows: boolean;
 	renderMode: number;
 	fog: number;
 }
@@ -47,6 +48,7 @@ export class Gfx {
 	readonly format: GPUTextureFormat;
 	readonly gbuffer: GBuffer;
 	readonly shadowMap: ShadowMap;
+	private drawShadows: boolean = true;
 	private renderer: Renderer;
 	private frameSample: number = 128;
 	private frameTimes: Array<number> = [];
@@ -167,6 +169,9 @@ export class Gfx {
 			this.canvasPixelRatio = config.canvasPixelRatio;
 			this.updateSize();
 		}
+		if (config.drawShadows != null) {
+			this.drawShadows = config.drawShadows;
+		}
 		Object.assign(
 			this.renderer.pipelines.compose.config,
 			config,
@@ -196,7 +201,9 @@ export class Gfx {
 	async draw(scene: Scene, camera: Camera) {
 		this.gbuffer.size = this.framebufferSize;
 		await this.encode(async (encoder) => {
-			this.renderer.drawSceneShadows(encoder, scene, scene.light, this.shadowMap);
+			if (this.drawShadows) {
+				this.renderer.drawSceneShadows(encoder, scene, scene.light, this.shadowMap);
+			}
 			this.renderer.drawScene(encoder, scene, camera, this.gbuffer);
 			this.renderer.compose(
 				encoder,

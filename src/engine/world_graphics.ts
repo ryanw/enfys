@@ -23,7 +23,8 @@ import { TerrainPipeline } from './pipelines/terrain';
 import { ColorScheme } from './color_scheme';
 import { DecorComponent } from './ecs/components/decor';
 import { DecorMesh } from './decor_mesh';
-import { VariantMesh } from '../landscape/meshes/variant';
+import { MaterialComponent } from './ecs/components/material';
+import { colorToInt } from './color';
 
 export type Resource = {};
 
@@ -167,7 +168,14 @@ export class WorldGraphics {
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
 				pawn = this.instanceMeshes.get(mesh);
 				if (!pawn) {
-					pawn = scene.addMesh(mesh, new SimpleMaterial(this.gfx, 0xffffffff));
+					const material = new SimpleMaterial(this.gfx, 0xffffffff);
+					const materialComp = world.getComponent(entity, MaterialComponent);
+					if (materialComp) {
+						material.color = colorToInt(materialComp.color);
+						material.emissive = materialComp.emissive;
+						material.noise = materialComp.noise;
+					}
+					pawn = scene.addMesh(mesh, material);
 					this.instanceMeshes.set(mesh, pawn);
 				}
 				const variantIndex = Math.random() * mesh.variantCount | 0;

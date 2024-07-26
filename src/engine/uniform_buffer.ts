@@ -8,7 +8,7 @@ export type UniformOffsets = Record<string, [WgslType, number]>;
 export type ByteSize = number;
 export type Alignment = number;
 
-export type UniformRecord = Record<string, boolean | number | Array<number>>;
+export type UniformRecord = Record<string, boolean | number | bigint | Array<number | bigint>>;
 
 /**
  * Storage for a struct inside a {@link GPUBuffer} which can be bound as a uniform in shaders.
@@ -55,7 +55,7 @@ export class UniformBuffer {
 		const diff: Set<string> = theirKeys.symmetricDifference(ourKeys);
 		if (diff.size > 0) {
 			console.error("Keys don't match", diff, theirKeys, ourKeys);
-			throw new Error(`Keys don't match: ${theirKeys} != ${ourKeys}`);
+			throw new Error(`Keys don't match, missing: ${Array.from(diff)}`);
 		}
 
 		// Copy every field into a single array buffer

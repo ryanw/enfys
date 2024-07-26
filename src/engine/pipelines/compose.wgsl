@@ -1,10 +1,20 @@
 const BLEND_TO_ALPHA: bool = false;
 const DRAW_SHADOWS: bool = true;
 const DRAW_WATER: bool = true;
-const DISTORT_WATER: bool = true;
+const DISTORT_WATER: vec2f = vec2(12.0, 0.1);
 const DRAW_FOG: bool = true;
-const EDGE_MODE: i32 = 2;
+const EDGE_MODE: i32 = 3;
+const DITHER_SHADOWS: bool = false;
 const DEBUG_SHADOW_MAP: i32 = -1;
+
+fn ditherPixel(p: vec2f, shade: f32, levels: i32) -> f32 {
+ let shadeLevels = f32(levels);
+ let div = f32(u.ditherSize);
+ let ditherCoord = vec2(i32(p.x / div) % 4, i32(p.y / div) % 4);
+ let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
+ return 1.0 - clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
+}
+
 
 struct VertexOut {
 	@builtin(position) position: vec4f,
@@ -21,6 +31,7 @@ struct Uniforms {
 	ditherSize: i32,
 	ditherDepth: i32,
 	drawEdges: i32,
+	drawShadows: i32,
 	renderMode: i32,
 	fog: f32,
 	t: f32,
@@ -81,11 +92,11 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let depth = textureLoad(depthTex, depthCoord, 0).r;
 	let pos = worldFromScreen(uv, depth, u.invMvp);
 
-	if DISTORT_WATER && pos.y < 0.0 {
-		let n0 = (fractalNoise(pos/64.0 + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
-		let n1 = (fractalNoise(pos/64.0 + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
-		uv.x = uv.x + n0;
-		uv.y = uv.y + n1;
+	if DISTORT_WATER.x > 0.0 && pos.y < 0.0 {
+		let n0 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
+		let n1 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
+		uv.x = uv.x + n0 * DISTORT_WATER.y;
+		uv.y = uv.y + n1 * DISTORT_WATER.y;
 	}
 
 	var ripDepthCoord = vec2u(depthSize * uv);
@@ -110,7 +121,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let metaCoord = vec2u(metaSize * uv);
 	let metaVal = textureLoad(metaTex, metaCoord, 0).r;
 
-	var isEdge = false;
+	var isEdge = 0.0;
 
 	if u.drawEdges > 0 {
 		const et = 1.0 / 1500.0;
@@ -129,16 +140,16 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			}
 
 			if length(metas[0] - metas[1]) > et {
-				//isEdge = true;
+				//isEdge = 1.0;
 			}
 			if length(metas[2] - metas[3]) > et {
-				isEdge = true;
+				isEdge = 1.0;
 			}
 			if length(metas[0] - metas[2]) > et {
-				//isEdge = true;
+				//isEdge = 1.0;
 			}
 			if length(metas[1] - metas[3]) > et {
-				isEdge = true;
+				isEdge = 1.0;
 			}
 
 		} else if EDGE_MODE == 1 {
@@ -151,51 +162,96 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			let d2 = textureLoad(depthTex, depthCoord - vec2(0, 1), 0).r;
 			let d3 = textureLoad(depthTex, depthCoord - vec2(1, 0), 0).r;
 			if d0 <= depth && length(n0 - normal) > et {
-				isEdge = true;
+				isEdge = 1.0;
 			}
 			if d1 <= depth && length(n1 - normal) > et {
-				isEdge = true;
+				isEdge = 1.0;
 			}
 			if d2 <= depth && length(n2 - normal) > et {
-				isEdge = true;
+				isEdge = 1.0;
 			}
 			if d3 <= depth && length(n3 - normal) > et {
-				isEdge = true;
+				isEdge = 1.0;
 			}
 		}
-		else if EDGE_MODE == 2 {
+		else if EDGE_MODE == 2 || (EDGE_MODE == 3 && uv.x < 0.5) {
 			let n0 = textureLoad(metaTex, metaCoord + vec2(1, 0), 0).r;
 			let n1 = textureLoad(metaTex, metaCoord - vec2(1, 0), 0).r;
 			let n2 = textureLoad(metaTex, metaCoord + vec2(0, 1), 0).r;
 			let n3 = textureLoad(metaTex, metaCoord - vec2(0, 1), 0).r;
 			if n0 < metaVal || n1 < metaVal || n2 < metaVal || n3 < metaVal {
-				isEdge = true;
+				isEdge = 1.0;
+			}
+		}
+		else if EDGE_MODE == 3 {
+			var offsets = array(
+				vec2(-1, 0),
+				vec2(1, 0),
+				vec2(0, -1),
+				vec2(0, 1),
+			);
+			for (var i = 0; i < 4; i++) {
+				let off = offsets[i];
+				let metaP = vec2i(metaCoord) + off;
+				let n = textureLoad(metaTex, metaP, 0).r;
+				if n < metaVal {
+					isEdge = length(vec2f(off));
+				}
 			}
 		}
 	}
 
+	var renderMode = u.renderMode;
+	var color = vec4(0.0);
 	var brightness = 1.0;
+	var shade = 0.0;
 
 	if length(normal) > 0.0 {
 		//let lightPos = u.light.xyz;
 		//let lightDir = normalize(pos - lightPos);
 		let lightDir = u.light.xyz;
-		let shade = dot(normal, lightDir) * 0.5 + 0.5;
+		shade = dot(normal, lightDir) * 0.5 + 0.5;
+	}
 
+	if DRAW_SHADOWS && u.drawShadows > 0 && renderMode == 0 {
+		if DITHER_SHADOWS {
+			var shadow = 0.0;
+			if isInShadow(ripPos, normal) {
+				shade += ditherPixel(in.position.xy, 0.5, 1);
+			}
+		} else {
+			let sp = 0.03;
+			let n = normal*0.02;
+			let shadowSamples: array<bool, 5> = array(
+				isInShadow(ripPos, normal),
+				isInShadow(ripPos + vec3(sp, 0.0, 0.0), normal),
+				isInShadow(ripPos + vec3(0.0, 0.0, sp), normal),
+				isInShadow(ripPos - vec3(sp, 0.0, 0.0), normal),
+				isInShadow(ripPos - vec3(0.0, 0.0, sp), normal),
+			);
 
+			var shadow = 0.0;
+			for (var i = 0; i < 5; i++) {
+				if (shadowSamples[i]) {
+					shadow += 1.0;
+				}
+			}
 
-		if u.ditherSize > 0 {
-			let shadeLevels = f32(u.ditherDepth);
-			let div = f32(u.ditherSize);
-			let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
-			let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
-			brightness = 1.0 - clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
-		}
-		else {
-			brightness = 1.0 - shade;
+			shade += shadow/5.0 / 2;
 		}
 	}
-	var color = vec4(0.0);
+
+	if u.ditherSize > 0 {
+		let shadeLevels = f32(u.ditherDepth);
+		let div = f32(u.ditherSize);
+		let ditherCoord = vec2(i32(in.position.x / div) % 4, i32(in.position.y / div) % 4);
+		let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
+		brightness = 1.0 - clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
+	}
+	else {
+		brightness = 1.0 - shade;
+	}
+
 	if BLEND_TO_ALPHA {
 		color = albedo * brightness;
 	}
@@ -203,7 +259,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		color = vec4(albedo.rgb * brightness, 1.0) * albedo.a;
 	}
 
-	var renderMode = u.renderMode;
 	if renderMode == 1 {
 		// GBuffer split view
 		if uv.y < 0.5 {
@@ -224,70 +279,53 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
+	switch (renderMode) {
+		// Shading
+		case 2: {
+			color = vec4(vec3(brightness), 1.0);
+		}
+		// Albedo
+		case 3: {
+			color = albedo;
+		}
+		// Normal
+		case 4: {
+			color = vec4(normal.xyz, 1.0);
+		}
+		// Position
+		case 5: {
+			color = vec4(pos.xyz / 100.0, 1.0);
+		}
+		// Depth
+		case 6: {
+			color = vec4(vec3((1.0-depth) * 10.0), 1.0);
+		}
+		// Meta
+		case 7: {
+			color = intToColor(metaVal);
+		}
+		// Fog
+		case 8: {
+			//color = vec4(vec3(fogFactor), 1.0);
+			return color;
+		}
+		default: {}
+	}
+
 	// Draw edges
-	if isEdge {
-		let ef = smoothstep(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
-		color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
+	if isEdge == 0.0 {
+	} else {
+		// Fade out in distance
+		//let ef = smoothstep(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
+		//color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
+		let m = smoothstep(0.0, 1.0, isEdge) / 3.0;
+		color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, m);
+		//color = vec4(vec3(1.0-isEdge/8.0), 1.0);
 	}
-	else {
-		switch (renderMode) {
-			// Shading
-			case 2: {
-				color = vec4(vec3(brightness), 1.0);
-			}
-			// Albedo
-			case 3: {
-				color = albedo;
-			}
-			// Normal
-			case 4: {
-				color = vec4(normal.xyz, 1.0);
-			}
-			// Position
-			case 5: {
-				color = vec4(pos.xyz / 100.0, 1.0);
-			}
-			// Depth
-			case 6: {
-				color = vec4(vec3((1.0-depth) * 10.0), 1.0);
-			}
-			// Meta
-			case 7: {
-				color = intToColor(metaVal);
-			}
-			// Fog
-			case 8: {
-				//color = vec4(vec3(fogFactor), 1.0);
-				return color;
-			}
-			default: {}
-		}
-	}
-
-	if DRAW_SHADOWS && renderMode == 0 {
-		let sp = 0.03;
-		let n = normal*0.02;
-		let shadowSamples: array<bool, 5> = array(
-			isInShadow(ripPos, normal),
-			isInShadow(ripPos + vec3(sp, 0.0, 0.0), normal),
-			isInShadow(ripPos + vec3(0.0, 0.0, sp), normal),
-			isInShadow(ripPos - vec3(sp, 0.0, 0.0), normal),
-			isInShadow(ripPos - vec3(0.0, 0.0, sp), normal),
-		);
-
-		var shadow = 0.0;
-		for (var i = 0; i < 5; i++) {
-			if (shadowSamples[i]) {
-				shadow += 1.0;
-			}
-		}
-		var lightness = 1.0 - shadow/5.0 / 2;
-		color = vec4(color.rgb*lightness, color.a);
-	}
-
 
 	// Draw water -- depth test to fix water behind fog
 	if DRAW_WATER && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
+		// Animate waves near edges
 		let noiseScale = 0.03;
 		let noiseOffset = vec3(u.t/37.0,u.t/24.0, u.t/47.0) * 20.0;
 		let n0 = fractalNoise((vec3(pos.x, pos.y, pos.z) + noiseOffset) * noiseScale, 3) - 0.5;

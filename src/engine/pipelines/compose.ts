@@ -18,6 +18,7 @@ export class ComposePipeline extends Pipeline {
 		ditherSize: 1,
 		ditherDepth: 4,
 		drawEdges: false,
+		drawShadows: true,
 		renderMode: 0,
 		fog: 1.0,
 	};
@@ -120,6 +121,7 @@ export class ComposePipeline extends Pipeline {
 			['ditherSize', 'i32'],
 			['ditherDepth', 'i32'],
 			['drawEdges', 'i32'],
+			['drawShadows', 'i32'],
 			['renderMode', 'i32'],
 			['fog', 'f32'],
 			['t', 'f32'],
@@ -162,6 +164,7 @@ export class ComposePipeline extends Pipeline {
 				: colorToInt(waterColor),
 			ditherSize: this.config.ditherSize,
 			ditherDepth: this.config.ditherDepth,
+			drawShadows: this.config.drawShadows,
 			drawEdges: this.config.drawEdges,
 			renderMode: this.config.renderMode,
 			fog: this.config.fog,
