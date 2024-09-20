@@ -2,7 +2,7 @@ import { Gfx } from 'engine';
 import defaultSource from './render_mesh.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
-import { SimpleMesh } from 'engine/mesh';
+import { ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
 import { Pawn } from 'engine/pawn';
 import { MaterialPipeline } from './material';
 import { ShadowMap } from 'engine/shadow_map';
@@ -11,7 +11,7 @@ import { DirectionalLight } from 'engine/light';
 /**
  * Render Pipeline to draw {@link SimpleMesh} instances to a {@link GBuffer}
  */
-export class RenderMeshPipeline extends MaterialPipeline {
+export class RenderMeshPipeline extends MaterialPipeline<ColorVertex, ColorInstance, SimpleMesh> {
 	private pipeline: GPURenderPipeline;
 	private pipelineShadowMap: GPURenderPipeline;
 	private pipelineNoDepth: GPURenderPipeline;

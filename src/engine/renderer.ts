@@ -5,12 +5,13 @@ import { Camera } from './camera';
 import { GBuffer } from './gbuffer';
 import { SimpleMesh } from './mesh';
 import { Pawn, isPawnOf } from './pawn';
-import { DotMaterial, Material, SimpleMaterial } from './material';
+import { DotMaterial, Material, SimpleMaterial, SpriteMaterial } from './material';
 import { MaterialPipeline } from './pipelines/material';
 import { RenderDotPipeline } from './pipelines/render_dot';
 import { ShadowMap } from './shadow_map';
 import { Scene } from './scene';
 import { DirectionalLight } from './light';
+import { RenderSpritePipeline } from './pipelines/render_sprite';
 
 export interface RenderPipelines {
 	compose: ComposePipeline,
@@ -27,6 +28,7 @@ export class Renderer {
 		};
 		this.registerMaterial(SimpleMaterial, new RenderMeshPipeline(gfx));
 		this.registerMaterial(DotMaterial, new RenderDotPipeline(gfx));
+		this.registerMaterial(SpriteMaterial, new RenderSpritePipeline(gfx));
 	}
 
 	registerMaterial<M extends Material, P extends MaterialPipeline>(material: Constructor<M>, pipeline: P) {
@@ -50,28 +52,28 @@ export class Renderer {
 
 		// Group entities by material, render them together if possible
 		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
-			function isSimpleMesh(entity: Pawn<unknown>): entity is Pawn<SimpleMesh> {
-				return isPawnOf(entity, SimpleMesh) && (entity.material instanceof Mat);
+			function isMatch(entity: Pawn<unknown>): boolean {
+				return (entity.material instanceof Mat);
 			}
 
-			const entities = scene.pawns.filter(isSimpleMesh);
+			const entities = scene.pawns.filter(isMatch);
 			pipeline.drawShadowMapBatch(encoder, entities, light, target);
 		}
 	}
 
 	drawScene(encoder: GPUCommandEncoder, scene: Scene, camera: Camera, target: GBuffer) {
 		const [w, h] = target.size;
-		camera.aspect = w / h;
+		camera.resize(w, h);
 		this.clear(encoder, target);
 
 
 		// Group entities by material, render them together if possible
 		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
-			function isSimpleMesh(entity: Pawn<unknown>): entity is Pawn<SimpleMesh> {
-				return isPawnOf(entity, SimpleMesh) && (entity.material instanceof Mat);
+			function isMatch(entity: Pawn<unknown>): boolean {
+				return entity.material instanceof Mat;
 			}
 
-			const entities = scene.pawns.filter(isSimpleMesh);
+			const entities = scene.pawns.filter(isMatch);
 			pipeline.drawBatch(encoder, entities, camera, target);
 		}
 	}

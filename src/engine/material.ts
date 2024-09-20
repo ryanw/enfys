@@ -1,6 +1,7 @@
 import { Color, Gfx } from 'engine';
 import { UniformBuffer } from './uniform_buffer';
 import { Vector4 } from './math';
+import { ResourceId } from './resource';
 
 export enum Skin {
 	Matte = 1 << 0,
@@ -31,6 +32,29 @@ export class DotMaterial extends Material {
 			['color', 'vec4f'],
 		]);
 		this.uniform.set('color', this.color.map(v => v / 255));
+	}
+
+	bindingResource(): GPUBindingResource {
+		return this.uniform.bindingResource();
+	}
+}
+
+/**
+ * Simple color {@link Material} stored in a {@link GPUBuffer}
+ */
+export class SpriteMaterial extends Material {
+	readonly uniform: UniformBuffer;
+
+	constructor(
+		readonly gfx: Gfx,
+		public texture: GPUTexture,
+		private tint: Color = [255, 255, 255, 255],
+	) {
+		super();
+		this.uniform = new UniformBuffer(gfx, [
+			['tint', 'vec4f'],
+		]);
+		this.uniform.set('tint', this.tint.map(v => v / 255));
 	}
 
 	bindingResource(): GPUBindingResource {

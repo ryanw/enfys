@@ -6,7 +6,7 @@ import replace from '@rollup/plugin-replace';
 import wgsl from './src/wgsl_loader.mjs';
 import html from './src/html_loader.mjs';
 
-const entries = ['hello', 'landscape'];
+const entries = ['noke', 'hello', 'landscape'];
 
 const projectRootDir = path.dirname(import.meta.url.replace("file://", ""));
 const enginePath = path.resolve(projectRootDir, './src/engine/');

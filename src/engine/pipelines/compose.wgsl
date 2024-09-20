@@ -1,18 +1,18 @@
 const BLEND_TO_ALPHA: bool = false;
-const DRAW_SHADOWS: bool = true;
-const DRAW_WATER: bool = true;
+const DRAW_SHADOWS: bool = false;
+const DRAW_WATER: bool = false;
 const DISTORT_WATER: vec2f = vec2(32.0, 0.3);
-const DRAW_FOG: bool = true;
+const DRAW_FOG: bool = false;
 const EDGE_MODE: i32 = 3;
 const DITHER_SHADOWS: bool = false;
 const DEBUG_SHADOW_MAP: i32 = -1;
 
 fn ditherPixel(p: vec2f, shade: f32, levels: i32) -> f32 {
- let shadeLevels = f32(levels);
- let div = f32(u.ditherSize);
- let ditherCoord = vec2(i32(p.x / div) % 4, i32(p.y / div) % 4);
- let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
- return 1.0 - clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
+	let shadeLevels = f32(levels);
+	let div = f32(u.ditherSize);
+	let ditherCoord = vec2(i32(p.x / div) % 4, i32(p.y / div) % 4);
+	let ditherVal = ditherMatrix[ditherCoord.x][ditherCoord.y];
+	return 1.0 - clamp(floor(shade * shadeLevels + ditherVal) / shadeLevels, 0.0, 1.0);
 }
 
 
@@ -92,7 +92,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let depth = textureLoad(depthTex, depthCoord, 0).r;
 	let pos = worldFromScreen(uv, depth, u.invMvp);
 
-	if DISTORT_WATER.x > 0.0 && pos.y < 0.0 {
+	if DRAW_WATER && DISTORT_WATER.x > 0.0 && pos.y < 0.0 {
 		let n0 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
 		let n1 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
 		uv.x = uv.x + n0 * DISTORT_WATER.y;

@@ -1,10 +1,14 @@
 import { Gfx, Triangle, calculateNormal } from 'engine';
 import { Matrix4, Plane, Point3, Vector3 } from './math';
-import { identity, transformPoint, inverse, multiply, multiplyVector, perspectiveProjection, rotation, scaling, translation, orthographicProjection } from './math/transform';
+import { identity, transformPoint, inverse, multiply, multiplyVector, orthographicProjection, perspectiveProjection, rotation, scaling, translation} from './math/transform';
 import { UniformBuffer } from './uniform_buffer';
 
 
 export type ClippingPlanes = [Plane, Plane, Plane, Plane, Plane, Plane];
+export enum ProjectionKind {
+	Perspective,
+	Orthographic,
+}
 
 /**
  * A camera in 3D space
@@ -18,10 +22,12 @@ export class Camera {
 	private _projection: Matrix4 = identity();
 	private _aspect: number = 1.0;
 	private _fov: number = 45.0;
+	private _projectionKind;
 	private _near: number = 1.0;
 	private _far: number = 20000.0;
 
-	constructor(readonly gfx: Gfx) {
+	constructor(readonly gfx: Gfx, projectionKind: ProjectionKind = ProjectionKind.Perspective) {
+		this._projectionKind = projectionKind;
 		this.uniform = new UniformBuffer(gfx, [
 			['view', 'mat4x4f'],
 			['projection', 'mat4x4f'],
@@ -121,8 +127,37 @@ export class Camera {
 		this.rebuildProjection();
 	}
 
+	resize(width: number, height: number) {
+		if (this.isOrthographic()) {
+			this.makeOrthographic(width, height);
+		}
+		else {
+			this._aspect = width / height;
+		}
+	}
+
+	makeOrthographic(width: number, height: number) {
+		this._near = -100000;
+		this._far = 100000;
+		this._fov = height;
+		this._aspect = width / height;
+		this._projectionKind = ProjectionKind.Orthographic;
+		this.rebuildProjection();
+	}
+
+	isPerspective(): boolean {
+		return this._projectionKind === ProjectionKind.Perspective;
+	}
+
+	isOrthographic(): boolean {
+		return this._projectionKind === ProjectionKind.Orthographic;
+	}
+
 	rebuildProjection() {
-		this._projection = perspectiveProjection(this._aspect, this._fov, this._near, this._far);
+		const size = [this._aspect * this._fov, this._fov];
+		this._projection = this.isPerspective()
+			? perspectiveProjection(this._aspect, this._fov, this._near, this._far)
+			: orthographicProjection(-size[0], size[0], -size[1], size[1], this._near, this._far);
 		this.updateView();
 	}
 

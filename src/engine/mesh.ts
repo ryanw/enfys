@@ -390,6 +390,17 @@ export function subdivideFace(face: Triangle, divisions: number): Array<Triangle
 	return faces.flatMap(face => subdivideFace(face, divisions - 1))
 }
 
+export const QUAD_VERTS: Array<Point3> = [
+	[0.5, -0.5, 0],
+	[-0.5, -0.5, 0],
+	[-0.5, 0.5, 0],
+
+	[0.5, -0.5, 0],
+	[-0.5, 0.5, 0],
+	[0.5, 0.5, 0],
+];
+
+
 export const CUBE_VERTS: Array<Point3> = [
 	[-1, -1, 1],
 	[1, -1, 1],

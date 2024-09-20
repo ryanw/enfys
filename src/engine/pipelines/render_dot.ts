@@ -2,7 +2,7 @@ import { Gfx } from 'engine';
 import shaderSource from './render_dot.wgsl';
 import { Camera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
-import { SimpleMesh } from 'engine/mesh';
+import { ColorInstance, ColorVertex, Mesh, SimpleMesh } from 'engine/mesh';
 import { Pawn } from 'engine/pawn';
 import { MaterialPipeline } from './material';
 import { ShadowMap } from 'engine/shadow_map';
@@ -11,7 +11,7 @@ import { DirectionalLight } from 'engine/light';
 /**
  * Render Pipeline to draw {@link SimpleMesh} instances using the {@link DotMaterial} to a {@link GBuffer}
  */
-export class RenderDotPipeline extends MaterialPipeline {
+export class RenderDotPipeline extends MaterialPipeline<ColorVertex, ColorInstance, SimpleMesh> {
 	private pipeline: GPURenderPipeline;
 	private pipelineNoDepth: GPURenderPipeline;
 

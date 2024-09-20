@@ -101,16 +101,16 @@ export function scaling(x: number, y: number = x, z: number = x): Matrix4 {
  * Create an orthographic projection matrix
  */
 export function orthographicProjection(left: number, right: number, bottom: number, top: number, near: number, far: number): Matrix4 {
-	const lr = 1 / (left - right);
-	const bt = 1 / (bottom - top);
-	const nf = 1 / (near - far);
+	const rl = (right - left);
+	const tb = (top - bottom);
+	const fn = (far - near);
 	return [
-		2 * lr, 0, 0, 0,
-		0, 2 * bt, 0, 0,
-		0, 0, 2 * nf, 0,
-		(left + right) * lr,
-		(bottom + top) * bt,
-		(near + far) * nf,
+		2/rl, 0, 0, 0,
+		0, 2/tb, 0, 0,
+		0, 0, 2/fn, 0,
+		-(right + left) / rl,
+		-(top + bottom) / tb,
+		-(far + near) / fn,
 		1,
 	];
 }

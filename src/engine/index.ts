@@ -283,15 +283,19 @@ export class Gfx {
 	/**
 	 * Create a new GPUTexture
 	 */
-	createTexture(format: GPUTextureFormat, size: GPUExtent3DStrict = [1, 1], label?: string): GPUTexture {
+	createTexture(format: GPUTextureFormat, size: GPUExtent3DStrict = [1, 1], label?: string, usageFlags?: GPUFlagsConstant): GPUTexture {
 		const device = this.device;
 		let usage = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
 
 		if (['r32uint', 'rgba8unorm', 'rgba8uint', 'r32float'].includes(format)) {
 			usage |= GPUTextureUsage.STORAGE_BINDING;
 		}
-		if (['r32uint', 'r8uint', 'rgba8unorm', 'rgba8snorm', 'rgba16float', 'rgba32float', 'depth32float', 'depth24plus'].includes(format)) {
+		if (['r32uint', 'r8uint', 'rgba8unorm', 'rgba16float', 'rgba32float', 'depth32float', 'depth24plus'].includes(format)) {
 			usage |= GPUTextureUsage.RENDER_ATTACHMENT;
+		}
+
+		if (usageFlags) {
+			usage = usage | usageFlags;
 		}
 
 		return device.createTexture({
@@ -305,8 +309,8 @@ export class Gfx {
 	/**
 	 * Create a new GPUBuffer
 	 */
-	createBuffer(size: number, usage: GPUBufferUsageFlags): GPUBuffer {
-		return this.device.createBuffer({ size, usage });
+	createBuffer(size: number, usage: GPUBufferUsageFlags, label?: string): GPUBuffer {
+		return this.device.createBuffer({ size, usage, label });
 	}
 }
 
