@@ -90,7 +90,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		const oldInstanceBuffer = this.instanceBuffer;
 		console.debug("Resizing Instance buffer %d bytes", ceil(oldInstanceBuffer.size * change));
 		const newInstanceBuffer = device.createBuffer({
-			label: 'Mesh Instance Buffer',
+			label: `Mesh<${this.constructor.name}> Instance Buffer`,
 			size: ceil(oldInstanceBuffer.size * change),
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
@@ -108,7 +108,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 
 	uploadInstances(instances: Array<I>) {
 		const { device } = this.gfx;
-		const capacity = Math.max(this.instanceCapacity, instances.length);
+		const capacity = Math.max(1, this.instanceCapacity, instances.length);
 		this.instanceSize = instances.length > 0 ? calcVertexSize(instances[0]) : this.instanceSize;
 		const keys = this.instanceOrder.length === 0 && instances.length > 0
 			? Object.keys(instances[0]).sort() as Array<keyof I>
@@ -117,7 +117,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		const instanceData = toArrayBuffer(instances, keys);
 		console.debug("Creating Instance buffer %d bytes", capacity * this.instanceSize);
 		const instanceBuffer = device.createBuffer({
-			label: 'Mesh Instance Buffer',
+			label: `Mesh<${this.constructor.name}> Instance Buffer`,
 			size: capacity * this.instanceSize,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
@@ -132,6 +132,10 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	}
 
 	writeInstance(idx: number, instance: I) {
+		if (idx >= this.instanceCapacity) {
+			console.error(`Instance is outside capacity. ${idx} instance, ${this.instanceCapacity} capacity`, this, instance);
+			throw new Error(`Instance is outside capacity. ${idx} instance, ${this.instanceCapacity} capacity`);
+		}
 		const { device } = this.gfx;
 		const instanceData = toArrayBuffer([instance], this.instanceOrder);
 		const byteOffset = instanceData.byteLength * idx;

@@ -1,9 +1,9 @@
 import { Gfx } from 'engine';
-import { ColorVertex, SimpleMesh } from 'engine/mesh';
+import { ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
 
 export class VariantMesh extends SimpleMesh {
-	constructor(gfx: Gfx, readonly seed: number, variantCount: number = 32) {
-		super(gfx, []);
+	constructor(gfx: Gfx, readonly seed: number, variantCount: number = 32, instances?: Array<ColorInstance>) {
+		super(gfx, [], instances);
 		const models: Array<Array<ColorVertex>> = [];
 
 		for (let i = 0; i < variantCount; i++) {
@@ -13,6 +13,8 @@ export class VariantMesh extends SimpleMesh {
 
 		padModels(models);
 		this.uploadVertices(models.flat(), models[0].length);
+		this.instanceCount = instances?.length ?? 0;
+		this.instanceOrder = [];
 	}
 
 	generateVariant(i: number): Array<ColorVertex> {

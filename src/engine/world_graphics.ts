@@ -163,7 +163,7 @@ export class WorldGraphics {
 			);
 
 			let [idx, pawn] = this.meshes.get(entity) || [];
-			if (!pawn || !idx) {
+			if (pawn == null || idx == null) {
 				// Create
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
 				pawn = this.instanceMeshes.get(mesh);
