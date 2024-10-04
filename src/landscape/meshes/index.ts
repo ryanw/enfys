@@ -15,7 +15,7 @@ export function buildSegment(p0: Point3, p1: Point3, radius: number = 1.0, divis
 	const mid = scale(add(p0, p1), 0.5);
 	const h = magnitude(subtract(p0, p1));
 	const dir = normalize(subtract(p1, p0));
-	const branchRotation = rotationFromVector(dir, dir[1] >= 0 ? [0, 1, 0] : [0, -1, 0]);
+	const branchRotation = rotationFromVector(dir, [0, 1, 0]);
 	const branchTranslate = translation(...mid);
 	const transform = multiply(branchTranslate, branchRotation);
 	return buildCylinder(h, radius, divisions).map(position => transformPoint(transform, position));

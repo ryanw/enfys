@@ -90,8 +90,8 @@ export async function main(el: HTMLCanvasElement) {
 	const tufts1 = decorPrefab(world, 'decor-tufts-2', seed, 7, 4, orbitCam);
 	const terrain = terrainPrefab(world, seed, orbitCam);
 
-	for (let i = 0; i< 10; i++) {
-		const animal = animalPrefab(world, [rnd(-32, 32), 3, rnd(-32, 32)]);
+	for (let i = 0; i < 1; i++) {
+		const animal = animalPrefab(world, 'animal-placeholder', [rnd(-32, 32), 3, rnd(-32, 32)]);
 	}
 
 	world.run();

@@ -35,13 +35,13 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 	]);
 }
 
-export function animalPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
+export function animalPrefab(world: World, mesh: ResourceId, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new PhysicsComponent(),
 		new InsectComponent(),
 		new TransformComponent(position),
 		new VelocityComponent([0, 0, 0]),
-		new MeshComponent('animal-placeholder'),
+		new MeshComponent(mesh),
 	]);
 }
 
