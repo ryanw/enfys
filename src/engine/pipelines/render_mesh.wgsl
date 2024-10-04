@@ -185,7 +185,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		discard;
 	}
 
-	let noisy = material.noise.x > 0.0;
+	let noisy = false;// FIXME material.noise.x > 0.0;
 
 	var shade = 0.0;
 	var shadowCount = 8u;
@@ -219,6 +219,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
 
 		var nn = vec3(0.0);
+		// Add noisy texture to surface
 		if noisy && length(in.normal) > 0.0 {
 			var s0 = 0.1;
 			var s1 = material.noise.x;

@@ -71,11 +71,10 @@ export function decorPrefab(world: World, mesh: ResourceId, seed: number, spread
 }
 
 export function terrainPrefab(world: World, seed: number, target?: Entity): Entity {
-	const { terrainSeed, terrainColors } = new Planet(seed);
-
+	const { terrainSeed, terrainColors } = new Planet(seed);255
 	return world.createEntity([
 		new TerrainComponent(terrainSeed, terrainColors.seed, target),
-		new MaterialComponent({ noise: [2.0, 0.6, 0.0, 0.0] }),
+		new MaterialComponent({ color: [255, 150, 0, 255] }),
 	]);
 }
 
