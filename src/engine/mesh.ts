@@ -96,19 +96,21 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		});
 		this.instanceBuffer = newInstanceBuffer;
 
-		// Copy old buffer into new buffer
-		await this.gfx.encode(async enc => {
-			enc.copyBufferToBuffer(
-				oldInstanceBuffer, 0,
-				newInstanceBuffer, 0,
-				min(oldInstanceBuffer.size, newInstanceBuffer.size)
-			);
-		});
+		if (oldInstanceBuffer.size > 0) {
+			// Copy old buffer into new buffer
+			await this.gfx.encode(async enc => {
+				enc.copyBufferToBuffer(
+					oldInstanceBuffer, 0,
+					newInstanceBuffer, 0,
+					min(oldInstanceBuffer.size, newInstanceBuffer.size)
+				);
+			});
+		}
 	}
 
 	uploadInstances(instances: Array<I>) {
 		const { device } = this.gfx;
-		const capacity = Math.max(1, this.instanceCapacity, instances.length);
+		const capacity = Math.max(this.instanceCapacity, instances.length);
 		this.instanceSize = instances.length > 0 ? calcVertexSize(instances[0]) : this.instanceSize;
 		const keys = this.instanceOrder.length === 0 && instances.length > 0
 			? Object.keys(instances[0]).sort() as Array<keyof I>

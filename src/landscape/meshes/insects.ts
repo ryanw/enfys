@@ -14,7 +14,7 @@ export class InsectsMesh extends VariantMesh {
 	}
 
 	generateVariant(i: number): Array<ColorVertex> {
-		const seed = this.seed + i * 214;
+		const seed = this.seed + i * 2140;
 		const rnd = randomizer(seed);
 		const size = rnd(0.2, 1.0);
 
@@ -50,20 +50,20 @@ export class InsectsMesh extends VariantMesh {
 		const vertices = [
 			// Head
 			buildIcosphere(1, p => toHeadVertex(
-				scale(add(p, [0, 1.3, 0.0]), [0.8, 0.8, 1.1])
+				scale(add(p, [0, 1.3, 2]), [0.6, 0.6, 0.8])
 			)),
 			// Body
 			buildIcosphere(1, p => toBodyVertex(
-				scale(add(p, [0, 1, -1]), [1, 1, 1.66])
+				scale(add(p, [0, 1, 0]), [1, 1, 1.66])
 			)),
 			// Legs - Right
-			buildSegment([0.5, legHip, 0], [legLen, legFoot, 0], legThickness, legRes).map(toLegsVertex),
-			buildSegment([0.5, legHip, -1], [legLen, legFoot, -1], legThickness, legRes).map(toLegsVertex),
-			buildSegment([0.5, legHip, -2], [legLen, legFoot, -2], legThickness, legRes).map(toLegsVertex),
+			buildSegment([0.6, legHip-0.1, 1], [legLen, legFoot, 1], legThickness, legRes).map(toLegsVertex),
+			buildSegment([0.6, legHip+0.2, 0], [legLen, legFoot, 0], legThickness, legRes).map(toLegsVertex),
+			buildSegment([0.6, legHip-0.1, -1], [legLen, legFoot, -1], legThickness, legRes).map(toLegsVertex),
 			// Legs - Left
-			buildSegment([-0.5, legHip, 0], [-legLen, legFoot, 0], legThickness, legRes).map(toLegsVertex),
-			buildSegment([-0.5, legHip, -1], [-legLen, legFoot, -1], legThickness, legRes).map(toLegsVertex),
-			buildSegment([-0.5, legHip, -2], [-legLen, legFoot, -2], legThickness, legRes).map(toLegsVertex),
+			buildSegment([-0.6, legHip-0.1, 1], [-legLen, legFoot, 1], legThickness, legRes).map(toLegsVertex),
+			buildSegment([-0.6, legHip+0.2, 0], [-legLen, legFoot, 0], legThickness, legRes).map(toLegsVertex),
+			buildSegment([-0.6, legHip-0.1, -1], [-legLen, legFoot, -1], legThickness, legRes).map(toLegsVertex),
 		].flat().map(v => ({ ...v, position: scale(v.position, size) }));
 
 		//jiggleVertices(vertices, 2 * size);

@@ -14,7 +14,6 @@ export class VariantMesh extends SimpleMesh {
 		padModels(models);
 		this.uploadVertices(models.flat(), models[0].length);
 		this.instanceCount = instances?.length ?? 0;
-		this.instanceOrder = [];
 	}
 
 	generateVariant(i: number): Array<ColorVertex> {
