@@ -316,9 +316,9 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	if isEdge == 0.0 {
 	} else {
 		// Fade out in distance
-		//let ef = smoothstep(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
+		//let ef = ss(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
 		//color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
-		let m = smoothstep(0.0, 1.0, isEdge) / 3.0;
+		let m = ss(0.0, 1.0, isEdge) / 3.0;
 		color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, m);
 		//color = vec4(vec3(1.0-isEdge/8.0), 1.0);
 	}
@@ -331,8 +331,8 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		let n0 = fractalNoise((vec3(pos.x, pos.y, pos.z) + noiseOffset) * noiseScale, 3) - 0.5;
 		let y = (-pos.y + n0 * 2.0) / 128.0;
 		if y > 0.0 {
-			let waterDepth = smoothstep(0.0, 1.5, pow(y, 0.4));
-			//let waterDepth = smoothstep(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
+			let waterDepth = ss(0.0, 1.5, pow(y, 0.4));
+			//let waterDepth = ss(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
 			if waterDepth > 0.0 {
 				var waterColor = uintToColor(u.waterColor);
 				let foamColor = vec4(0.8, 0.9, 1.0, 1.0);
@@ -353,8 +353,8 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	if DRAW_FOG && u.fog > 0.0 {
 		if depth >= 0.999 && pos.y < 4000.0 {
 			let fogColor = vec4(0.7, 0.4, 0.8, 1.0);
-			var fogFactor = smoothstep(4000.0, 0.0, pos.y);
-			fogFactor *= smoothstep(0.9995, 1.0, depth);
+			var fogFactor = ss(4000.0, 0.0, pos.y);
+			fogFactor *= ss(0.9995, 1.0, depth);
 			color = mix(color, fogColor, fogFactor);
 		}
 	}
