@@ -144,7 +144,11 @@ export class WorldGraphics {
 
 		const removed: Array<Entity> = [...this.particles.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
-			console.warn('Not implemented: Remove particles', entity);
+			const pawn = this.particles.get(entity);
+			this.particles.delete(entity);
+			if (pawn) {
+				scene.removePawn(pawn);
+			}
 		}
 	}
 
@@ -183,7 +187,8 @@ export class WorldGraphics {
 					transform,
 					instanceColor: 0,
 					variantIndex: BigInt(variantIndex),
-				}) - 1;
+					live: 1,
+				});
 				this.meshes.set(entity, [idx, pawn]);
 			}
 
@@ -191,13 +196,17 @@ export class WorldGraphics {
 			// FIXME better field updating
 			device.queue.writeBuffer(pawn.object.instanceBuffer, idx * pawn.object.instanceSize, new Float32Array(transform));
 		}
+
+		// Remove stale meshes
 		const removed: Array<Entity> = [...this.meshes.keys()].filter(e => !saw.has(e));
+		if (removed.length > 0) {
+			console.debug("Removing meshes", removed);
+		}
 		for (const entity of removed) {
-			const [_idx, pawn] = this.meshes.get(entity) || [];
+			const [idx, pawn] = this.meshes.get(entity) || [];
 			this.meshes.delete(entity);
-			if (pawn) {
-				// Delete
-				scene.removePawn(pawn);
+			if (pawn && idx != null) {
+				pawn.object.removeInstance(idx);
 			}
 		}
 	}

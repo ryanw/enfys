@@ -5,7 +5,7 @@
  */
 
 import { Gfx } from 'engine';
-import { Cube, Icosahedron } from 'engine/mesh';
+import { Cube } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { DotMaterial } from 'engine/material';
 import { ui } from './ui';
@@ -27,6 +27,8 @@ import { FlowersMesh } from './meshes/flowers';
 import { InsectsMesh } from './meshes/insects';
 import { InsectAISystem } from './systems/insect_ai';
 import { randomizer } from 'engine/noise';
+import { Socket } from 'engine/net/socket';
+import { NetworkSystem } from './systems/network';
 
 /**
  * Procedurally generated alien worlds
@@ -44,6 +46,9 @@ export async function main(el: HTMLCanvasElement) {
 	// Add the HTML UI stuff
 	ui(el.parentElement!, gfx, seed);
 
+	// Socket for multiplayer
+	const socket = connectSocket();
+	socket.login("Test User", seed);
 
 	// Graphics objects
 	const scene = new Scene(gfx);
@@ -74,6 +79,7 @@ export async function main(el: HTMLCanvasElement) {
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new TerrainSystem(gfx));
 	world.addSystem(new InsectAISystem());
+	world.addSystem(new NetworkSystem(socket));
 
 	const light = lightPrefab(world, [0.5, 0.7, 0.0]);
 	const player = playerPrefab(world, [0, 3, 0]);
@@ -91,7 +97,7 @@ export async function main(el: HTMLCanvasElement) {
 	const terrain = terrainPrefab(world, seed, orbitCam);
 
 	for (let i = 0; i < 20; i++) {
-		const animal = animalPrefab(world, 'animal-placeholder', [rnd(-32, 32), 3, rnd(-32, 32)]);
+		//const animal = animalPrefab(world, 'animal-placeholder', [rnd(-32, 32), 3, rnd(-32, 32)]);
 	}
 
 	world.run();
@@ -104,6 +110,15 @@ export async function main(el: HTMLCanvasElement) {
 		graphics.update(world, scene);
 		await gfx.draw(scene, scene.activeCamera);
 	});
+}
+
+function connectSocket(): Socket {
+	const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+	const hostname = window.location.hostname;
+	const port = proto === 'wss:' ? 443 : 3012;
+	const path = proto === 'wss:' ? '/v2/socket' : '';
+	const addr = `${proto}//${hostname}:${port}${path}`;
+	return new Socket(addr);
 }
 
 function getSeed(): number {

@@ -2,6 +2,7 @@ struct Instance {
 	transform: array<f32, 16>,
 	color: u32,
 	vertexIndex: u32,
+	live: u32,
 }
 
 struct Particle {
@@ -108,9 +109,11 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 		}
 		let opacity = 1.0 - clamp(pow(dur, 2.0), 0.0, 1.0);
 		color.a = opacity;
+		instance.live = 1u;
 	} else {
 		// Remove hidden particles
 		color = vec4(0.0);
+		instance.live = 0u;
 	}
 
 	instance.color = colorToUint(color);

@@ -30,6 +30,7 @@ struct VertexIn {
 	@location(6) transform3: vec4f,
 	@location(7) instanceColor: u32,
 	@location(8) variantIndex: u32,
+	@location(9) live: u32,
 }
 
 struct VertexOut {
@@ -106,6 +107,10 @@ var<storage, read> vertices: array<PackedVertex>;
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
+	if (in.live == 0u) {
+		out.position = vec4(100.0, 100.0, 100.0, 1.0);
+		return out;
+	}
 	let emissive = (material.skin & SKIN_EMISSIVE) != 0;
 
 	let variantIndex = in.variantIndex + pawn.variantIndex;

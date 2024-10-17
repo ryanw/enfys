@@ -6,7 +6,7 @@ import { UniformBuffer } from 'engine/uniform_buffer';
 const WorkgroupSize = [16, 16];
 const WorkgroupCount = [64, 64];
 const MaxInstances = WorkgroupSize[0] * WorkgroupSize[1] * WorkgroupCount[0] * WorkgroupCount[1];
-const InstanceByteSize = (16 + 1 + 1) * 4;// FIXME mat4x4f + u32 + u32 derive from type? OffsetInstance
+const InstanceByteSize = (16 + 1 + 1 + 1) * 4;// FIXME mat4x4f + u32 + u32 + live:u32 derive from type? OffsetInstance
 console.debug('Decor buffer size:', InstanceByteSize * MaxInstances);
 
 export class DecorUniform extends UniformBuffer {

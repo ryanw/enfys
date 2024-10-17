@@ -45,6 +45,7 @@ export interface ColorVertex extends NormalVertex {
 export interface TransformInstance {
 	transform: Matrix4;
 	variantIndex: number | bigint;
+	live: number;
 }
 
 export interface ColorInstance extends TransformInstance {
@@ -68,6 +69,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	instanceCount: number = 0;
 	variantCount: number = 1;
 	instanceSize: number = 0;
+	gaps: Set<number> = new Set();
 	private instanceCapacity: number = 2;
 
 	/**
@@ -77,6 +79,10 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	constructor(readonly gfx: Gfx, vertices: Array<V> = [], instances: Array<I> = []) {
 		this.uploadVertices(vertices);
 		this.uploadInstances(instances);
+	}
+
+	get hasCapacity(): boolean {
+		return this.instanceCount < this.instanceCapacity;
 	}
 
 	async resizeInstanceCapacity(capacity: number) {
@@ -117,9 +123,10 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 			: this.instanceOrder;
 		// Write instances
 		const instanceData = toArrayBuffer(instances, keys);
-		console.debug("Creating Instance buffer %d bytes", capacity * this.instanceSize);
+		const label = `Mesh<${this.constructor.name}> Instance Buffer`;
+		console.debug("Creating %s @ %d * %d = %d bytes", label, capacity, this.instanceSize, capacity * this.instanceSize);
 		const instanceBuffer = device.createBuffer({
-			label: `Mesh<${this.constructor.name}> Instance Buffer`,
+			label,
 			size: capacity * this.instanceSize,
 			usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
@@ -127,10 +134,6 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 
 		this.instanceCount = instances.length;
 		this.instanceBuffer = instanceBuffer;
-	}
-
-	get hasCapacity(): boolean {
-		return this.instanceCount < this.instanceCapacity;
 	}
 
 	writeInstance(idx: number, instance: I) {
@@ -146,8 +149,15 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 
 	pushInstance(instance: I): number {
 		if (!this.hasCapacity) {
-			console.error(`Instance Buffer is full. ${this.instanceCount + 1} instances, ${this.instanceCapacity} capacity`, this, instance);
-			throw new Error(`Instance Buffer is full. ${this.instanceCount + 1} instances, ${this.instanceCapacity} capacity`);
+			const newCapacity = Math.ceil(this.instanceCapacity * 1.5);
+			this.resizeInstanceCapacity(newCapacity);
+		}
+		// Reuse a gap
+		if (this.gaps.size > 0) {
+			const idx: number = this.gaps.values().next().value;
+			this.gaps.delete(idx);
+			this.writeInstance(idx, instance);
+			return idx;
 		}
 		const { device } = this.gfx;
 		const instanceData = toArrayBuffer([instance], this.instanceOrder);
@@ -155,7 +165,23 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		device.queue.writeBuffer(this.instanceBuffer, byteOffset, instanceData);
 
 		this.instanceCount += 1;
-		return this.instanceCount;
+		return this.instanceCount - 1;
+	}
+
+	removeInstance(idx: number) {
+		if (idx === this.instanceCount - 1) {
+			// End value, so just resize
+			this.instanceCount -= 1;
+		}
+		else {
+			// Start or middle index
+			this.gaps.add(idx);
+			// Live flag is last
+			const liveOffset = this.instanceSize - 4;
+			const byteOffset = idx * this.instanceSize + liveOffset;
+			console.log("Removing instance", idx, byteOffset, liveOffset);
+			this.gfx.device.queue.writeBuffer(this.instanceBuffer, byteOffset, new Uint32Array([0]));
+		}
 	}
 
 	uploadVertices(vertices: Array<V>, vertexCount?: number) {
@@ -190,7 +216,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
  */
 export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 	vertexOrder: Array<keyof ColorVertex> = ['position', 'normal', 'color', 'softness'];
-	instanceOrder: Array<keyof ColorInstance> = ['transform', 'instanceColor', 'variantIndex'];
+	instanceOrder: Array<keyof ColorInstance> = ['transform', 'instanceColor', 'variantIndex', 'live'];
 	constructor(gfx: Gfx, vertices: Array<ColorVertex> = [], instances?: Array<ColorInstance>) {
 		super(gfx);
 		this.uploadVertices(vertices);
@@ -202,6 +228,7 @@ export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 				transform: identity(),
 				instanceColor: BigInt(0xffffffff),
 				variantIndex: BigInt(0x0),
+				live: 1,
 			}]);
 		}
 	}

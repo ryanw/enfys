@@ -23,6 +23,14 @@ export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity
 	]);
 }
 
+export function opponentPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
+	return world.createEntity([
+		new ShipComponent(),
+		new TransformComponent(position),
+		new MeshComponent('player-ship'),
+	]);
+}
+
 export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new PlayerComponent(),

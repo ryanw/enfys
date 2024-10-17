@@ -2,6 +2,7 @@ struct Instance {
 	transform: array<f32, 16>,
 	color: u32,
 	variantIndex: u32,
+	live: u32,
 }
 
 struct Plane {
@@ -92,6 +93,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		);
 		instance.color = colorToUint(color);
 		instance.variantIndex = u32(abs(rnd3(p + vec3(31.0))) * 256.0);
+		instance.live = 1u;
 		let count = atomicAdd(&counter, 1u);
 		instances[count] = instance;
 	}

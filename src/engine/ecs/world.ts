@@ -42,6 +42,18 @@ export class World {
 		return entity;
 	}
 
+	removeEntity(entity: Entity) {
+		console.debug("Removing entity", entity);
+		this.entityComponents.delete(entity);
+		const components = this.componentsByEntity.get(entity);
+		this.componentsByEntity.delete(entity);
+		if (components) {
+			for (const kind of components.keys()) {
+				this.entitiesByComponent.get(kind)?.delete(entity);
+			}
+		}
+	}
+
 	addComponents(entity: Entity, components: Array<Component>) {
 		for (const comp of components) {
 			this.addComponent(entity, comp);

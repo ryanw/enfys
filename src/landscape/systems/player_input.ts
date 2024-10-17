@@ -268,6 +268,7 @@ export class PlayerInputSystem extends System {
 	}
 
 	updateGamepads() {
+		if (!document.hasFocus()) return;
 		for (const pad of navigator.getGamepads()) {
 			// We get nulls for some reason
 			if (!pad) continue;

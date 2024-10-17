@@ -249,6 +249,8 @@ const offsetInstanceLayout: GPUVertexBufferLayout = {
 		{ shaderLocation: 7, offset: 64, format: 'uint32' },
 		// Vertex Index
 		{ shaderLocation: 8, offset: 68, format: 'uint32' },
+		// Live
+		{ shaderLocation: 9, offset: 72, format: 'uint32' },
 	],
-	arrayStride: 72,
+	arrayStride: 76,
 };
