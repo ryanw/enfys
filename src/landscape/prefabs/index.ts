@@ -15,6 +15,7 @@ import { DecorComponent } from 'engine/ecs/components/decor';
 import { TerrainComponent } from 'engine/ecs/components/terrain';
 import { InsectComponent } from '../components/insect';
 import { MaterialComponent } from 'engine/ecs/components/material';
+import { SoundComponent } from 'engine/ecs/components/sound';
 
 export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	return world.createEntity([
@@ -34,6 +35,7 @@ export function opponentPrefab(world: World, position: Point3 = [0, 0, 0]): Enti
 export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new PlayerComponent(),
+		new SoundComponent('thruster', false, 0.5, true),
 		new PhysicsComponent(),
 		new ParticlesComponent('tiny-cube', 0, true),
 		new ShipComponent(),

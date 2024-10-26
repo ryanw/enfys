@@ -26,9 +26,11 @@ import { getParam } from 'engine/helpers';
 import { FlowersMesh } from './meshes/flowers';
 import { InsectsMesh } from './meshes/insects';
 import { InsectAISystem } from './systems/insect_ai';
-import { randomizer } from 'engine/noise';
 import { Socket } from 'engine/net/socket';
 import { NetworkSystem } from './systems/network';
+import { Sound } from 'engine/sound';
+import { thrusterSound } from './sounds/thruster';
+import { SoundSystem } from 'engine/ecs/systems/sound';
 
 /**
  * Procedurally generated alien worlds
@@ -41,7 +43,6 @@ export async function main(el: HTMLCanvasElement) {
 		gfx.framecap = 60;
 	}
 	const seed = getSeed();
-	const rnd = randomizer(seed + 645);
 
 	// Add the HTML UI stuff
 	ui(el.parentElement!, gfx, seed);
@@ -71,9 +72,15 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('decor-flowers-1', new FlowersMesh(gfx, seed + 64, 32));
 	graphics.insertResource('decor-flowers-2', new FlowersMesh(gfx, seed + 94, 32));
 
+	// Sound effects
+	const sound = new Sound();
+	sound.create('thruster', thrusterSound);
+
+
 	// World simulation
 	const world = new World();
 	world.addSystem(new PhysicsSystem(gfx));
+	world.addSystem(new SoundSystem(sound));
 	world.addSystem(new PlayerInputSystem(el));
 	world.addSystem(new FreeCameraInputSystem(el));
 	world.addSystem(new OrbitCameraInputSystem(el));

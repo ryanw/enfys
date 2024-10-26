@@ -8,6 +8,7 @@ import { PlayerComponent, TransformComponent, VelocityComponent } from 'engine/e
 import { ShipComponent, ShipMode } from '../components/ship';
 import { Entity } from 'engine/ecs';
 import { ParticlesComponent } from 'engine/ecs/components/particles';
+import { SoundComponent } from 'engine/ecs/components/sound';
 
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
@@ -265,6 +266,10 @@ export class PlayerInputSystem extends System {
 		if (particles) {
 			particles.count = 256 * thrust;
 		}
+
+		const sound = world.getComponent(entity, SoundComponent);
+		if (!sound) return;
+		sound.playing = thrust > 0.00;
 	}
 
 	updateGamepads() {
