@@ -43,8 +43,8 @@ export class SoundEffect {
 	}
 
 	stop() {
-		if (!this.sound || !this.gain) return;
 		this.isPlaying = false;
+		if (!this.sound || !this.gain) return;
 		const ctx = this.sound.ctx!;
 		const source = this.source!;
 		this.gain.gain.setValueAtTime(this.gain.gain.value, ctx.currentTime);
