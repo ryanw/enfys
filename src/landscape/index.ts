@@ -63,6 +63,7 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('small-cube', new Cube(gfx, 0.1));
 	graphics.insertResource('cube', new Cube(gfx, 0.5));
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
+	graphics.insertResource('missile', new RockMesh(gfx, 1, 8));
 	graphics.insertResource('animal-placeholder', new InsectsMesh(gfx, seed + 55, 32));
 	graphics.insertResource('decor-rocks', new RockMesh(gfx, seed + 41, 4));
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 16));

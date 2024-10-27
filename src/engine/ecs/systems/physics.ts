@@ -46,8 +46,9 @@ export class PhysicsSystem extends System {
 			const tra = world.getComponent(entity, TransformComponent)!;
 			const vel = world.getComponent(entity, VelocityComponent)!;
 			const phy = world.getComponent(entity, PhysicsComponent);
+			const gravity = GRAVITY * (phy ? phy.gravityMultiplier : 1);
 			tra.position = add(tra.position, scale(vel.velocity, dt));
-			vel.velocity[1] += GRAVITY * dt;
+			vel.velocity[1] += gravity * dt;
 
 			// Handle terrain collision
 			const terrains = world.entitiesWithComponent(TerrainComponent);

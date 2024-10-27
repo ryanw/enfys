@@ -1,5 +1,5 @@
 import { Entity } from 'engine/ecs';
-import { PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { GunComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from 'engine/ecs/components/camera';
 import { MeshComponent } from 'engine/ecs/components/mesh';
 import { World } from 'engine/ecs/world';
@@ -32,9 +32,19 @@ export function opponentPrefab(world: World, position: Point3 = [0, 0, 0]): Enti
 	]);
 }
 
+export function missilePrefab(world: World, position: Point3, velocity: Vector3): Entity {
+	return world.createEntity([
+		new TransformComponent(position),
+		new VelocityComponent(velocity),
+		new PhysicsComponent(),
+		new MeshComponent('missile'),
+	]);
+}
+
 export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new PlayerComponent(),
+		new GunComponent(),
 		new SoundComponent('thruster', false, 0.5, true),
 		new PhysicsComponent(),
 		new ParticlesComponent('tiny-cube', 0, true),

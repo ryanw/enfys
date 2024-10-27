@@ -1,14 +1,15 @@
 import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
 import { add, normalize, scale } from 'engine/math/vectors';
 import { Point3, Vector3 } from 'engine/math';
-import { multiply, multiplyVector, rotation } from 'engine/math/transform';
+import { multiply, multiplyVector, rotation, transformPoint } from 'engine/math/transform';
 import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
-import { PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { GunComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { ShipComponent, ShipMode } from '../components/ship';
 import { Entity } from 'engine/ecs';
 import { ParticlesComponent } from 'engine/ecs/components/particles';
 import { SoundComponent } from 'engine/ecs/components/sound';
+import { missilePrefab } from '../prefabs';
 
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
@@ -23,12 +24,13 @@ export class PlayerInputSystem extends System {
 		'd': Key.Right,
 		'q': Key.Down,
 		'e': Key.Up,
-		'shift': Key.Boost,
-		'r': Key.ToggleMode,
+		' ': Key.Fire,
+		'alt': Key.Boost,
+		//'f': Key.ToggleMode,
 		',': Key.PrevCamera,
 		'.': Key.NextCamera,
-		' ': Key.Thrust,
-		[XboxButton[XboxButton.Y]]: Key.ToggleMode,
+		'shift': Key.Thrust,
+		//[XboxButton[XboxButton.Y]]: Key.ToggleMode,
 		[XboxButton[XboxButton.X]]: Key.Fire,
 		[XboxButton[XboxButton.A]]: Key.Pick,
 		[XboxButton[XboxButton.B]]: Key.Bomb,
@@ -72,34 +74,34 @@ export class PlayerInputSystem extends System {
 
 		for (const [key, _amount] of this.pressedKeys) {
 			switch (key) {
-			case Key.ToggleMode:
-				switch (ship.mode) {
-				case ShipMode.Air:
-					transform.rotation[0] = 0;
-					ship.mode = ShipMode.Land;
+				case Key.ToggleMode:
+					switch (ship.mode) {
+						case ShipMode.Air:
+							transform.rotation[0] = 0;
+							ship.mode = ShipMode.Land;
+							break;
+						case ShipMode.Land:
+							ship.mode = ShipMode.Air;
+							break;
+					}
 					break;
-				case ShipMode.Land:
-					ship.mode = ShipMode.Air;
-					break;
-				}
-				break;
 			}
 		}
 
 		switch (ship.mode) {
-		case ShipMode.Air:
-			this.updateModeAir(dt, world, entity);
-			break;
+			case ShipMode.Air:
+				this.updateModeAir(dt, world, entity);
+				break;
 
-		case ShipMode.Land:
-			this.updateModeLand(dt, world, entity);
-			break;
+			case ShipMode.Land:
+				this.updateModeLand(dt, world, entity);
+				break;
 
-		case ShipMode.Water:
-			break;
+			case ShipMode.Water:
+				break;
 
-		case ShipMode.Space:
-			break;
+			case ShipMode.Space:
+				break;
 		}
 
 
@@ -121,30 +123,30 @@ export class PlayerInputSystem extends System {
 
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
-			case Key.Forward:
-				break;
-			case Key.Backward:
-				break;
-			case Key.Left:
-				yaw = -value;
-				break;
-			case Key.Right:
-				yaw = value;
-				break;
-			case Key.Thrust:
-				if (Math.abs(value) > DEADZONE) {
-					thrust = value;
+				case Key.Forward:
+					break;
+				case Key.Backward:
+					break;
+				case Key.Left:
+					yaw = -value;
+					break;
+				case Key.Right:
+					yaw = value;
+					break;
+				case Key.Thrust:
+					if (Math.abs(value) > DEADZONE) {
+						thrust = value;
 
-					movement[2] = value;
-				}
-				break;
-			case Key.Brake:
-				brake = value;
-				break;
-			case Key.Stable:
-				transform.rotation[0] = 0;
-				transform.rotation[2] = 0;
-				break;
+						movement[2] = value;
+					}
+					break;
+				case Key.Brake:
+					brake = value;
+					break;
+				case Key.Stable:
+					transform.rotation[0] = 0;
+					transform.rotation[2] = 0;
+					break;
 			}
 		}
 		for (const [key, value] of this.axis.entries()) {
@@ -152,22 +154,18 @@ export class PlayerInputSystem extends System {
 				continue;
 			}
 			switch (key) {
-			case XboxAxis.LeftStickX:
-				yaw = value;
-				break;
-			case XboxAxis.LeftStickY:
-				break;
+				case XboxAxis.LeftStickX:
+					yaw = value;
+					break;
+				case XboxAxis.LeftStickY:
+					break;
 			}
 		}
 
 		transform.rotation = add(transform.rotation, [pitch * dt * rotateSpeed, yaw * dt * rotateSpeed, 0]);
 
 		if (movement[0] !== 0 || movement[1] !== 0 || movement[2] !== 0) {
-			const playerRotationMatrix = multiply(
-				rotation(0, 0, transform.rotation[2]),
-				rotation(0, transform.rotation[1], 0),
-				rotation(transform.rotation[0], 0, 0),
-			);
+			const playerRotationMatrix = transform.rotationMatrix();
 
 			const direction = multiplyVector(playerRotationMatrix, [...movement, 0]).slice(0, 3) as Vector3;
 			const velocity = scale(direction, speed * dt);
@@ -200,32 +198,45 @@ export class PlayerInputSystem extends System {
 
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
-			case Key.Forward:
-				pitch = value;
-				break;
-			case Key.Backward:
-				pitch = -value;
-				break;
-			case Key.Left:
-				yaw = -value;
-				break;
-			case Key.Right:
-				yaw = value;
-				break;
-			case Key.Thrust:
-				if (Math.abs(value) > DEADZONE) {
-					thrust = value;
+				case Key.Forward:
+					pitch = value;
+					break;
+				case Key.Backward:
+					pitch = -value;
+					break;
+				case Key.Left:
+					yaw = -value;
+					break;
+				case Key.Right:
+					yaw = value;
+					break;
+				case Key.Thrust:
+					if (Math.abs(value) > DEADZONE) {
+						thrust = value;
 
-					movement[1] = value;
-				}
-				break;
-			case Key.Brake:
-				brake = value;
-				break;
-			case Key.Stable:
-				transform.rotation[0] = 0;
-				transform.rotation[2] = 0;
-				break;
+						movement[1] = value;
+					}
+					break;
+				case Key.Brake:
+					brake = value;
+					break;
+				case Key.Stable:
+					transform.rotation[0] = 0;
+					transform.rotation[2] = 0;
+					break;
+				case Key.Fire:
+					const gun = world.getComponent(entity, GunComponent)!;
+					if (!gun) break;
+					if (gun.canFire()) {
+						gun.fire();
+						const position = [...transform.position] as Point3;
+						const rot = transform.rotationMatrix();
+						const missileVelocity = [0, 0, 128] as Vector3;
+						const velocity = multiplyVector(rot, add(playerVelocity.velocity, missileVelocity));
+						const missile = missilePrefab(world, position, velocity);
+						setTimeout(() => world.removeEntity(missile), 5000);
+					}
+					break;
 			}
 		}
 
@@ -234,12 +245,12 @@ export class PlayerInputSystem extends System {
 				continue;
 			}
 			switch (key) {
-			case XboxAxis.LeftStickX:
-				yaw = value;
-				break;
-			case XboxAxis.LeftStickY:
-				pitch -= value;
-				break;
+				case XboxAxis.LeftStickX:
+					yaw = value;
+					break;
+				case XboxAxis.LeftStickY:
+					pitch -= value;
+					break;
 			}
 		}
 
@@ -310,6 +321,7 @@ export class PlayerInputSystem extends System {
 	onKeyDown = (e: KeyboardEvent) => {
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
+		e.preventDefault();
 		this.pressedKeys.set(key, 1.0);
 		this.heldKeys.set(key, 1.0);
 	};
@@ -317,6 +329,7 @@ export class PlayerInputSystem extends System {
 	onKeyUp = (e: KeyboardEvent) => {
 		const key: Key | undefined = this.bindings[e.key.toLowerCase()];
 		if (key == null) return;
+		e.preventDefault();
 		this.heldKeys.delete(key);
 	};
 }
