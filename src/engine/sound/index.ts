@@ -49,7 +49,7 @@ export class SoundEffect {
 		const source = this.source!;
 		this.gain.gain.setValueAtTime(this.gain.gain.value, ctx.currentTime);
 		this.gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-		setTimeout(() => source.stop() , 300);
+		setTimeout(() => source.stop(), 300);
 	}
 }
 
@@ -57,6 +57,7 @@ export class Sound {
 	ctx?: AudioContext;
 	queue: Array<SoundEffect> = [];
 	resources: Map<ResourceId, SoundEffect> = new Map();
+	muted = false;
 
 	constructor() {
 		// Only allowed to enable sound after a "user geasture"
@@ -71,8 +72,19 @@ export class Sound {
 	init() {
 		if (this.ctx) return;
 		this.ctx = new AudioContext();
+		if (this.muted) {
+			this.ctx.suspend();
+		}
 		this.queue.forEach(s => s.build());
 		this.queue = [];
+	}
+
+	mute(muted: boolean) {
+		if (muted === this.muted) return;
+		this.muted = muted;
+		if (this.ctx) {
+			muted ? this.ctx.suspend() : this.ctx.resume();
+		}
 	}
 
 	isReady(): boolean {

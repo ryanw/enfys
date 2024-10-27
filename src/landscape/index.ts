@@ -44,8 +44,13 @@ export async function main(el: HTMLCanvasElement) {
 	}
 	const seed = getSeed();
 
+
+	// Sound effects
+	const sound = new Sound();
+	sound.create('thruster', thrusterSound);
+
 	// Add the HTML UI stuff
-	ui(el.parentElement!, gfx, seed);
+	ui(el.parentElement!, gfx, sound, seed);
 
 	// Socket for multiplayer
 	const socket = connectSocket();
@@ -72,10 +77,6 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('decor-cubes', new Cube(gfx, 0.2));
 	graphics.insertResource('decor-flowers-1', new FlowersMesh(gfx, seed + 64, 32));
 	graphics.insertResource('decor-flowers-2', new FlowersMesh(gfx, seed + 94, 32));
-
-	// Sound effects
-	const sound = new Sound();
-	sound.create('thruster', thrusterSound);
 
 
 	// World simulation

@@ -1,5 +1,6 @@
 import { Gfx } from 'engine';
 import html from './ui.html';
+import { Sound } from 'engine/sound';
 
 
 /**
@@ -10,31 +11,50 @@ import html from './ui.html';
  * @param seed World seed
  *
  */
-export function ui(wrapper: HTMLElement, gfx: Gfx, seed: number) {
+export function ui(wrapper: HTMLElement, gfx: Gfx, sound: Sound, seed: number) {
 	const el = document.createElement('div');
 	el.innerHTML = html;
 
+	let showSettings = false;
 	const fps = el.querySelector('#fps span')!;
 	const permalink = el.querySelector('#perma-link')!;
+	const settings: HTMLElement = el.querySelector('#settings')!;
+	const panel: HTMLElement = el.querySelector('#settings-panel')!;
+	panel.classList.add('open');
+	setTimeout(() => panel.classList.remove('open'), 3000);
+
+	settings.style.display = showSettings ? 'block' : 'none';
+
 	permalink.setAttribute('href', '?seed=' + seed.toString(36));
 	permalink.innerHTML = seed.toString(36);
 	setInterval(() => {
-		fps.innerHTML = `${gfx.fps.toFixed(0)} (${gfx.uncappedFps.toFixed(0)})`;
-	}, 1000 / 30);
+		if (showSettings) {
+			fps.innerHTML = `${gfx.fps.toFixed(0)} (${gfx.uncappedFps.toFixed(0)})`;
+		}
+	}, 1000 / 10);
+
+	function toggleSettings() {
+		showSettings = !showSettings;
+		settings.style.display = showSettings ? 'block' : 'none';
+	}
 
 	const form = el.querySelector('form')!;
 	form.addEventListener('input', (e: Event) => {
 		const data = new FormData(form);
 	});
 
+	const toggleButton = el.querySelector('#toggle-settings') as HTMLButtonElement;
+	toggleButton.addEventListener('click', toggleSettings);
 
 	const canvasPixelInp = el.querySelector('#canvas-pixel') as HTMLInputElement;
 	const ditherSizeInp = el.querySelector('#dither-size') as HTMLInputElement;
 	const ditherDepthInp = el.querySelector('#dither-depth') as HTMLInputElement;
 	const fogInp = el.querySelector('#fog-level') as HTMLInputElement;
 	const edgesChk = el.querySelector('#enable-edges') as HTMLInputElement;
+	const soundChk = el.querySelector('#enable-sound') as HTMLInputElement;
 	const modeSel = el.querySelector('#render-mode') as HTMLSelectElement;
 	function updateSettings() {
+		sound.mute(!soundChk.checked);
 		gfx.configure({
 			canvasPixelRatio: 1.0 / (parseFloat(canvasPixelInp.value) || 0.5),
 			ditherSize: parseInt(ditherSizeInp.value),
@@ -46,7 +66,7 @@ export function ui(wrapper: HTMLElement, gfx: Gfx, seed: number) {
 	}
 
 	// Update settings when they change
-	const inputs = el.querySelector('#settings')?.querySelectorAll('input, select') || [];
+	const inputs = el.querySelectorAll('input, select') || [];
 	for (const input of inputs) {
 		input.addEventListener('input', updateSettings);
 		input.addEventListener('click', updateSettings);

@@ -22,14 +22,31 @@ html, body {
 	height: 100%;
 	image-rendering: pixelated;
 }
-#settings {
-	transition: opacity 1000ms;
-	opacity: 0.0;
-	width: 250px;
+
+#enable-sound {
+	width: 24px;
+	height: 24px;
+	vertical-align: middle;
+}
+
+#settings-panel {
+	transition: all 1000ms;
+	opacity: 0.2;
+	transform-origin: top right;
+	transform: scale(0.25);
+}
+#settings-panel:hover, #settings-panel.open {
+	transition: all 250ms;
+	opacity: 1.0;
+	transform: scale(1.0);
+}
+
+#settings-panel {
 	position: fixed;
+	top: 0.5em;
+	right: 0.5em;
+	width: 250px;
 	z-index: 1000;
-	top: 2em;
-	right: 2em;
 	color: #fff;
 	font-family: sans-serif;
 	background: rgba(0, 0, 0, 0.8);
@@ -38,24 +55,27 @@ html, body {
 	display: flex;
 	flex-direction: column;
 }
-#settings hr {
-	width: 100%;
+#settings-panel ul {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+	line-height: 1.5em;
 }
-#settings button {
+#settings-panel hr {
+	width: 100%;
+	border: 1px solid #333;
+}
+#settings-panel button {
 	margin-bottom: 0.5em;
 	padding: 0.5em;
 	font: inherit;
 	font-size: 1em;
 }
-#settings a {
+#settings-panel a {
 	color: inherit;
 	margin-bottom: 0.5em;
 }
-#settings:hover {
-	transition: opacity 100ms;
-	opacity: 1.0;
-}
-#settings label {
+#settings-panel label {
 	user-select: none;
 	display: block;
 }
@@ -64,16 +84,38 @@ html, body {
 	width: 5em;
 	margin: 0;
 }
-#settings label input[type="number"] {
+#settings-panel label input[type="checkbox"] {
+	text-align: right;
+	background: red;
+}
+#settings-panel label input[type="number"] {
 	text-align: right;
 }
-#settings label + label {
+#settings-panel label + label {
 	margin-top: 0.3em;
 }
-#settings p {
+#settings-panel p {
 	margin: 0 0 0.3em 0;
 }
-#settings #fps {
+#settings-panel #fps {
 	margin-top: 0.5em;
 }
 
+#settings-panel button#toggle-settings {
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	line-height: 32px;
+	overflow: hidden;
+	color: #fff;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+}
+#settings-panel button#toggle-settings:hover {
+	background: #333;
+}

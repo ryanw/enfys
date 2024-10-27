@@ -1,5 +1,5 @@
 export async function thrusterSound(liveCtx: AudioContext): Promise<AudioBuffer> {
-	const volume = 1.0;
+	const volume = 0.25;
 	const duration = 2;
 	const bufferSize = liveCtx.sampleRate * duration;
 	const ctx = new OfflineAudioContext(1, bufferSize, liveCtx.sampleRate);
