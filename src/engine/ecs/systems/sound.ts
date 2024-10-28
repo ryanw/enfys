@@ -30,7 +30,7 @@ export class SoundSystem extends System {
 				continue;
 			}
 
-			this.sound.play(soundId);
+			this.sound.start(soundId);
 			this.playing.add(entity);
 		}
 	}

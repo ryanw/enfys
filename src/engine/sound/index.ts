@@ -104,7 +104,7 @@ export class Sound {
 		return effect;
 	}
 
-	play(name: ResourceId) {
+	start(name: ResourceId) {
 		const sound = this.resources.get(name);
 		if (!sound) return;
 
