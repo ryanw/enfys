@@ -21,12 +21,12 @@ impl World {
 		if self.users.len() == 0 {
 			return Ok(());
 		}
-		println!(
+		log::info!(
 			"Broadcasting to {} clients in world {:?}: {action:?}",
 			self.users.len() as isize - 1,
 			self.seed,
 		);
-		for User { connection, .. } in self.users.values() {
+		for User { sender: connection, .. } in self.users.values() {
 			if connection.connection_id() == sender_id {
 				// Don't send to self
 				continue;

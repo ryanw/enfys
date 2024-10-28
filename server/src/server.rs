@@ -5,27 +5,34 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use crossbeam::channel::{self, Receiver, Sender};
-use std::collections::HashMap;
+use std::{collections::HashMap, net::SocketAddr};
 
 pub type Seed = u32;
 pub type ConnectionID = u32;
 
 pub enum ServerEvent {
 	Connection(ws::Sender),
-	Disconnection(ws::Sender),
+	Handshake {
+		sender_id: ConnectionID,
+		shake: ws::Handshake,
+	},
+	Disconnection {
+		sender_id: ConnectionID,
+		code: ws::CloseCode,
+		reason: String,
+	},
 	Action {
 		sender_id: ConnectionID,
 		action: UserAction,
 	},
 }
 
-#[derive(Clone)]
-pub struct Connection {
+pub struct SocketHandler {
 	pub sender: ws::Sender,
 	pub tx: Sender<ServerEvent>,
 }
 
-impl Connection {
+impl SocketHandler {
 	pub fn process_message(&mut self, data: &[u8]) -> Result<()> {
 		let action = UserAction::try_from(data)?;
 		self.tx.send(ServerEvent::Action {
@@ -37,7 +44,7 @@ impl Connection {
 	}
 }
 
-impl ws::Handler for Connection {
+impl ws::Handler for SocketHandler {
 	fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
 		match &msg {
 			ws::Message::Text(txt) => {
@@ -51,15 +58,84 @@ impl ws::Handler for Connection {
 		}
 	}
 
+	fn on_open(&mut self, shake: ws::Handshake) -> ws::Result<()> {
+		log::info!(
+			"Connection established: {:?} - {:?}",
+			(self.sender.connection_id(), self.sender.token()),
+			shake.peer_addr
+		);
+		self.tx
+			.send(ServerEvent::Handshake {
+				sender_id: self.sender.connection_id(),
+				shake,
+			})
+			.unwrap();
+
+		Ok(())
+	}
+
 	fn on_close(&mut self, code: ws::CloseCode, reason: &str) {
-		let _ = self
-			.tx
-			.send(ServerEvent::Disconnection(self.sender.clone()));
+		let _ = self.tx.send(ServerEvent::Disconnection {
+			sender_id: self.sender.connection_id(),
+			code,
+			reason: reason.to_owned(),
+		});
+	}
+}
+
+#[derive(Debug)]
+pub struct Connection {
+	pub sender: ws::Sender,
+	pub shake: Option<ws::Handshake>,
+}
+
+impl Connection {
+	pub fn new(sender: ws::Sender) -> Self {
+		Connection {
+			sender,
+			shake: None,
+		}
+	}
+
+	pub fn ident(&self) -> String {
+		if self.shake.is_some() {
+			format!(
+				"{}: {} - {:?}",
+				self.peer_addr(),
+				self.sender.connection_id(),
+				self.sender.token()
+			)
+		} else {
+			format!(
+				"{} - {:?}",
+				self.sender.connection_id(),
+				self.sender.token()
+			)
+		}
+	}
+
+	pub fn client_addr(&self) -> String {
+		self.shake
+			.as_ref()
+			.and_then(|shake| shake.request.client_addr().ok().flatten())
+			.map(String::from)
+			.unwrap_or_else(|| format!("Unknown Client: {}", self.peer_addr()))
+	}
+
+	pub fn peer_addr(&self) -> String {
+		format!(
+			"{}",
+			self.shake
+				.as_ref()
+				.and_then(|s| s.peer_addr)
+				.map(|a| a.to_string())
+				.unwrap_or_default()
+		)
 	}
 }
 
 pub struct Server {
-	pub connections: HashMap<ConnectionID, ws::Sender>,
+	pub connections: HashMap<ConnectionID, Connection>,
 	pub worlds: HashMap<Seed, World>,
 	pub user_worlds: HashMap<ConnectionID, Seed>,
 	tx: Sender<ServerEvent>,
@@ -88,13 +164,37 @@ impl Server {
 		let event = self.rx.recv()?;
 		match event {
 			ServerEvent::Connection(conn) => {
-				self.connections.insert(conn.connection_id(), conn);
+				log::debug!("Connect: {:?}", (conn.connection_id(), conn.token()));
+				self.connections
+					.insert(conn.connection_id(), Connection::new(conn));
 			}
-			ServerEvent::Disconnection(conn) => {
-				let sender_id = conn.connection_id();
-				self.connections.remove(&sender_id);
+			ServerEvent::Handshake { sender_id, shake } => {
+				let Some(conn) = self.connections.get_mut(&sender_id) else {
+					log::warn!("Couldn't find connection: {sender_id:?}");
+					return Ok(());
+				};
+
+				log::debug!(
+					"Handshake: {sender_id}: {:?} - {:?}",
+					conn.client_addr(),
+					shake.peer_addr
+				);
+				conn.shake = Some(shake);
+			}
+			ServerEvent::Disconnection {
+				sender_id,
+				reason,
+				code,
+			} => {
+				log::info!("Disconnect: {sender_id} - {code:?} - {reason}");
+
+				let conn = self.connections.remove(&sender_id);
 				let Some(seed) = self.user_worlds.remove(&sender_id) else {
-					eprintln!("Couldn't find seed for: {:?}", sender_id);
+					log::error!(
+						"Couldn't find seed for: {:?} - {:?}",
+						conn.map(|c| c.ident()),
+						sender_id
+					);
 					return Err(anyhow!("Invalid Seed"));
 				};
 
@@ -109,80 +209,93 @@ impl Server {
 					self.worlds.remove(&seed);
 				}
 			}
-			ServerEvent::Action { sender_id, action } => match action {
-				UserAction::Noop => {}
-				UserAction::Login { name, seed } => {
-					let world = self.worlds.entry(seed).or_insert_with(|| World::new(seed));
-					let Some(connection) = self.connections.get(&sender_id) else {
-						eprintln!("Couldn't find connection for sender: {:?}", sender_id);
-						return Err(anyhow!("Invalid Sender ID"));
-					};
-					let user = User {
-						connection: connection.clone(),
-						name: name.clone(),
-						position: Default::default(),
-						velocity: Default::default(),
-						rotation: Default::default(),
-					};
-					self.user_worlds.insert(sender_id, seed);
-					println!("Added user {:?} - {:?}", (seed, sender_id), user);
-					if let Err(error) = world.broadcast(
-						&ServerAction::Join {
-							id: sender_id,
+			ServerEvent::Action { sender_id, action } => {
+				let identity = self
+					.connections
+					.get(&sender_id)
+					.map(|c| format!("{sender_id}: {}", c.client_addr()))
+					.unwrap_or_else(|| format!("{sender_id}: Unknown Connection"));
+				match action {
+					UserAction::Noop => log::debug!("Noop: {:?}", sender_id),
+					UserAction::Login { name, seed } => {
+						log::debug!("Login: {:?} - {:?} - {:?}", identity, seed, name);
+						let world = self.worlds.entry(seed).or_insert_with(|| World::new(seed));
+						let Some(connection) = self.connections.get(&sender_id) else {
+							log::error!("Couldn't find connection for sender: {:?}", identity);
+							return Err(anyhow!("Invalid Sender ID"));
+						};
+						let user = User {
+							sender: connection.sender.clone(),
 							name: name.clone(),
-						},
-						sender_id,
-					) {
-						eprintln!("Error broadcasting message: {:?}", error);
-					}
+							position: Default::default(),
+							velocity: Default::default(),
+							rotation: Default::default(),
+						};
+						self.user_worlds.insert(sender_id, seed);
+						log::info!("Created user: {:?} - {:?}", (&identity, seed), user);
+						if let Err(error) = world.broadcast(
+							&ServerAction::Join {
+								id: sender_id,
+								name: name.clone(),
+							},
+							sender_id,
+						) {
+							log::error!("Error broadcasting message: {identity} {:?}", error);
+						}
 
-					for (user_id, other_user) in &world.users {
-						let _ = user.connection.send(&ServerAction::Join {
-							id: *user_id,
-							name: other_user.name.clone(),
-						});
-						let _ = user.connection.send(&ServerAction::Move {
-							id: *user_id,
-							position: other_user.position.clone(),
-							velocity: other_user.velocity.clone(),
-							rotation: other_user.rotation.clone(),
-						});
+						for (user_id, other_user) in &world.users {
+							let _ = user.sender.send(&ServerAction::Join {
+								id: *user_id,
+								name: other_user.name.clone(),
+							});
+							let _ = user.sender.send(&ServerAction::Move {
+								id: *user_id,
+								position: other_user.position.clone(),
+								velocity: other_user.velocity.clone(),
+								rotation: other_user.rotation.clone(),
+							});
+						}
+						world.users.insert(sender_id, user);
 					}
-					world.users.insert(sender_id, user);
-				}
-				UserAction::Move {
-					position,
-					velocity,
-					rotation,
-				} => {
-					let Some(seed) = self.user_worlds.get_mut(&sender_id) else {
-						eprintln!("Couldn't find seed for: {:?}", sender_id);
-						return Err(anyhow!("Invalid Sender"));
-					};
-					let Some(world) = self.worlds.get_mut(&seed) else {
-						eprintln!("Couldn't find world for: {:?}", sender_id);
-						return Err(anyhow!("Invalid Seed"));
-					};
-					let Some(user) = world.users.get_mut(&sender_id) else {
-						eprintln!("Couldn't find user: {:?}", sender_id);
-						return Err(anyhow!("Invalid User ID"));
-					};
-					user.position = position;
-					user.velocity = velocity;
-					user.rotation = rotation;
-					if let Err(error) = world.broadcast(
-						&ServerAction::Move {
-							id: sender_id,
-							position,
-							velocity,
-							rotation,
-						},
-						sender_id,
-					) {
-						eprintln!("Error broadcasting message: {:?}", error);
+					UserAction::Move {
+						position,
+						velocity,
+						rotation,
+					} => {
+						log::debug!(
+							"Move: {:?} - {:?}",
+							identity,
+							(position, velocity, rotation)
+						);
+						let Some(seed) = self.user_worlds.get_mut(&sender_id) else {
+							log::error!("Couldn't find seed for: {:?}", identity);
+							return Err(anyhow!("Invalid Sender"));
+						};
+						let Some(world) = self.worlds.get_mut(&seed) else {
+							log::error!("Couldn't find world for: {:?}", identity);
+							return Err(anyhow!("Invalid Seed"));
+						};
+						let Some(user) = world.users.get_mut(&sender_id) else {
+							log::error!("Couldn't find user: {:?}", identity);
+							return Err(anyhow!("Invalid User ID"));
+						};
+						user.position = position;
+						user.velocity = velocity;
+						user.rotation = rotation;
+						if let Err(error) = world.broadcast(
+							&ServerAction::Move {
+								id: sender_id,
+								position,
+								velocity,
+								rotation,
+							},
+							sender_id,
+						) {
+							log::error!("Error broadcasting message: {identity} {:?}", error);
+						}
 					}
 				}
-			},
+			}
 		}
 		Ok(())
 	}

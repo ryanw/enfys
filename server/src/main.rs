@@ -3,28 +3,31 @@ mod server;
 mod user;
 mod world;
 
-use server::{Connection, Server, ServerEvent};
+use server::{SocketHandler, Server, ServerEvent};
 use std::{env, thread};
 
 fn main() {
+	env_logger::init();
+
 	let addr = env::args()
 		.skip(1)
 		.next()
 		.unwrap_or_else(|| "127.0.0.1:3012".to_string());
-	println!("Listening on: {addr:?}");
+	log::info!("Binding to: {addr:?}");
 	let mut server = Server::new();
 	let tx = server.tx();
 
 	thread::spawn(move || {
-		eprintln!("Server thread started");
+		log::info!("Server thread started");
 		server.run();
-		eprintln!("Server thread died");
+		log::warn!("Server thread died");
 	});
 
 	ws::listen(addr, |sender| {
+		log::info!("Establishing connection: {:?}", (sender.connection_id(), sender.token()));
 		tx.send(ServerEvent::Connection(sender.clone())).unwrap();
 
-		Connection {
+		SocketHandler {
 			sender: sender.clone(),
 			tx: tx.clone(),
 		}
