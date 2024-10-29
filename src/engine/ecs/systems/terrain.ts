@@ -32,7 +32,7 @@ export class TerrainSystem extends System {
 		terrain.currentChunk = [cx, cy];
 
 		terrain.chunks.clear();
-		const chunks = generateChunks(cx, cy, 0, 6);
+		const chunks = generateChunks(cx, cy, 0, 4);
 		for (const chunk of chunks) {
 			terrain.chunks.set(toChunkHash(chunk), chunk);
 		}
