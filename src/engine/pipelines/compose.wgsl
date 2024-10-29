@@ -279,50 +279,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
-	switch (renderMode) {
-		// Shading
-		case 2: {
-			color = vec4(vec3(brightness), 1.0);
-		}
-		// Albedo
-		case 3: {
-			color = albedo;
-		}
-		// Normal
-		case 4: {
-			color = vec4(normal.xyz, 1.0);
-		}
-		// Position
-		case 5: {
-			color = vec4(pos.xyz / 100.0, 1.0);
-		}
-		// Depth
-		case 6: {
-			color = vec4(vec3((1.0-depth) * 10.0), 1.0);
-		}
-		// Meta
-		case 7: {
-			color = intToColor(metaVal);
-		}
-		// Fog
-		case 8: {
-			//color = vec4(vec3(fogFactor), 1.0);
-			return color;
-		}
-		default: {}
-	}
-
-	// Draw edges
-	if isEdge == 0.0 {
-	} else {
-		// Fade out in distance
-		//let ef = ss(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
-		//color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
-		let m = ss(0.0, 1.0, isEdge) / 3.0;
-		color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, m);
-		//color = vec4(vec3(1.0-isEdge/8.0), 1.0);
-	}
-
 	// Draw water -- depth test to fix water behind fog
 	if DRAW_WATER && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
 		// Animate waves near edges
@@ -350,14 +306,69 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
+
+	var fogFactor = 0.0;
 	if DRAW_FOG && u.fog > 0.0 {
-		if depth >= 0.999 && pos.y < 4000.0 {
-			let fogColor = vec4(0.7, 0.4, 0.8, 1.0);
-			var fogFactor = ss(4000.0, 0.0, pos.y);
-			fogFactor *= ss(0.9995, 1.0, depth);
+		let fogHeight = 1000.0;
+		let fogMin = 0.995 - (0.005 * (1.0 - u.fog));
+		let fogMax = min(fogMin + 0.005, 1.0);
+		let y = pos.y;
+		let fogColor = vec4(0.7, 0.4, 0.8, 1.0);
+		fogFactor = ss(0.0, 1.0, fogHeight/abs(y));
+		fogFactor *= ss(fogMin, fogMax, depth);
+		if color.a == 0.0 {
+			let a = fogFactor;
+			color = vec4(fogColor.rgb * a, a);
+		}
+		else {
 			color = mix(color, fogColor, fogFactor);
 		}
 	}
+
+	switch (renderMode) {
+		// Shading
+		case 2: {
+			color = vec4(vec3(brightness), 1.0);
+		}
+		// Albedo
+		case 3: {
+			color = albedo;
+		}
+		// Normal
+		case 4: {
+			color = vec4(normal.xyz, 1.0);
+		}
+		// Position
+		case 5: {
+			color = vec4(pos.xyz / 100.0, 1.0);
+		}
+		// Depth
+		case 6: {
+			color = vec4(vec3((1.0-depth) * 128.0), 1.0);
+		}
+		// Meta
+		case 7: {
+			color = intToColor(metaVal);
+		}
+		// Fog
+		case 8: {
+			color = vec4(vec3(fogFactor), 1.0);
+			return color;
+		}
+		default: {}
+	}
+
+	// Draw edges
+	if isEdge == 0.0 {
+	} else {
+		// Fade out in distance
+		//let ef = ss(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
+		//color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
+		let m = ss(0.0, 1.0, isEdge) / 3.0;
+		color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, m);
+		//color = vec4(vec3(1.0-isEdge/8.0), 1.0);
+	}
+
 
 	if DEBUG_SHADOW_MAP > -1 {
 		color = drawShadowMap(uv, color, DEBUG_SHADOW_MAP);
