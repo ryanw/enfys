@@ -45,3 +45,10 @@ export function cross(v0: Vector3, v1: Vector3): Vector3 {
 	const z = v0[0] * v1[1] - v0[1] * v1[0];
 	return [x, y, z];
 }
+
+export function toEuler(v: Vector3): Vector3 {
+	const pitch = Math.atan2(v[1], Math.sqrt(v[0] ** 2 + v[2] ** 2));
+	const yaw = Math.atan2(v[2], v[0]);
+	const roll = 0;
+	return [pitch, yaw, roll];
+}

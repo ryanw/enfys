@@ -2,7 +2,7 @@ import { Gfx } from 'engine';
 import { ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
 
 export class VariantMesh extends SimpleMesh {
-	constructor(gfx: Gfx, readonly seed: number, variantCount: number = 32, instances?: Array<ColorInstance>) {
+	constructor(gfx: Gfx, readonly seed: number = 123, variantCount: number = 1, instances?: Array<ColorInstance>) {
 		super(gfx, [], instances);
 		const models: Array<Array<ColorVertex>> = [];
 

@@ -31,6 +31,7 @@ import { NetworkSystem } from './systems/network';
 import { Sound } from 'engine/sound';
 import { thrusterSound } from './sounds/thruster';
 import { SoundSystem } from 'engine/ecs/systems/sound';
+import { BombMesh, LaserMesh } from './meshes/projectiles';
 
 /**
  * Procedurally generated alien worlds
@@ -59,7 +60,7 @@ export async function main(el: HTMLCanvasElement) {
 	// Graphics objects
 	const scene = new Scene(gfx);
 	// Sky dome
-	const stars = scene.addMesh(new StarMesh(gfx, [0, 0, 0], 1000.0, 1.0, seed), new DotMaterial(gfx));
+	const stars = scene.addMesh(new StarMesh(gfx, [0, 0, 0], 5000.0, 1.0, seed), new DotMaterial(gfx));
 
 
 	// Sync graphics with world
@@ -68,7 +69,8 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('small-cube', new Cube(gfx, 0.1));
 	graphics.insertResource('cube', new Cube(gfx, 0.5));
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
-	graphics.insertResource('missile', new RockMesh(gfx, 1, 8));
+	graphics.insertResource('bomb', new BombMesh(gfx));
+	graphics.insertResource('laser', new LaserMesh(gfx));
 	graphics.insertResource('animal-placeholder', new InsectsMesh(gfx, seed + 55, 32));
 	graphics.insertResource('decor-rocks', new RockMesh(gfx, seed + 41, 4));
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 16));

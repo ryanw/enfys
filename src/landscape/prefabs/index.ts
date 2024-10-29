@@ -32,12 +32,21 @@ export function opponentPrefab(world: World, position: Point3 = [0, 0, 0]): Enti
 	]);
 }
 
-export function missilePrefab(world: World, position: Point3, velocity: Vector3): Entity {
+export function laserPrefab(world: World, position: Point3, velocity: Vector3): Entity {
+	return world.createEntity([
+		new TransformComponent(position),
+		new VelocityComponent(velocity),
+		new PhysicsComponent(0),
+		new MeshComponent('laser'),
+	]);
+}
+
+export function bombPrefab(world: World, position: Point3, velocity: Vector3): Entity {
 	return world.createEntity([
 		new TransformComponent(position),
 		new VelocityComponent(velocity),
 		new PhysicsComponent(),
-		new MeshComponent('missile'),
+		new MeshComponent('bomb'),
 	]);
 }
 

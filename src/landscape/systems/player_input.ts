@@ -1,5 +1,5 @@
 import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
-import { add, normalize, scale } from 'engine/math/vectors';
+import { add, normalize, scale, toEuler } from 'engine/math/vectors';
 import { Point3, Vector3 } from 'engine/math';
 import { multiply, multiplyVector, rotation, transformPoint } from 'engine/math/transform';
 import { System } from 'engine/ecs/systems';
@@ -9,7 +9,7 @@ import { ShipComponent, ShipMode } from '../components/ship';
 import { Entity } from 'engine/ecs';
 import { ParticlesComponent } from 'engine/ecs/components/particles';
 import { SoundComponent } from 'engine/ecs/components/sound';
-import { missilePrefab } from '../prefabs';
+import { bombPrefab, laserPrefab } from '../prefabs';
 
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
@@ -32,8 +32,8 @@ export class PlayerInputSystem extends System {
 		'shift': Key.Thrust,
 		//[XboxButton[XboxButton.Y]]: Key.ToggleMode,
 		[XboxButton[XboxButton.X]]: Key.Fire,
-		[XboxButton[XboxButton.A]]: Key.Pick,
-		[XboxButton[XboxButton.B]]: Key.Bomb,
+		[XboxButton[XboxButton.B]]: Key.Pick,
+		[XboxButton[XboxButton.A]]: Key.Bomb,
 		[XboxButton[XboxButton.LeftBumper]]: Key.Boost,
 		[XboxButton[XboxButton.LeftTrigger]]: Key.Brake,
 		[XboxButton[XboxButton.RightTrigger]]: Key.Thrust,
@@ -224,19 +224,41 @@ export class PlayerInputSystem extends System {
 					transform.rotation[0] = 0;
 					transform.rotation[2] = 0;
 					break;
-				case Key.Fire:
+				case Key.Fire: {
+					const gun = world.getComponent(entity, GunComponent)!;
+					if (!gun) break;
+					if (gun.canFire()) {
+						gun.fire();
+						const offset = [0, 0, 1] as Vector3;
+						const position = [...transform.position] as Point3;
+						const rot = transform.rotationMatrix();
+						const missileVelocity = [0, 0, 6.4] as Vector3;
+						const velocity = multiplyVector(rot, add(playerVelocity.velocity, missileVelocity));
+						const missilePosition = add(position, multiplyVector(rot, offset));
+						const missile = laserPrefab(world, missilePosition, velocity);
+						const missileTransform = world.getComponent(missile, TransformComponent)!;
+						const [p, y, _r] = toEuler(normalize(velocity));
+						missileTransform.rotation = [
+							-p, Math.PI / 2 - y, 0
+						];
+						setTimeout(() => world.removeEntity(missile), 5000);
+					}
+					break;
+				}
+				case Key.Bomb: {
 					const gun = world.getComponent(entity, GunComponent)!;
 					if (!gun) break;
 					if (gun.canFire()) {
 						gun.fire();
 						const position = [...transform.position] as Point3;
 						const rot = transform.rotationMatrix();
-						const missileVelocity = [0, 0, 128] as Vector3;
+						const missileVelocity = [0, 0, 16] as Vector3;
 						const velocity = multiplyVector(rot, add(playerVelocity.velocity, missileVelocity));
-						const missile = missilePrefab(world, position, velocity);
+						const missile = bombPrefab(world, position, velocity);
 						setTimeout(() => world.removeEntity(missile), 5000);
 					}
 					break;
+				}
 			}
 		}
 
