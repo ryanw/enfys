@@ -257,6 +257,9 @@ impl Server {
 						}
 						world.users.insert(sender_id, user);
 					}
+					UserAction::Logout => {
+						log::error!("Logout not implemented");
+					}
 					UserAction::Move {
 						position,
 						velocity,
@@ -355,8 +358,8 @@ mod test {
 		server
 			.process_next_event()
 			.expect("Failed to process event");
-		let actual_sender = server.connections.get(&444).unwrap().clone();
-		assert_eq!(mock_sender, actual_sender);
+		let conn = server.connections.get(&444).unwrap();
+		assert_eq!(mock_sender, conn.sender);
 	}
 
 	#[test]

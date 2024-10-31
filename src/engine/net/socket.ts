@@ -1,13 +1,18 @@
 import { Point3, Vector3, Vector4 } from "engine/math";
 
-export enum MessageActions {
+export enum UserActions {
 	Noop,
 	Login,
 	Logout,
 	Move,
+}
+
+export enum ServerActions {
 	Join,
 	Leave,
+	Move,
 }
+
 export interface LoginMessage {
 	action: 'login';
 	name: string;
@@ -138,18 +143,18 @@ export class Socket {
 function decodeMessage(bytes: ArrayBuffer): ServerMessages | void {
 	const u8 = new Uint8Array(bytes);
 	switch (u8[0]) {
-		case MessageActions.Join: {
+		case ServerActions.Join: {
 			const id = new Uint32Array(bytes, 4, 1)[0];
 			const name = String.fromCharCode(...u8.slice(8));
 			console.log("Player joined", id, name);
 			return { action: 'join', id, name } as JoinMessage;
 		}
-		case MessageActions.Leave: {
+		case ServerActions.Leave: {
 			const id = new Uint32Array(bytes, 4, 1)[0];
 			console.log("Player left", id);
 			return { action: 'leave', id } as LeaveMessage;
 		}
-		case MessageActions.Move: {
+		case ServerActions.Move: {
 			const id = new Uint32Array(bytes, 4, 1)[0];
 			const f32 = new Float32Array(bytes, 8);
 			const position = Array.from(f32.slice(0, 3)) as Point3;
@@ -168,26 +173,28 @@ function encodeMessage(message: ClientMessages): ArrayBuffer {
 			const enc = new TextEncoder();
 			const name = enc.encode(sanitize(message.name));
 
-			const byteLength = name.length + 8;
+			const byteLength = name.length + 16;
 			const buffer = new ArrayBuffer(byteLength);
 			const u32 = new Uint32Array(buffer, 0, 2);
-			const u8 = new Uint8Array(buffer, 8);
-			u32[0] = MessageActions.Login;
+			const u8 = new Uint8Array(buffer, 16);
+			u32[0] = UserActions.Login;
 			u32[1] = message.seed;
+			u32[2] = name.length;
+			u32[3] = 0x0;
 			u8.set(name);
 			return buffer;
 		}
 
 		case 'logout':
-			return new Uint8Array([MessageActions.Logout]);
+			return new Uint32Array([UserActions.Logout]);
 
 		case 'move': {
 			const { position, velocity, rotation } = message;
-			const byteLength = (2 + 3 + 3 + 3) * 4;
+			const byteLength = (1 + 3 + 3 + 3) * 4;
 			const buffer = new ArrayBuffer(byteLength);
-			const u8 = new Uint8Array(buffer, 0, 1);
-			const f32 = new Float32Array(buffer, 8);
-			u8[0] = MessageActions.Move;
+			const u32 = new Uint32Array(buffer, 0, 1);
+			const f32 = new Float32Array(buffer, 4);
+			u32[0] = UserActions.Move;
 			f32.set([...position, ...velocity, ...rotation]);
 			return buffer;
 		}
