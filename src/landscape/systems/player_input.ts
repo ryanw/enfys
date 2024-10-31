@@ -196,6 +196,29 @@ export class PlayerInputSystem extends System {
 		let yaw = 0.0;
 		let thrust = 0;
 
+		function spawnProjectile(
+			projectilePrefab: (world: World, position: Point3, velocity: Vector3) => Entity,
+			projectileVelocity: Vector3,
+			timeout: number,
+		) {
+			const gun = world.getComponent(entity, GunComponent)!;
+			if (!gun) return;
+			if (gun.canFire()) {
+				gun.fire();
+
+				const offset = [0, 0, 1] as Vector3;
+				const position = [...transform.position] as Point3;
+				const rot = transform.rotationMatrix();
+
+				const velocity = add(playerVelocity.velocity, multiplyVector(rot, projectileVelocity));
+				const projectilePosition = add(position, multiplyVector(rot, offset));
+				const projectile = projectilePrefab(world, projectilePosition, velocity);
+				const projectileTransform = world.getComponent(projectile, TransformComponent)!;
+				projectileTransform.rotation = [...transform.rotation];
+				setTimeout(() => world.removeEntity(projectile), timeout);
+			}
+		}
+
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
 				case Key.Forward:
@@ -224,41 +247,14 @@ export class PlayerInputSystem extends System {
 					transform.rotation[0] = 0;
 					transform.rotation[2] = 0;
 					break;
-				case Key.Fire: {
-					const gun = world.getComponent(entity, GunComponent)!;
-					if (!gun) break;
-					if (gun.canFire()) {
-						gun.fire();
-						const offset = [0, 0, 1] as Vector3;
-						const position = [...transform.position] as Point3;
-						const rot = transform.rotationMatrix();
-						const missileVelocity = [0, 0, 6.4] as Vector3;
-						const velocity = multiplyVector(rot, add(playerVelocity.velocity, missileVelocity));
-						const missilePosition = add(position, multiplyVector(rot, offset));
-						const missile = laserPrefab(world, missilePosition, velocity);
-						const missileTransform = world.getComponent(missile, TransformComponent)!;
-						const [p, y, _r] = toEuler(normalize(velocity));
-						missileTransform.rotation = [
-							-p, Math.PI / 2 - y, 0
-						];
-						setTimeout(() => world.removeEntity(missile), 5000);
-					}
+
+				case Key.Fire:
+					spawnProjectile(laserPrefab, [0, 0, 64], 5000);
 					break;
-				}
-				case Key.Bomb: {
-					const gun = world.getComponent(entity, GunComponent)!;
-					if (!gun) break;
-					if (gun.canFire()) {
-						gun.fire();
-						const position = [...transform.position] as Point3;
-						const rot = transform.rotationMatrix();
-						const missileVelocity = [0, 0, 16] as Vector3;
-						const velocity = multiplyVector(rot, add(playerVelocity.velocity, missileVelocity));
-						const missile = bombPrefab(world, position, velocity);
-						setTimeout(() => world.removeEntity(missile), 5000);
-					}
+
+				case Key.Bomb:
+					spawnProjectile(bombPrefab, [0, 0, 16], 5000);
 					break;
-				}
 			}
 		}
 

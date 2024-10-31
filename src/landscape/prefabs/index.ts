@@ -36,7 +36,7 @@ export function laserPrefab(world: World, position: Point3, velocity: Vector3): 
 	return world.createEntity([
 		new TransformComponent(position),
 		new VelocityComponent(velocity),
-		new PhysicsComponent(0),
+		new PhysicsComponent(0, 0),
 		new MeshComponent('laser'),
 	]);
 }
