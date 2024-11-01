@@ -1,11 +1,12 @@
 import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
-import { JoinMessage, LeaveMessage, MoveMessage, ServerMessages, Socket } from 'engine/net/socket';
-import { opponentPrefab} from '../prefabs';
-import { PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { JoinMessage, LeaveMessage, TransformMessage, ServerMessages, Socket, SpawnMessage, DespawnMessage } from 'engine/net/socket';
+import { bombPrefab, laserPrefab, opponentPrefab } from '../prefabs';
+import { NetworkComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { Point3, Vector3 } from 'engine/math';
 import { magnitude, subtract } from 'engine/math/vectors';
 import { Entity } from 'engine/ecs';
+import { MeshComponent } from 'engine/ecs/components/mesh';
 
 const NETWORK_LIVE_FPS = 30;
 const NETWORK_IDLE_FPS = 1;
@@ -19,10 +20,14 @@ export interface PlayerState {
 export class NetworkSystem extends System {
 	private pendingJoins: Array<JoinMessage> = [];
 	private pendingLeaves: Array<LeaveMessage> = [];
-	private pendingMoves: Array<MoveMessage> = [];
+	private pendingMoves: Array<TransformMessage> = [];
+	private pendingSpawns: Array<SpawnMessage> = [];
+	private pendingDespawns: Array<DespawnMessage> = [];
+	private activeEntities: Set<Entity> = new Set();
 	private lastSend: number = 0;
 	private previousState: PlayerState = { position: [0, 0, 0], velocity: [0, 0, 0], rotation: [0, 0, 0] };
 	private players: Record<number, Entity> = {};
+	private serverEntities: Record<number, Entity> = {};
 
 	constructor(public socket: Socket) {
 		super();
@@ -37,12 +42,69 @@ export class NetworkSystem extends System {
 			case 'leave':
 				this.pendingLeaves.push(message);
 				return;
-			case 'move':
+			case 'transform':
 				this.pendingMoves.push(message);
+				return;
+			case 'spawn':
+				this.pendingSpawns.push(message);
+				return;
+			case 'despawn':
+				this.pendingDespawns.push(message);
 				return;
 			default:
 				console.warn("Unhandled message", message);
 		}
+	}
+
+	async updateNetworkComponents(world: World) {
+		const entities = world.entitiesWithComponents([NetworkComponent, TransformComponent]);
+		for (const entity of entities) {
+			const transform = world.getComponent(entity, TransformComponent)!;
+			const velocity = world.getComponent(entity, VelocityComponent)?.velocity ?? [0, 0, 0];
+			if (!this.activeEntities.has(entity)) {
+				// New entity
+				this.activeEntities.add(entity);
+				const prefab = world.getComponent(entity, MeshComponent)?.meshId.toString() ?? 'bomb';
+				this.socket.spawnEntity(entity, prefab, transform.position, transform.rotation, velocity);
+			}
+			else {
+				// Updated entity
+			}
+		}
+		// Removed entities
+		for (const entity of this.activeEntities) {
+			if (entities.has(entity)) continue;
+			this.socket.despawnEntity(entity);
+			this.activeEntities.delete(entity);
+		}
+	}
+
+	async updateSpawns(world: World) {
+		for (const spawn of this.pendingSpawns) {
+			let entity = 0;
+			switch (spawn.prefab) {
+				case 'bomb':
+					entity = bombPrefab(world, false, spawn.position, spawn.rotation, spawn.velocity);
+					break;
+				case 'laser':
+					entity = laserPrefab(world, false, spawn.position, spawn.rotation, spawn.velocity);
+					break;
+				default:
+					console.error("Invalid spawn", spawn);
+					throw new Error("Invalid spawn prefab")
+			}
+			this.serverEntities[spawn.id] = entity;
+		}
+		this.pendingSpawns = [];
+
+		for (const despawn of this.pendingDespawns) {
+			const entity = this.serverEntities[despawn.id];
+			if (entity) {
+				delete this.serverEntities[despawn.id];
+				world.removeEntity(entity);
+			}
+		}
+		this.pendingDespawns = [];
 	}
 
 	async tick(_dt: number, world: World) {
@@ -96,5 +158,8 @@ export class NetworkSystem extends System {
 				}
 			}
 		}
+
+		await this.updateNetworkComponents(world);
+		await this.updateSpawns(world);
 	}
 }

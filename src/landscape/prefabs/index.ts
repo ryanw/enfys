@@ -1,5 +1,5 @@
 import { Entity } from 'engine/ecs';
-import { GunComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { Component, GunComponent, NetworkComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from 'engine/ecs/components/camera';
 import { MeshComponent } from 'engine/ecs/components/mesh';
 import { World } from 'engine/ecs/world';
@@ -32,22 +32,30 @@ export function opponentPrefab(world: World, position: Point3 = [0, 0, 0]): Enti
 	]);
 }
 
-export function laserPrefab(world: World, position: Point3, velocity: Vector3): Entity {
-	return world.createEntity([
-		new TransformComponent(position),
+export function laserPrefab(world: World, networked: boolean, position: Point3, rotation: Vector3, velocity: Vector3): Entity {
+	const components: Array<Component> = [
+		new TransformComponent(position, rotation),
 		new VelocityComponent(velocity),
 		new PhysicsComponent(0, 0),
 		new MeshComponent('laser'),
-	]);
+	];
+	if (networked) {
+		components.push(new NetworkComponent());
+	}
+	return world.createEntity(components);
 }
 
-export function bombPrefab(world: World, position: Point3, velocity: Vector3): Entity {
-	return world.createEntity([
-		new TransformComponent(position),
+export function bombPrefab(world: World, networked: boolean, position: Point3, rotation: Vector3, velocity: Vector3): Entity {
+	const components: Array<Component> = [
+		new TransformComponent(position, rotation),
 		new VelocityComponent(velocity),
 		new PhysicsComponent(),
 		new MeshComponent('bomb'),
-	]);
+	];
+	if (networked) {
+		components.push(new NetworkComponent());
+	}
+	return world.createEntity(components);
 }
 
 export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
@@ -100,7 +108,7 @@ export function decorPrefab(world: World, mesh: ResourceId, seed: number, spread
 }
 
 export function terrainPrefab(world: World, seed: number, target?: Entity): Entity {
-	const { terrainSeed, terrainColors } = new Planet(seed);255
+	const { terrainSeed, terrainColors } = new Planet(seed); 255
 	return world.createEntity([
 		new TerrainComponent(terrainSeed, terrainColors.seed, target),
 		new MaterialComponent({ color: [255, 150, 0, 255] }),

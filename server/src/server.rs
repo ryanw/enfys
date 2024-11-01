@@ -1,14 +1,17 @@
-use crate::{
-	action::{ServerAction, UserAction},
-	user::User,
-	world::World,
-};
+use crate::{action::ServerAction, user::User, world::World};
 use anyhow::{anyhow, Result};
 use crossbeam::channel::{self, Receiver, Sender};
-use std::{collections::HashMap, net::SocketAddr};
+use std::{
+	collections::HashMap,
+	sync::atomic::{AtomicU32, Ordering},
+};
 
 pub type Seed = u32;
 pub type ConnectionID = u32;
+pub type ClientID = u32;
+pub type ServerID = u32;
+
+static NEXT_SERVER_ID: AtomicU32 = AtomicU32::new(0);
 
 pub enum ServerEvent {
 	Connection(ws::Sender),
@@ -23,7 +26,7 @@ pub enum ServerEvent {
 	},
 	Action {
 		sender_id: ConnectionID,
-		action: UserAction,
+		action: ServerAction,
 	},
 }
 
@@ -34,7 +37,7 @@ pub struct SocketHandler {
 
 impl SocketHandler {
 	pub fn process_message(&mut self, data: &[u8]) -> Result<()> {
-		let action = UserAction::try_from(data)?;
+		let action = ServerAction::try_from(data)?;
 		self.tx.send(ServerEvent::Action {
 			sender_id: self.sender.connection_id(),
 			action,
@@ -69,9 +72,10 @@ impl ws::Handler for SocketHandler {
 				sender_id: self.sender.connection_id(),
 				shake,
 			})
-			.unwrap();
-
-		Ok(())
+			.map_err(|error| ws::Error {
+				kind: ws::ErrorKind::Custom(error.into()),
+				details: "Failed to send Handshake".into(),
+			})
 	}
 
 	fn on_close(&mut self, code: ws::CloseCode, reason: &str) {
@@ -138,6 +142,7 @@ pub struct Server {
 	pub connections: HashMap<ConnectionID, Connection>,
 	pub worlds: HashMap<Seed, World>,
 	pub user_worlds: HashMap<ConnectionID, Seed>,
+	pub entity_id_map: HashMap<ConnectionID, HashMap<ClientID, ServerID>>,
 	tx: Sender<ServerEvent>,
 	rx: Receiver<ServerEvent>,
 }
@@ -215,9 +220,10 @@ impl Server {
 					.get(&sender_id)
 					.map(|c| format!("{sender_id}: {}", c.client_addr()))
 					.unwrap_or_else(|| format!("{sender_id}: Unknown Connection"));
+				log::debug!("Action from: {identity}");
 				match action {
-					UserAction::Noop => log::debug!("Noop: {:?}", sender_id),
-					UserAction::Login { name, seed } => {
+					ServerAction::Noop => log::debug!("Noop: {:?}", sender_id),
+					ServerAction::Login { name, seed } => {
 						log::debug!("Login: {:?} - {:?} - {:?}", identity, seed, name);
 						let world = self.worlds.entry(seed).or_insert_with(|| World::new(seed));
 						let Some(connection) = self.connections.get(&sender_id) else {
@@ -248,22 +254,23 @@ impl Server {
 								id: *user_id,
 								name: other_user.name.clone(),
 							});
-							let _ = user.sender.send(&ServerAction::Move {
+							let _ = user.sender.send(&ServerAction::Transform {
 								id: *user_id,
 								position: other_user.position.clone(),
-								velocity: other_user.velocity.clone(),
 								rotation: other_user.rotation.clone(),
+								velocity: other_user.velocity.clone(),
 							});
 						}
 						world.users.insert(sender_id, user);
 					}
-					UserAction::Logout => {
+					ServerAction::Logout => {
 						log::error!("Logout not implemented");
 					}
-					UserAction::Move {
+					ServerAction::Transform {
+						id,
 						position,
-						velocity,
 						rotation,
+						velocity,
 					} => {
 						log::debug!(
 							"Move: {:?} - {:?}",
@@ -286,7 +293,7 @@ impl Server {
 						user.velocity = velocity;
 						user.rotation = rotation;
 						if let Err(error) = world.broadcast(
-							&ServerAction::Move {
+							&ServerAction::Transform {
 								id: sender_id,
 								position,
 								velocity,
@@ -297,6 +304,69 @@ impl Server {
 							log::error!("Error broadcasting message: {identity} {:?}", error);
 						}
 					}
+					ServerAction::Join { id, name } => todo!(),
+					ServerAction::Leave { id } => todo!(),
+					ServerAction::Spawn {
+						id,
+						position,
+						velocity,
+						rotation,
+						prefab,
+					} => {
+						let id_map = self
+							.entity_id_map
+							.entry(sender_id)
+							.or_insert_with(|| HashMap::with_capacity(1024));
+						let server_id = NEXT_SERVER_ID.fetch_add(1, Ordering::Relaxed);
+						log::warn!("Spawned entity: c-{id} -> s-{server_id} -- {prefab}");
+						id_map.insert(id, server_id);
+
+						let Some(world) = self
+							.user_worlds
+							.get(&sender_id)
+							.and_then(|seed| self.worlds.get_mut(seed))
+						else {
+							log::error!("Couldn't find world for sender: {identity}");
+							return Ok(());
+						};
+
+						if let Err(error) = world.broadcast(
+							&ServerAction::Spawn {
+								id: server_id,
+								position,
+								velocity,
+								rotation,
+								prefab,
+							},
+							sender_id,
+						) {
+							log::error!("Error broadcasting message: {identity} {:?}", error);
+						}
+					}
+					ServerAction::Despawn { id } => {
+						let id_map = self
+							.entity_id_map
+							.entry(sender_id)
+							.or_insert_with(|| HashMap::with_capacity(1024));
+						if let Some(server_id) = id_map.remove(&id) {
+							log::warn!("Despawned entity: c-{id} -> s-{server_id:?}");
+							let Some(world) = self
+								.user_worlds
+								.get(&sender_id)
+								.and_then(|seed| self.worlds.get_mut(seed))
+							else {
+								log::error!("Couldn't find world for sender: {identity}");
+								return Ok(());
+							};
+
+							if let Err(error) =
+								world.broadcast(&ServerAction::Despawn { id: server_id }, sender_id)
+							{
+								log::error!("Error broadcasting message: {identity} {:?}", error);
+							}
+						}
+					}
+					ServerAction::Damage { id, position } => todo!(),
 				}
 			}
 		}
@@ -311,6 +381,7 @@ impl Default for Server {
 			connections: HashMap::with_capacity(1024),
 			worlds: HashMap::with_capacity(1024),
 			user_worlds: HashMap::with_capacity(1024),
+			entity_id_map: HashMap::with_capacity(1024),
 			tx,
 			rx,
 		}
@@ -409,7 +480,7 @@ mod test {
 		server
 			.send(ServerEvent::Action {
 				sender_id: conn_id,
-				action: UserAction::Login {
+				action: ServerAction::Login {
 					seed,
 					name: name.to_owned(),
 				},

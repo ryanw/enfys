@@ -197,7 +197,7 @@ export class PlayerInputSystem extends System {
 		let thrust = 0;
 
 		function spawnProjectile(
-			projectilePrefab: (world: World, position: Point3, velocity: Vector3) => Entity,
+			projectilePrefab: (world: World, networked: boolean, position: Point3, rotation: Vector3, velocity: Vector3) => Entity,
 			projectileVelocity: Vector3,
 			timeout: number,
 		) {
@@ -212,9 +212,7 @@ export class PlayerInputSystem extends System {
 
 				const velocity = add(playerVelocity.velocity, multiplyVector(rot, projectileVelocity));
 				const projectilePosition = add(position, multiplyVector(rot, offset));
-				const projectile = projectilePrefab(world, projectilePosition, velocity);
-				const projectileTransform = world.getComponent(projectile, TransformComponent)!;
-				projectileTransform.rotation = [...transform.rotation];
+				const projectile = projectilePrefab(world, true, projectilePosition, transform.rotation, velocity);
 				setTimeout(() => world.removeEntity(projectile), timeout);
 			}
 		}

@@ -1,16 +1,15 @@
 import { Point3, Vector3, Vector4 } from "engine/math";
 
-export enum UserActions {
+export enum ServerActions {
 	Noop,
 	Login,
 	Logout,
-	Move,
-}
-
-export enum ServerActions {
 	Join,
 	Leave,
-	Move,
+	Transform,
+	Spawn,
+	Despawn,
+	Damage,
 }
 
 export interface LoginMessage {
@@ -34,16 +33,30 @@ export interface LeaveMessage {
 	id: number;
 }
 
-export interface MoveMessage {
-	action: 'move';
+export interface TransformMessage {
+	action: 'transform';
 	id: number;
 	position: Point3;
-	velocity: Vector3;
 	rotation: Vector3;
+	velocity: Vector3;
 }
 
-export type ClientMessages = LoginMessage | LogoutMessage | MoveMessage;
-export type ServerMessages = MoveMessage | JoinMessage | LeaveMessage;
+export interface SpawnMessage {
+	action: 'spawn';
+	id: number;
+	position: Point3;
+	rotation: Vector3;
+	velocity: Vector3;
+	prefab: string;
+}
+
+export interface DespawnMessage {
+	action: 'despawn';
+	id: number;
+}
+
+export type ClientMessages = LoginMessage | LogoutMessage | TransformMessage | SpawnMessage | DespawnMessage;
+export type ServerMessages = TransformMessage | JoinMessage | LeaveMessage | SpawnMessage | DespawnMessage;
 
 export type MessageCallback = (arg: ServerMessages) => void;
 
@@ -105,8 +118,20 @@ export class Socket {
 		this.send({ action: 'logout' });
 	}
 
-	move(position: Point3, velocity: Vector3, rotation: Vector3) {
-		this.send({ action: 'move', id: -1, position, velocity, rotation });
+	move(position: Point3, rotation: Vector3, velocity: Vector3) {
+		this.updateEntity(-1, position, velocity, rotation);
+	}
+
+	spawnEntity(entity: number, prefab: string, position: Point3, rotation: Vector3, velocity: Vector3) {
+		this.send({ action: 'spawn', id: entity, position, velocity, rotation, prefab });
+	}
+
+	despawnEntity(entity: number) {
+		this.send({ action: 'despawn', id: entity });
+	}
+
+	updateEntity(entity: number, position: Point3, rotation: Vector3, velocity: Vector3) {
+		this.send({ action: 'transform', id: entity, position, velocity, rotation });
 	}
 
 	on(callback: MessageCallback) {
@@ -141,29 +166,44 @@ export class Socket {
 }
 
 function decodeMessage(bytes: ArrayBuffer): ServerMessages | void {
-	const u8 = new Uint8Array(bytes);
-	switch (u8[0]) {
+	const alignLength = Math.floor(bytes.byteLength / 4);
+	const u32 = new Uint32Array(bytes, 0, alignLength);
+	const id = u32[1];
+	switch (u32[0]) {
 		case ServerActions.Join: {
-			const id = new Uint32Array(bytes, 4, 1)[0];
-			const name = String.fromCharCode(...u8.slice(8));
+			const length = u32[2]; // FIXME this is actually u64
+			const chars = new Uint8Array(bytes, 12, length);
+			const name = String.fromCharCode(...chars);
 			console.log("Player joined", id, name);
 			return { action: 'join', id, name } as JoinMessage;
 		}
 		case ServerActions.Leave: {
-			const id = new Uint32Array(bytes, 4, 1)[0];
 			console.log("Player left", id);
 			return { action: 'leave', id } as LeaveMessage;
 		}
-		case ServerActions.Move: {
-			const id = new Uint32Array(bytes, 4, 1)[0];
+		case ServerActions.Transform: {
 			const f32 = new Float32Array(bytes, 8);
 			const position = Array.from(f32.slice(0, 3)) as Point3;
-			const velocity = Array.from(f32.slice(3, 6)) as Vector3;
-			const rotation = Array.from(f32.slice(6, 9)) as Vector3;
-			return { action: 'move', id, position, velocity, rotation } as MoveMessage;
+			const rotation = Array.from(f32.slice(3, 6)) as Vector3;
+			const velocity = Array.from(f32.slice(6, 9)) as Vector3;
+			return { action: 'transform', id, position, velocity, rotation } as TransformMessage;
+		}
+		case ServerActions.Spawn: {
+			const f32 = new Float32Array(bytes, 8, alignLength - 4);
+			const position = Array.from(f32.slice(0, 3)) as Point3;
+			const rotation = Array.from(f32.slice(3, 6)) as Vector3;
+			const velocity = Array.from(f32.slice(6, 9)) as Vector3;
+			const offset = 11;
+			const length = u32[offset]; // FIXME this is actually u64
+			const chars = new Uint8Array(bytes, offset * 4 + 8, length);
+			const prefab = String.fromCharCode(...chars);
+			return { action: 'spawn', id, position, rotation, velocity, prefab };
+		}
+		case ServerActions.Despawn: {
+			return { action: 'despawn', id };
 		}
 		default:
-			console.warn("Unknown message", u8);
+			console.warn("Unknown message", u32);
 	}
 }
 
@@ -177,7 +217,7 @@ function encodeMessage(message: ClientMessages): ArrayBuffer {
 			const buffer = new ArrayBuffer(byteLength);
 			const u32 = new Uint32Array(buffer, 0, 2);
 			const u8 = new Uint8Array(buffer, 16);
-			u32[0] = UserActions.Login;
+			u32[0] = ServerActions.Login;
 			u32[1] = message.seed;
 			u32[2] = name.length;
 			u32[3] = 0x0;
@@ -186,21 +226,49 @@ function encodeMessage(message: ClientMessages): ArrayBuffer {
 		}
 
 		case 'logout':
-			return new Uint32Array([UserActions.Logout]);
+			return new Uint32Array([ServerActions.Logout]);
 
-		case 'move': {
-			const { position, velocity, rotation } = message;
-			const byteLength = (1 + 3 + 3 + 3) * 4;
+		case 'transform': {
+			const { id, position, rotation, velocity } = message;
+			const byteLength = (2 + 3 + 3 + 3) * 4;
 			const buffer = new ArrayBuffer(byteLength);
-			const u32 = new Uint32Array(buffer, 0, 1);
-			const f32 = new Float32Array(buffer, 4);
-			u32[0] = UserActions.Move;
-			f32.set([...position, ...velocity, ...rotation]);
+			const u32 = new Uint32Array(buffer, 0, 2);
+			const f32 = new Float32Array(buffer, 8);
+			u32[0] = ServerActions.Transform;
+			u32[1] = id;
+			f32.set([...position, ...rotation, ...velocity]);
 			return buffer;
 		}
 
+		case 'spawn': {
+			const { id, position, rotation, velocity, prefab } = message;
+			const enc = new TextEncoder();
+			const prefabBytes = enc.encode(sanitize(prefab));
+
+			const dataLength = (2 + 3 + 3 + 3 + 2) * 4;
+			const bufferLength = Math.ceil(prefabBytes.length / 4) * 4 + dataLength;
+			const buffer = new ArrayBuffer(bufferLength);
+			const u32 = new Uint32Array(buffer, 0);
+			const f32 = new Float32Array(buffer, 8);
+			u32[0] = ServerActions.Spawn;
+			u32[1] = id;
+			f32.set([...position, ...rotation, ...velocity]);
+			u32[dataLength / 4 - 2] = prefabBytes.length;
+			u32[dataLength / 4 - 1] = 0x00; // u64 msb
+
+			// Prefab string starts after data
+			const u8 = new Uint8Array(buffer, dataLength);
+			u8.set(prefabBytes);
+			return buffer;
+		}
+
+		case 'despawn': {
+			return new Uint32Array([ServerActions.Despawn, message.id]);
+		}
+
 		default:
-			throw new Error("Unknown message action");
+			console.error('Unknown message:', message);
+			throw new Error(`Unknown message: ${message}`);
 	}
 }
 

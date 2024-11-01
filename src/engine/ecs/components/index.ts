@@ -3,6 +3,14 @@ import { multiply, rotation } from 'engine/math/transform';
 
 export abstract class Component { }
 
+export class NetworkComponent extends Component {
+	constructor(
+		public remoteId?: number,
+	) {
+		super();
+	}
+}
+
 export class PlayerComponent extends Component {
 }
 

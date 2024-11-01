@@ -25,7 +25,9 @@ fn main() {
 
 	ws::listen(addr, |sender| {
 		log::info!("Establishing connection: {:?}", (sender.connection_id(), sender.token()));
-		tx.send(ServerEvent::Connection(sender.clone())).unwrap();
+		if let Err(error) = tx.send(ServerEvent::Connection(sender.clone())) {
+			log::error!("Error sending server connection event: {:?}", error);
+		}
 
 		SocketHandler {
 			sender: sender.clone(),
