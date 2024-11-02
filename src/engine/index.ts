@@ -214,6 +214,7 @@ export class Gfx {
 				this.shadowMap,
 				this.currentTexture,
 				scene.waterColor,
+				scene.fogColor,
 				scene.clearColor,
 			);
 		});

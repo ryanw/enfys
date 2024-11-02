@@ -18,7 +18,8 @@ export type CameraId = number;
  */
 export class Scene {
 	clearColor: Color = [0, 0, 0, 0];
-	waterColor: Color = [10, 30, 90, 100];
+	waterColor: Color = [0, 0, 0, 0];
+	fogColor: Color = [0, 0, 0, 0];
 	pawns: Array<Pawn<unknown>> = [];
 	cameras: Array<Camera> = [];
 	currentCameraId = 0;

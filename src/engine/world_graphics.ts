@@ -221,6 +221,7 @@ export class WorldGraphics {
 
 			const colors = new ColorScheme(terrain.colorSeed);
 			scene.waterColor = [...colors.scheme.water];
+			scene.fogColor = [...colors.scheme.fog];
 			this.updateTerrainQueue(entity, terrain);
 			if (this.queuedTerrain.size === 0) {
 				this.removeExpiredTerrainChunks(entity, terrain, scene);

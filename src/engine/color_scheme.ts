@@ -11,6 +11,7 @@ export type ColorList = {
 	sand: Color;
 	rock: Color;
 	snow: Color;
+	fog: Color;
 }
 
 export class ColorScheme {
@@ -35,8 +36,9 @@ export class ColorScheme {
 		const sand = rndColor(0.3, 0.5);
 		const rock = rndColor(0.2, 0.7);
 		const snow = rndColor(0.1, 0.9);
+		const fog = rndColor(0.6, 0.4);
 
-		this.scheme = { water, beach, lush, dry, soil, sand, rock, snow };
+		this.scheme = { water, beach, lush, dry, soil, sand, rock, snow, fog };
 		this._colors = [
 			beach,
 			beach,

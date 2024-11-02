@@ -33,6 +33,7 @@ struct Uniforms {
 	drawEdges: i32,
 	drawShadows: i32,
 	renderMode: i32,
+	fogColor: u32,
 	fog: f32,
 	t: f32,
 }
@@ -92,7 +93,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let depth = textureLoad(depthTex, depthCoord, 0).r;
 	let pos = worldFromScreen(uv, depth, u.invMvp);
 
-	if DISTORT_WATER.x > 0.0 && pos.y < 0.0 {
+	if u.waterColor > 0u &&  DISTORT_WATER.x > 0.0 && pos.y < 0.0 {
 		let n0 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
 		let n1 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
 		uv.x = uv.x + n0 * DISTORT_WATER.y;
@@ -280,7 +281,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	// Draw water -- depth test to fix water behind fog
-	if DRAW_WATER && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
+	if DRAW_WATER && u.waterColor > 0u && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
 		// Animate waves near edges
 		let noiseScale = 0.03;
 		let noiseOffset = vec3(u.t/37.0,u.t/24.0, u.t/47.0) * 20.0;
@@ -308,12 +309,12 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 
 
 	var fogFactor = 0.0;
-	if DRAW_FOG && u.fog > 0.0 {
+	if DRAW_FOG && u.fogColor > 0u && u.fog > 0.0 {
 		let fogHeight = 1000.0;
 		let fogMin = 0.995 - (0.005 * (1.0 - u.fog));
 		let fogMax = min(fogMin + 0.005, 1.0);
 		let y = pos.y;
-		let fogColor = vec4(0.7, 0.4, 0.8, 1.0);
+		let fogColor = uintToColor(u.fogColor);
 		fogFactor = ss(0.0, 1.0, fogHeight/abs(y));
 		fogFactor *= ss(fogMin, fogMax, depth);
 		if color.a == 0.0 {

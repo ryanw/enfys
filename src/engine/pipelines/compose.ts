@@ -123,6 +123,7 @@ export class ComposePipeline extends Pipeline {
 			['drawEdges', 'i32'],
 			['drawShadows', 'i32'],
 			['renderMode', 'i32'],
+			['fogColor', 'u32'],
 			['fog', 'f32'],
 			['t', 'f32'],
 		]);
@@ -147,6 +148,7 @@ export class ComposePipeline extends Pipeline {
 		shadows: ShadowMap,
 		target: GPUTexture,
 		waterColor: Color | number,
+		fogColor: Color | number,
 		clear: Color = [0, 0, 0, 0],
 	) {
 		const { device } = this.gfx;
@@ -167,6 +169,9 @@ export class ComposePipeline extends Pipeline {
 			drawShadows: this.config.drawShadows,
 			drawEdges: this.config.drawEdges,
 			renderMode: this.config.renderMode,
+			fogColor: typeof fogColor === 'number'
+				? fogColor
+				: colorToInt(fogColor),
 			fog: this.config.fog,
 			t: performance.now() / 1000.0,
 		};
