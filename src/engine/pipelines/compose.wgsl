@@ -3,7 +3,9 @@ const DRAW_SHADOWS: bool = true;
 const DRAW_WATER: bool = true;
 const DISTORT_WATER: vec2f = vec2(32.0, 0.3);
 const DRAW_FOG: bool = true;
-const EDGE_MODE: i32 = 3;
+const EDGE_MODE: i32 = 4;
+const EDGE_INVERT: bool = true;
+const EDGE_COLOR: vec4f = vec4(0.0, 0.0, 0.0, 0.6);
 const DITHER_SHADOWS: bool = false;
 const DEBUG_SHADOW_MAP: i32 = -1;
 
@@ -200,6 +202,25 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 				}
 			}
 		}
+		else if EDGE_MODE == 4 {
+			var thickness = 5;
+			isEdge = 0.0;
+			for (var y = 0; y < thickness; y++) {
+				for (var x = 0; x < thickness; x++) {
+					let off = vec2(-thickness/2) + vec2(x, y);
+					let metaP = vec2i(metaCoord) + off;
+					let n = textureLoad(metaTex, metaP, 0).r;
+					if n != metaVal {
+						let l = length(vec2f(off));
+						let t = f32(thickness)/2.0;
+						if l <= t {
+							let v = ss(0.0, 1.0, l/t);
+							isEdge = max(isEdge, 1.0 - v);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	var renderMode = u.renderMode;
@@ -307,14 +328,28 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		}
 	}
 
+	// Draw edges
+	if EDGE_INVERT {
+		isEdge = 1.0 - isEdge;
+	}
+	if isEdge == 0.0 {
+	} else {
+		// Fade out in distance
+		//let ef = ss(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
+		//color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
+		//color = vec4(vec3(1.0-isEdge/8.0), 1.0);
+		//color = vec4(mix(color.rgb, EDGE_COLOR.rgb, isEdge * EDGE_COLOR.a), color.a);
+	}
+
 
 	var fogFactor = 0.0;
 	if DRAW_FOG && u.fogColor > 0u && u.fog > 0.0 {
-		let fogHeight = 1000.0;
+		let fogColor = uintToColor(u.fogColor);
+		let fogHeight = 48.0;
 		let fogMin = 0.995 - (0.005 * (1.0 - u.fog));
 		let fogMax = min(fogMin + 0.005, 1.0);
+
 		let y = pos.y;
-		let fogColor = uintToColor(u.fogColor);
 		fogFactor = ss(0.0, 1.0, fogHeight/abs(y));
 		fogFactor *= ss(fogMin, fogMax, depth);
 		if color.a == 0.0 {
@@ -359,18 +394,6 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		default: {}
 	}
 
-	// Draw edges
-	if isEdge == 0.0 {
-	} else {
-		// Fade out in distance
-		//let ef = ss(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
-		//color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
-		let m = ss(0.0, 1.0, isEdge) / 3.0;
-		color = mix(vec4(0.0, 0.0, 0.0, 1.0), color, m);
-		//color = vec4(vec3(1.0-isEdge/8.0), 1.0);
-	}
-
-
 	if DEBUG_SHADOW_MAP > -1 {
 		color = drawShadowMap(uv, color, DEBUG_SHADOW_MAP);
 	}
@@ -379,6 +402,12 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 }
 
 fn isInShadow(p: vec3f, normal: vec3f) -> bool {
+	let n = normal * 0.005;
+	var d = depthInShadowCascade(p + n, 0);
+	return d > 0.0;
+}
+
+fn cascading_isInShadow(p: vec3f, normal: vec3f) -> bool {
 	for (var i = 0; i < u.lightCascadeCount; i++) {
 		let n = normal * 0.07 * f32(i + 1);
 		var d = depthInShadowCascade(p + n, i);

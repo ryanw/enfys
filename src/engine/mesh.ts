@@ -1,7 +1,8 @@
 import { Gfx, Size, Triangle, calculateNormals } from 'engine';
 import { Matrix4, PHI, Point2, Point3, Vector2, Vector3, Vector4 } from './math';
 import { add, normalize, scale } from './math/vectors';
-import { identity } from './math/transform';
+import { identity, multiply, rotationFromVector, scaling, transformPoint, translation } from './math/transform';
+import { colorToBigInt, colorToInt, hsl } from './color';
 
 /**
  * Enforces all properties on a Vertex to be `number` or `Array<number>`
@@ -94,6 +95,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		this.instanceCapacity = capacity;
 
 		const oldInstanceBuffer = this.instanceBuffer;
+		if (!oldInstanceBuffer) return;
 		console.debug("Resizing Instance buffer %d bytes", ceil(oldInstanceBuffer.size * change));
 		const newInstanceBuffer = device.createBuffer({
 			label: `Mesh<${this.constructor.name}> Instance Buffer`,
@@ -115,6 +117,11 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	}
 
 	uploadInstances(instances: Array<I>) {
+		if (instances.length === 0) {
+			this.instanceCount = 0;
+			return;
+		}
+
 		const { device } = this.gfx;
 		const capacity = Math.max(this.instanceCapacity, instances.length);
 		this.instanceSize = instances.length > 0 ? calcVertexSize(instances[0]) : this.instanceSize;
@@ -148,6 +155,10 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	}
 
 	pushInstance(instance: I): number {
+		if (!this.instanceBuffer || this.instanceCapacity === 0) {
+			this.uploadInstances([instance]);
+			return 0;
+		}
 		if (!this.hasCapacity) {
 			const newCapacity = Math.ceil(this.instanceCapacity * 1.5);
 			this.resizeInstanceCapacity(newCapacity);
@@ -224,12 +235,12 @@ export class SimpleMesh extends Mesh<ColorVertex, ColorInstance> {
 			this.uploadInstances(instances);
 		}
 		else {
-			this.uploadInstances([{
-				transform: identity(),
-				instanceColor: BigInt(0xffffffff),
-				variantIndex: BigInt(0x0),
-				live: 1,
-			}]);
+			//this.uploadInstances([{
+			//	transform: identity(),
+			//	instanceColor: BigInt(0xffffffff),
+			//	variantIndex: BigInt(0x0),
+			//	live: 1,
+			//}]);
 		}
 	}
 }
@@ -309,48 +320,8 @@ function toVertex(position: Point3): ColorVertex {
  * Mesh shaped like a flat subdivided plane
  */
 export class QuadMesh extends SimpleMesh {
-	constructor(gfx: Gfx, divisions: [number, number], size: Size = [1, 1]) {
-		const s0 = (1 / (divisions[0] + 1)) * size[0];
-		const s1 = (1 / (divisions[1] + 1)) * size[1];
-		const quad: Array<Point3> = [
-			[-s0, 0, s1],
-			[s0, 0, s1],
-			[s0, 0, -s1],
-
-			[-s0, 0, s1],
-			[s0, 0, -s1],
-			[-s0, 0, -s1],
-		];
-
-		const vertexCount = (divisions[0] + 1) * (divisions[1] + 1) * quad.length;
-
-		const subquad: Array<Point3> = new Array(vertexCount);
-
-		const gap = 0.0;
-		const stepX = s0 * 2 + gap;
-		const stepY = s1 * 2 + gap;
-		const offset = [
-			-s0 * divisions[0],
-			-s1 * divisions[1],
-		];
-		for (let y = 0; y <= divisions[1]; y++) {
-			for (let x = 0; x <= divisions[0]; x++) {
-				const o = x + y * (divisions[0] + 1);
-				for (let i = 0; i < quad.length; i++) {
-					const p = quad[i];
-					const idx = o * quad.length + i;
-					const vertexPosition: Point3 = [
-						stepX * x + offset[0],
-						0,
-						stepY * y + offset[1],
-					];
-					subquad[idx] = add(p, vertexPosition);
-				}
-			}
-		}
-
-		const vertices = subquad.map(toVertex);
-
+	constructor(gfx: Gfx, divisions: [number, number] = [1, 1], size: Size = [1, 1]) {
+		const vertices = buildQuad(divisions, size).map(toVertex);
 		super(gfx, vertices);
 	}
 }
@@ -358,9 +329,55 @@ export class QuadMesh extends SimpleMesh {
 /**
  * Mesh shaped like an Cube
  */
-export class Cube extends SimpleMesh {
-	constructor(gfx: Gfx, scale: number = 1) {
-		const vertices = CUBE_VERTS.map(v => toVertex(v.map(i => i * scale) as Point3));
+export class CubeMesh extends SimpleMesh {
+	constructor(gfx: Gfx, divisions: [number, number, number] = [0, 0, 0], scale: number | Vector3 = 1) {
+	if (divisions[0] ==null) debugger;
+		const s: Vector3 = typeof scale === 'number' ? [scale, scale, scale] : scale;
+		const transforms = [
+			// Top
+			multiply(
+				scaling(...s),
+				translation(0, 1, 0),
+				rotationFromVector([0, 1, 0], [0, 1, 0]),
+			),
+			// Bottom
+			multiply(
+				scaling(...s),
+				translation(0, -1, 0),
+				rotationFromVector([0, -1, 0], [0, 1, 0]),
+			),
+			// Left
+			multiply(
+				scaling(...s),
+				translation(-1, 0, 0),
+				rotationFromVector([-1, 0, 0], [0, 1, 0]),
+			),
+			// Right
+			multiply(
+				scaling(...s),
+				translation(1, 0, 0),
+				rotationFromVector([1, 0, 0], [0, 1, 0]),
+			),
+			// Front
+			multiply(
+				scaling(...s),
+				translation(0, 0, 1),
+				rotationFromVector([0, 0, 1], [0, 1, 0]),
+			),
+			// Back
+			multiply(
+				scaling(...s),
+				translation(0, 0, -1),
+				rotationFromVector([0, 0, -1], [0, 1, 0]),
+			),
+		];
+		const divs: Array<[number, number]> = [
+			[divisions[0], divisions[2]],
+			[divisions[1], divisions[2]],
+			[divisions[0], divisions[1]],
+		];
+
+		const vertices = transforms.map((t,i) => buildQuad(divs[i/2|0]).map(v => transformPoint(t, v))).flat().map(toVertex);
 		calculateNormals(vertices);
 		super(gfx, vertices);
 	}
@@ -382,6 +399,42 @@ export class Icosahedron extends SimpleMesh {
 	}
 }
 
+/**
+ * Sphere Mesh created from subdivided icosahedron
+ */
+export class Icosphere extends SimpleMesh {
+	constructor(gfx: Gfx, divisions: number, instances?: Array<ColorInstance>) {
+		const vertices = buildIcosphere(
+			divisions,
+			position => ({
+				softness: 0.0,
+				position: [...position],
+				normal: [0, 0, 0],
+				color: BigInt(0xffffffff),
+			} as ColorVertex),
+		);
+		calculateNormals(vertices);
+		super(gfx, vertices, instances);
+	}
+}
+
+export class InnerIcosphere extends SimpleMesh {
+	constructor(gfx: Gfx, divisions: number, instances?: Array<ColorInstance>) {
+		const vertices = buildIcosphere(
+			divisions,
+			true,
+			position => ({
+				softness: 0.0,
+				position: [...position],
+				normal: [0, 0, 0],
+				color: BigInt(0xffffffff),
+			} as ColorVertex),
+		);
+		calculateNormals(vertices);
+		super(gfx, vertices, instances);
+	}
+}
+
 
 export function buildIcosahedron<T>(callback: (position: Point3, index: number) => T): Array<T> {
 	return ICOSAHEDRON_TRIS.map(
@@ -392,16 +445,21 @@ export function buildIcosahedron<T>(callback: (position: Point3, index: number) 
 	).flat();
 }
 
-export function buildIcosphere<T>(divisions: number, callback: (position: Point3, index: number) => T): Array<T> {
+type BuildCallback<T> = (position: Point3, index: number) => T;
+export function buildIcosphere<T>(divisions: number, invert: boolean, callback: BuildCallback<T>): Array<T>;
+export function buildIcosphere<T>(divisions: number, callback: BuildCallback<T>): Array<T>;
+export function buildIcosphere<T>(divisions: number, invertOrCallback: boolean | BuildCallback<T>, maybeCallback?: BuildCallback<T>): Array<T> {
+	const invert = typeof invertOrCallback === 'boolean' ? invertOrCallback : false;
+	const callback = typeof invertOrCallback === 'boolean' ? maybeCallback : invertOrCallback;
 	const vertices = ICOSAHEDRON_TRIS.map(
 		([v0, v1, v2]) => {
-			const p0 = ICOSAHEDRON_VERTICES[v0];
-			const p1 = ICOSAHEDRON_VERTICES[v1];
-			const p2 = ICOSAHEDRON_VERTICES[v2];
+			const p0 = ICOSAHEDRON_VERTICES[invert ? v0 : v0];
+			const p1 = ICOSAHEDRON_VERTICES[invert ? v2 : v1];
+			const p2 = ICOSAHEDRON_VERTICES[invert ? v1 : v2];
 			return subdivideFace([p0, p1, p2], divisions)
 				.map(face => face
 					.map((p, i) =>
-						callback(normalize(p), i)
+						callback!(normalize(p), i)
 					)
 				);
 		}).flat().flat();
@@ -577,4 +635,47 @@ export function flipFaces(faces: Point3[]): Point3[] {
 		flipped[i + 2] = (faces[i + 2]);
 	}
 	return flipped;
+}
+
+export function buildQuad(divisions: [number, number] = [1, 1], size: Size = [1, 1]): Array<Point3> {
+	const s0 = (1 / (divisions[0] + 1)) * size[0];
+	const s1 = (1 / (divisions[1] + 1)) * size[1];
+	const quad: Array<Point3> = [
+		[-s0, 0, -s1],
+		[-s0, 0, s1],
+		[s0, 0, s1],
+
+		[s0, 0, s1],
+		[s0, 0, -s1],
+		[-s0, 0, -s1],
+	];
+
+	const vertexCount = (divisions[0] + 1) * (divisions[1] + 1) * quad.length;
+
+	const subquad: Array<Point3> = new Array(vertexCount);
+
+	const gap = 0.0;
+	const stepX = s0 * 2 + gap;
+	const stepY = s1 * 2 + gap;
+	const offset = [
+		-s0 * divisions[0],
+		-s1 * divisions[1],
+	];
+	for (let y = 0; y <= divisions[1]; y++) {
+		for (let x = 0; x <= divisions[0]; x++) {
+			const o = x + y * (divisions[0] + 1);
+			for (let i = 0; i < quad.length; i++) {
+				const p = quad[i];
+				const idx = o * quad.length + i;
+				const vertexPosition: Point3 = [
+					stepX * x + offset[0],
+					0,
+					stepY * y + offset[1],
+				];
+				subquad[idx] = add(p, vertexPosition);
+			}
+		}
+	}
+
+	return subquad;
 }

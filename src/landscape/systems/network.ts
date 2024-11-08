@@ -1,12 +1,11 @@
 import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
 import { JoinMessage, LeaveMessage, TransformMessage, ServerMessages, Socket, SpawnMessage, DespawnMessage } from 'engine/net/socket';
-import { bombPrefab, laserPrefab, opponentPrefab } from '../prefabs';
+import prefabs, { opponentPrefab } from '../prefabs';
 import { NetworkComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { Point3, Vector3 } from 'engine/math';
 import { magnitude, subtract } from 'engine/math/vectors';
 import { Entity } from 'engine/ecs';
-import { MeshComponent } from 'engine/ecs/components/mesh';
 
 const NETWORK_LIVE_FPS = 30;
 const NETWORK_IDLE_FPS = 1;
@@ -64,7 +63,7 @@ export class NetworkSystem extends System {
 			if (!this.activeEntities.has(entity)) {
 				// New entity
 				this.activeEntities.add(entity);
-				const prefab = world.getComponent(entity, MeshComponent)?.meshId.toString() ?? 'bomb';
+				const prefab = world.getComponent(entity, NetworkComponent)!.prefab;
 				this.socket.spawnEntity(entity, prefab, transform.position, transform.rotation, velocity);
 			}
 			else {
@@ -81,18 +80,8 @@ export class NetworkSystem extends System {
 
 	async updateSpawns(world: World) {
 		for (const spawn of this.pendingSpawns) {
-			let entity = 0;
-			switch (spawn.prefab) {
-				case 'bomb':
-					entity = bombPrefab(world, false, spawn.position, spawn.rotation, spawn.velocity);
-					break;
-				case 'laser':
-					entity = laserPrefab(world, false, spawn.position, spawn.rotation, spawn.velocity);
-					break;
-				default:
-					console.error("Invalid spawn", spawn);
-					throw new Error("Invalid spawn prefab")
-			}
+			const prefabName = spawn.prefab as keyof typeof prefabs;
+			const entity = prefabs[prefabName]?.(world, false, spawn.position, spawn.rotation, spawn.velocity);
 			this.serverEntities[spawn.id] = entity;
 		}
 		this.pendingSpawns = [];

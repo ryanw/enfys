@@ -1,6 +1,7 @@
 import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
 import decorShaderSource from './decor.wgsl';
+import defaultHeightShader from './terrain_height.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
 
 const WorkgroupSize = [16, 16];
@@ -39,7 +40,7 @@ export class DecorPipeline extends Pipeline {
 	protected counter: GPUBuffer;
 	protected counterRead: GPUBuffer;
 
-	constructor(gfx: Gfx) {
+	constructor(gfx: Gfx, heightShader: string = defaultHeightShader) {
 		super(gfx);
 
 		const { device } = gfx;
@@ -47,7 +48,7 @@ export class DecorPipeline extends Pipeline {
 		this.counter = device.createBuffer({ size: 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
 		this.counterRead = device.createBuffer({ size: 4, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
 
-		const shader = device.createShaderModule({ label: 'DecorPipeline Shader', code: decorShaderSource });
+		const shader = device.createShaderModule({ label: 'DecorPipeline Shader', code: decorShaderSource + '\n' + heightShader });
 		const bindGroupLayout = device.createBindGroupLayout({
 			entries: [
 				{

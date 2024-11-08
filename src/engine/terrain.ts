@@ -11,9 +11,8 @@ function cleanChunks(chunks: Array<Chunk>): Array<Chunk> {
 	return removeOverlaps(removeDuplicateChunks(chunks));
 }
 
-export function generateChunks(x: number, y: number, minLod: number = 0, maxLod: number = 6) {
+export function generateChunks(x: number, y: number, minLod: number = 0, maxLod: number = 6, range: number = 2) {
 	const point = [x, y] as Point2;
-	const range = 2;
 	const baseScale = 1 << maxLod;
 	// Create base chunks to subdivide
 	let chunks: Array<Chunk> = [];

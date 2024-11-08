@@ -19,7 +19,7 @@ export class Camera {
 	private _aspect: number = 1.0;
 	private _fov: number = 45.0;
 	private _near: number = 1.0;
-	private _far: number = 20000.0;
+	private _far: number = 10000.0;
 
 	constructor(readonly gfx: Gfx) {
 		this.uniform = new UniformBuffer(gfx, [

@@ -181,5 +181,5 @@ fn toVec(v: array<f32, 3>) -> vec3f {
 	return vec3(v[0], v[1], v[2]);
 }
 
-@import "./terrain_height.wgsl";
 @import "engine/shaders/color.wgsl";
+@import "engine/shaders/noise.wgsl";

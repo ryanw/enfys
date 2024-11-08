@@ -1,4 +1,3 @@
-
 var<private> continents_spline: array<f32, 10> = array<f32, 10>(1.0, 0.1, 0.11, 0.4, 0.42, 0.5, 0.7, 0.8, 0.9, 0.94);
 var<private> erosion_spline: array<f32, 10>    = array<f32, 10>(1.0, 0.8, 0.6, 0.7, 0.3, 0.27, 0.4, 0.31, 0.2, 0.1);
 var<private> valleys_spline: array<f32, 10>    = array<f32, 10>(0.0, 0.2, 0.4, 0.5, 0.55, 0.6, 0.7, 0.8, 0.9, 0.85);
@@ -157,6 +156,3 @@ fn valleys(p: vec3<f32>) -> f32 {
 	var t = fractalNoise(p + o, 5);
 	return spline(t, valleys_spline);
 }
-
-
-@import "engine/shaders/noise.wgsl";

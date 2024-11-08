@@ -5,7 +5,6 @@ import { GBuffer } from 'engine/gbuffer';
 import { UniformBuffer, UniformRecord } from 'engine/uniform_buffer';
 import { identity, inverse, multiply } from 'engine/math/transform';
 import { Camera } from 'engine/camera';
-import { Point3 } from 'engine/math';
 import { DirectionalLight, Light } from 'engine/light';
 import { ShadowMap } from 'engine/shadow_map';
 import { colorToInt } from 'engine/color';

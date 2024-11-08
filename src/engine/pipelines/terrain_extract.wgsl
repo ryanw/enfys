@@ -31,3 +31,4 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 }
 
 @import "./terrain_height.wgsl";
+@import "engine/shaders/noise.wgsl";

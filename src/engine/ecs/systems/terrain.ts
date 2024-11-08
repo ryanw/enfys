@@ -5,9 +5,15 @@ import { TerrainComponent } from '../components/terrain';
 import { Entity } from 'engine/ecs';
 import { TransformComponent } from 'engine/ecs/components';
 import { generateChunks, toChunkHash } from 'engine/terrain';
+import { Point3 } from 'engine/math';
 
 export class TerrainSystem extends System {
-	constructor(readonly gfx: Gfx) {
+	constructor(
+		readonly gfx: Gfx,
+		public minLod: number = 0,
+		public maxLod: number = 4,
+		public range: number = 2,
+	) {
 		super();
 	}
 
@@ -15,8 +21,10 @@ export class TerrainSystem extends System {
 		const entities = world.entitiesWithComponents([TerrainComponent]);
 		for (const entity of entities) {
 			const { target } = world.getComponent(entity, TerrainComponent)!;
-			if (!target) continue;
-			const { position } = world.getComponent(target, TransformComponent)!;
+			let position = [0,0,0] as Point3;
+			if (target) {
+				position = world.getComponent(target, TransformComponent)!.position;
+			}
 			this.move(world, entity, position[0], position[2]);
 		}
 	}
@@ -32,7 +40,7 @@ export class TerrainSystem extends System {
 		terrain.currentChunk = [cx, cy];
 
 		terrain.chunks.clear();
-		const chunks = generateChunks(cx, cy, 0, 4);
+		const chunks = generateChunks(cx, cy, this.minLod, this.maxLod, this.range);
 		for (const chunk of chunks) {
 			terrain.chunks.set(toChunkHash(chunk), chunk);
 		}

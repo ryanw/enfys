@@ -45,11 +45,11 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 	var n = rnd3(dp);
 
 	if p.y > 0.01 && p.y < 64.0 && n < u.density {
-		let isBuildingCell = buildingCell(p.xz, u.terrainSeed) > 0.0;
-		if isBuildingCell {
-			// No decor on building cells
-			//return;
-		}
+		//let isBuildingCell = buildingCell(p.xz, u.terrainSeed) > 0.0;
+		//if isBuildingCell {
+		//	// No decor on building cells
+		//	//return;
+		//}
 
 		let nn = fractalNoise(dp/128.0+vec3(u.decorSeed/10000.0), 2);
 		if nn < 0.6 {
@@ -99,6 +99,6 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 	}
 }
 
-@import "./terrain_height.wgsl";
 @import "engine/shaders/color.wgsl";
+@import "engine/shaders/noise.wgsl";
 @import "engine/shaders/helpers.wgsl";

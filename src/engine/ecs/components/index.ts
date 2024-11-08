@@ -5,7 +5,7 @@ export abstract class Component { }
 
 export class NetworkComponent extends Component {
 	constructor(
-		public remoteId?: number,
+		public prefab: string,
 	) {
 		super();
 	}

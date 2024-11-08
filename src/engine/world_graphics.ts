@@ -6,12 +6,12 @@ import { CameraComponent } from './ecs/components/camera';
 import { MeshComponent } from './ecs/components/mesh';
 import { World } from './ecs/world';
 import { Point3, Vector3 } from './math';
-import { multiply, multiplyVector, rotation, translation } from './math/transform';
-import { ColorInstance, SimpleMesh } from './mesh';
+import { multiply, multiplyVector, rotation, scaling, translation } from './math/transform';
+import { SimpleMesh } from './mesh';
 import { Pawn } from './pawn';
 import { ResourceId } from './resource';
 import { Scene } from './scene';
-import { SimpleMaterial } from './material';
+import { Material, SimpleMaterial } from './material';
 import { LightComponent } from './ecs/components/light';
 import { DirectionalLight } from './light';
 import { Chunk, ChunkKey, toChunkHash } from './terrain';
@@ -25,17 +25,18 @@ import { DecorComponent } from './ecs/components/decor';
 import { DecorMesh } from './decor_mesh';
 import { MaterialComponent } from './ecs/components/material';
 import { colorToInt } from './color';
+import { DecorPipeline } from './pipelines/decor';
 
 export type Resource = {};
 
 let NEXT_RESOURCE_ID: number = 1000000;
 
 export type QueuedChunk = {
-	entity: Entity,
-	terrainSeed: number,
-	colorSeed: number,
-	size: Size,
+	entity: Entity;
+	terrainSeed: number;
+	size: Size;
 	chunk: Chunk;
+	material: Material;
 };
 
 export class WorldGraphics {
@@ -50,8 +51,12 @@ export class WorldGraphics {
 	private queuedTerrain: Map<ChunkKey, QueuedChunk> = new Map();
 	private activeTerrain: Map<ChunkKey, Chunk> = new Map();
 	private terrainPipelines: Map<number, TerrainPipeline> = new Map();
+	private decorPipelines: Map<number, DecorPipeline> = new Map();
 
-	constructor(private gfx: Gfx) {
+	constructor(
+		private gfx: Gfx,
+		private heightShaderSource?: string,
+	) {
 	}
 
 	update(world: World, scene: Scene) {
@@ -160,11 +165,13 @@ export class WorldGraphics {
 			saw.add(entity);
 
 			const { meshId: meshResourceId } = world.getComponent(entity, MeshComponent)!;
-			const { position, rotation: rot } = world.getComponent(entity, TransformComponent)!;
+			const { position, scale, rotation: rot } = world.getComponent(entity, TransformComponent)!;
 			const transform = multiply(
 				translation(...position),
 				rotation(rot[0], rot[1], 0),
+				scaling(...scale),
 			);
+			// FIXME only update if transform has changed
 
 			let [idx, pawn] = this.meshes.get(entity) || [];
 			if (pawn == null || idx == null) {
@@ -172,12 +179,13 @@ export class WorldGraphics {
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
 				pawn = this.instanceMeshes.get(mesh);
 				if (!pawn) {
-					const material = new SimpleMaterial(this.gfx, 0xffffffff);
 					const materialComp = world.getComponent(entity, MaterialComponent);
+					let material;
 					if (materialComp) {
-						material.color = colorToInt(materialComp.color);
-						material.emissive = materialComp.emissive;
-						material.noise = materialComp.noise;
+						material = this.getMaterialForComponent(materialComp);
+					}
+					else {
+						material = new SimpleMaterial(this.gfx, 0xffffffff);
 					}
 					pawn = scene.addMesh(mesh, material);
 					this.instanceMeshes.set(mesh, pawn);
@@ -185,7 +193,7 @@ export class WorldGraphics {
 				const variantIndex = Math.random() * mesh.variantCount | 0;
 				idx = mesh.pushInstance({
 					transform,
-					instanceColor: 0,
+					instanceColor: BigInt(0xffffffff),
 					variantIndex: BigInt(variantIndex),
 					live: 1,
 				});
@@ -194,7 +202,11 @@ export class WorldGraphics {
 
 			// Update the transform of the instance
 			// FIXME better field updating
-			device.queue.writeBuffer(pawn.object.instanceBuffer, idx * pawn.object.instanceSize, new Float32Array(transform));
+			device.queue.writeBuffer(
+				pawn.object.instanceBuffer,
+				idx * pawn.object.instanceSize,
+				new Float32Array(transform),
+			);
 		}
 
 		// Remove stale meshes
@@ -218,11 +230,24 @@ export class WorldGraphics {
 			saw.add(entity);
 
 			const terrain = world.getComponent(entity, TerrainComponent)!;
+			const materialComp = world.getComponent(entity, MaterialComponent);
+			let material;
+			if (materialComp) {
+				material = this.getMaterialForComponent(materialComp);
+			}
+			else {
+				material = new SimpleMaterial(this.gfx, 0xffffffff);
+			}
 
-			const colors = new ColorScheme(terrain.colorSeed);
-			scene.waterColor = [...colors.scheme.water];
-			scene.fogColor = [...colors.scheme.fog];
-			this.updateTerrainQueue(entity, terrain);
+			const colors = ColorScheme.random(terrain.colorSeed);
+			// FIXME what if there's multiple terrains 1 once scene?
+			if (terrain.water) {
+				scene.waterColor = [...colors.scheme.water];
+			}
+			//if (scene.fogColor[3] > 0 && colors.scheme.fog[3] > 0) {
+			//	scene.fogColor = [...colors.scheme.fog];
+			//}
+			this.updateTerrainQueue(entity, terrain, material);
 			if (this.queuedTerrain.size === 0) {
 				this.removeExpiredTerrainChunks(entity, terrain, scene);
 			}
@@ -247,7 +272,7 @@ export class WorldGraphics {
 			if (!decor) {
 				console.debug('Adding Decor for entity', entity, meshId);
 				const mesh: SimpleMesh = this.getResource(meshId);
-				decor = scene.addMesh(new DecorMesh(this.gfx, [], [0, 0], 1.0, spread, terrainSeed, decorSeed, radius));
+				decor = scene.addMesh(new DecorMesh(this.gfx, [], [0, 0], 1.0, spread, terrainSeed, decorSeed, radius, this.heightShaderSource));
 				decor.object.vertexBuffer = mesh.vertexBuffer;
 				decor.object.vertexCount = mesh.vertexCount;
 				decor.object.variantCount = mesh.variantCount;
@@ -261,7 +286,6 @@ export class WorldGraphics {
 			const pos = scene.primaryCamera.position;
 			decor.object.move(pos[0], pos[2]);
 		}
-		this.processTerrainQueue(scene);
 
 		const removed: Array<Entity> = [...this.decors.keys()].filter(e => !saw.has(e));
 		for (const entity of removed) {
@@ -290,14 +314,14 @@ export class WorldGraphics {
 		return res as T;
 	}
 
-	private updateTerrainQueue(entity: Entity, terrain: TerrainComponent) {
+	private updateTerrainQueue(entity: Entity, terrain: TerrainComponent, material: Material) {
 		for (const [key, chunk] of terrain.chunks.entries()) {
 			if (this.activeTerrain.has(key) || this.queuedTerrain.has(key)) continue;
 			this.queuedTerrain.set(key, {
 				entity,
 				terrainSeed: terrain.terrainSeed,
-				colorSeed: terrain.colorSeed,
 				size: terrain.chunkSize,
+				material,
 				chunk,
 			});
 		}
@@ -317,7 +341,7 @@ export class WorldGraphics {
 	}
 
 	private generateTerrainChunk(scene: Scene, queuedChunk: QueuedChunk) {
-		const { entity, size: chunkSize, terrainSeed, colorSeed, chunk } = queuedChunk;
+		const { entity, size: chunkSize, terrainSeed, chunk, material } = queuedChunk;
 		const scale = 1 << chunk.lod;
 		const chunkId: Point3 = [
 			chunk.position[0] / scale | 0,
@@ -331,18 +355,15 @@ export class WorldGraphics {
 		];
 		const key = toChunkHash(chunk);
 		this.activeTerrain.set(key, chunk);
-		const terrainMaterial = new SimpleMaterial(this.gfx, 0xffffffff);
-		terrainMaterial.noise = [0.5, 0.7, 0.0, 0.0];
 		const terrain = scene.addMesh(
 			new TerrainMesh(
 				scene.gfx,
 				chunkSize,
 				chunkId,
 				terrainSeed,
-				colorSeed,
-				this.getTerrainPipeline(terrainSeed),
+				this.getTerrainPipeline(terrainSeed, new ColorScheme([255, 255, 255, 255])),
 			),
-			terrainMaterial,
+			material,
 			translation(...position),
 		);
 		if (!this.terrains.has(entity)) {
@@ -372,14 +393,40 @@ export class WorldGraphics {
 		}
 	}
 
-	private getTerrainPipeline(seed: number): TerrainPipeline {
+	private getTerrainPipeline(seed: number, colors: ColorScheme): TerrainPipeline {
 		let pipeline = this.terrainPipelines.get(seed);
 		if (!pipeline) {
-			pipeline = new TerrainPipeline(this.gfx, new ColorScheme(seed));
+			pipeline = new TerrainPipeline(this.gfx, colors, this.heightShaderSource);
 			this.terrainPipelines.set(seed, pipeline);
 		}
 		return pipeline;
 	}
+
+	private getDecorPipeline(seed: number): DecorPipeline {
+		let pipeline = this.decorPipelines.get(seed);
+		if (!pipeline) {
+			pipeline = new DecorPipeline(this.gfx, this.heightShaderSource);
+			this.decorPipelines.set(seed, pipeline);
+		}
+		return pipeline;
+	}
+
+	private getMaterialForComponent(comp: MaterialComponent): Material {
+		if (comp.custom != null) {
+			const material = this.getResource<Material>(comp.custom);
+			if (!material) {
+				console.error("Missing material", comp.custom, comp);
+			}
+			return material ?? new SimpleMaterial(this.gfx, 0xff0000ff);
+		} else {
+			const material = new SimpleMaterial(this.gfx, 0xffffffff);
+			material.color = colorToInt(comp.color);
+			material.emissive = comp.emissive;
+			material.noise = comp.noise;
+			return material;
+		}
+	}
+
 }
 
 export class MissingResource extends Error {

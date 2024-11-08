@@ -16,6 +16,11 @@ export type Constructor<T> = new (...args: Array<any>) => T;
 export type Triangle = [Point3, Point3, Point3];
 export type Volume = { position: Point3, size: Vector3, rotation: Matrix4 };
 
+export type MaterialTuple = [
+	new (...args: any[]) => Material,
+	new (gfx: Gfx) => MaterialPipeline,
+];
+
 export interface Config {
 	ditherSize: number;
 	ditherDepth: number;
@@ -181,6 +186,12 @@ export class Gfx {
 
 	registerMaterial<M extends Material, P extends MaterialPipeline>(material: Constructor<M>, pipeline: P) {
 		this.renderer.registerMaterial(material, pipeline);
+	}
+
+	registerMaterials(materials: Array<MaterialTuple>) {
+		for (const [mat, pipe] of materials) {
+			this.registerMaterial(mat, new pipe(this));
+		}
 	}
 
 	/**

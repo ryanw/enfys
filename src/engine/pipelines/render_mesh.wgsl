@@ -221,6 +221,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 	if camera.isShadowMap == 0 {
 		out.metaOutput = in.quadId;
+		//out.metaOutput = in.triangleId;
 		out.albedo =  vec4((color.rgb * (1.0-shade)) * color.a, color.a);
 
 		var nn = vec3(0.0);

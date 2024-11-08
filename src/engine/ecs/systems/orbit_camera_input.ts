@@ -3,7 +3,6 @@ import { System } from '.';
 import { TransformComponent } from '../components';
 import { OrbitCameraComponent } from '../components/camera';
 import { World } from '../world';
-import { Matrix4, Point3 } from 'engine/math';
 import { multiply, rotation, transformPoint, translation } from 'engine/math/transform';
 import { add } from 'engine/math/vectors';
 
@@ -20,7 +19,7 @@ export class OrbitCameraInputSystem extends System {
 		'e': Key.Up,
 		'shift': Key.Boost,
 	};
-	distance: number = 12;
+	distance: number = 16;
 	readonly heldKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
@@ -67,7 +66,7 @@ export class OrbitCameraInputSystem extends System {
 		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
 		for (const entity of entities) {
 			const trans = world.getComponent(entity, TransformComponent)!;
-			const { target } = world.getComponent(entity, OrbitCameraComponent)!;
+			const { target, offset } = world.getComponent(entity, OrbitCameraComponent)!;
 			if (!target) continue;
 			const { position: targetPoint} = world.getComponent(target, TransformComponent)!;
 
@@ -82,7 +81,7 @@ export class OrbitCameraInputSystem extends System {
 			let transform = translation(...targetPoint);
 			transform = multiply(transform, rotationMatrix);
 			transform = multiply(transform, translation(0, 0, -this.distance));
-			trans.position = transformPoint(transform, [0, 0, 0]);
+			trans.position = transformPoint(transform, offset);
 		}
 	}
 

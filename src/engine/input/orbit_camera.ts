@@ -4,9 +4,6 @@ import { Gfx } from 'engine';
 import { Camera } from 'engine/camera';
 import { multiply, transformPoint, translation } from 'engine/math/transform';
 
-const MIN_DISTANCE = 3;
-const MAX_DISTANCE = 20000;
-
 export class OrbitCameraController {
 	disabled = false;
 	bindings: Record<string, Key> = {
@@ -18,16 +15,20 @@ export class OrbitCameraController {
 		'e': Key.Up,
 		'shift': Key.Boost,
 	};
-	target: Point3 = [0, 0, 0];
-	distance: number = 12;
+	minDistance: number = 3;
+	maxDistance: number = 20000;
 	readonly heldKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
 	readonly gfx: Gfx;
 	private previousTouch?: Touch;
 
-
-	constructor(private el: HTMLElement, public camera: Camera) {
+	constructor(
+		private el: HTMLElement,
+		public camera: Camera,
+		public distance: number = 12,
+		public target: Point3 = [0, 0, 0],
+	) {
 		this.gfx = camera.gfx;
 		document.addEventListener('pointerlockchange', this.onPointerLockChange);
 		el.addEventListener('mousedown', this.onMouseDown);
@@ -54,12 +55,12 @@ export class OrbitCameraController {
 				continue;
 			}
 			switch (key) {
-			case XboxAxis.RightStickX:
-				yaw = value;
-				break;
-			case XboxAxis.RightStickY:
-				pitch = value;
-				break;
+				case XboxAxis.RightStickX:
+					yaw = value;
+					break;
+				case XboxAxis.RightStickY:
+					pitch = value;
+					break;
 			}
 		}
 		this.camera.rotate(pitch * dt, yaw * dt);
@@ -115,7 +116,7 @@ export class OrbitCameraController {
 	onWheel = (e: WheelEvent) => {
 		if (this.disabled) return;
 		this.distance *= 1.0 - (e.deltaY / -1000.0);
-		this.distance = Math.min(Math.max(this.distance, MIN_DISTANCE), MAX_DISTANCE);
+		this.distance = Math.min(Math.max(this.distance, this.minDistance), this.maxDistance);
 	};
 
 	onMouseDown = (e: MouseEvent) => {

@@ -27,7 +27,7 @@ function buildBranch(p0: Point3, p1: Point3, radius: number = 1.0): Array<ColorV
 }
 
 function buildBush(position: Point3, radius: number = 1, color: number = 0xff209a68): Array<ColorVertex> {
-	return buildIcosphere(0, p => ({
+	return buildIcosphere(0, false, p => ({
 		softness: 0.4,
 		position: add(scale(p, radius), position),
 		normal: [0, 0, 0],

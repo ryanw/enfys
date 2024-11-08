@@ -1,6 +1,7 @@
 import { Color, Gfx } from 'engine';
 import { UniformBuffer } from './uniform_buffer';
 import { Vector4 } from './math';
+import { colorToBigInt } from './color';
 
 export enum Skin {
 	Matte = 1 << 0,
@@ -51,11 +52,15 @@ export class SimpleMaterial extends Material {
 
 	constructor(
 		readonly gfx: Gfx,
-		color: number | bigint,
+		color: number | bigint | Color,
 		public dither: boolean = false,
 	) {
 		super();
-		this._color = BigInt(color);
+		if (Array.isArray(color)) {
+			this._color = colorToBigInt(color);
+		} else {
+			this._color = BigInt(color);
+		}
 		this.uniform = new UniformBuffer(gfx, [
 			['color', 'u32'],
 			['dither', 'u32'],

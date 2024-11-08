@@ -345,6 +345,11 @@ export function rotationFromVector(direction: Vector3, forward: Vector3 = [0, 0,
 	const axis = cross(v, w);
 	const c = dot(v, w);
 	const s = vec.magnitude(axis);
+	// 180°
+	if (c - 1e-6 <= -1) {
+		return rotation(0, 0, Math.PI);
+	}
+	// 0°
 	if (s < 1e-6) {
 		return identity();
 	}

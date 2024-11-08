@@ -5,7 +5,7 @@
  */
 
 import { Gfx } from 'engine';
-import { Cube } from 'engine/mesh';
+import { CubeMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { DotMaterial } from 'engine/material';
 import { ui } from './ui';
@@ -59,15 +59,16 @@ export async function main(el: HTMLCanvasElement) {
 
 	// Graphics objects
 	const scene = new Scene(gfx);
+	scene.fogColor = [0, 0, 0, 255];
 	// Sky dome
 	const stars = scene.addMesh(new StarMesh(gfx, [0, 0, 0], 5000.0, 1.0, seed), new DotMaterial(gfx));
 
 
 	// Sync graphics with world
 	const graphics = new WorldGraphics(gfx);
-	graphics.insertResource('tiny-cube', new Cube(gfx, 0.05));
-	graphics.insertResource('small-cube', new Cube(gfx, 0.1));
-	graphics.insertResource('cube', new Cube(gfx, 0.5));
+	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.05));
+	graphics.insertResource('small-cube', new CubeMesh(gfx, [0, 0, 0], 0.1));
+	graphics.insertResource('cube', new CubeMesh(gfx, [0, 0, 0], 0.5));
 	graphics.insertResource('player-ship', new ShipMesh(gfx));
 	graphics.insertResource('bomb', new BombMesh(gfx));
 	graphics.insertResource('laser', new LaserMesh(gfx));
@@ -76,7 +77,7 @@ export async function main(el: HTMLCanvasElement) {
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, seed + 77, 16));
 	graphics.insertResource('decor-tufts-1', new TuftMesh(gfx, seed + 11, 5));
 	graphics.insertResource('decor-tufts-2', new TuftMesh(gfx, seed + 22, 5));
-	graphics.insertResource('decor-cubes', new Cube(gfx, 0.2));
+	graphics.insertResource('decor-cubes', new CubeMesh(gfx, [0, 0, 0], 0.2));
 	graphics.insertResource('decor-flowers-1', new FlowersMesh(gfx, seed + 64, 32));
 	graphics.insertResource('decor-flowers-2', new FlowersMesh(gfx, seed + 94, 32));
 

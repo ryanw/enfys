@@ -57,7 +57,7 @@ export class RenderDotPipeline extends MaterialPipeline {
 				entryPoint: 'fs_main',
 				targets: [
 					// Albedo output
-					{ format: 'rgba8unorm' },
+					{ format: 'rgba16float' },
 					// Normal output
 					{ format: 'rgba16float' },
 					// Meta output

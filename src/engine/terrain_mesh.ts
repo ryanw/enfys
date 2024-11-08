@@ -4,6 +4,7 @@ import { SimpleMesh } from 'engine/mesh';
 import { TerrainPipeline } from './pipelines/terrain';
 import { hsl } from 'engine/color';
 import { ColorScheme } from './color_scheme';
+import { identity } from './math/transform';
 
 export class TerrainMesh extends SimpleMesh {
 	private terrainPipeline: TerrainPipeline;
@@ -13,11 +14,20 @@ export class TerrainMesh extends SimpleMesh {
 		readonly size: Size,
 		readonly chunkId: Point3,
 		private terrainSeed: number,
-		colorSeed: number,
-		terrainPipeline?: TerrainPipeline,
+		colorSchemeOrPipeline: ColorScheme | TerrainPipeline,
 	) {
-		super(gfx);
-		this.terrainPipeline = terrainPipeline || new TerrainPipeline(this.gfx, new ColorScheme(colorSeed));
+		const instances = [{
+			transform: identity(),
+			instanceColor: BigInt(0xffffffff),
+			variantIndex: BigInt(0x0),
+			live: 1,
+		}]
+		super(gfx, undefined, instances);
+		if (colorSchemeOrPipeline instanceof TerrainPipeline) {
+			this.terrainPipeline = colorSchemeOrPipeline;
+		} else {
+			this.terrainPipeline = new TerrainPipeline(this.gfx, colorSchemeOrPipeline);
+		}
 		this.createVertexBuffer();
 	}
 

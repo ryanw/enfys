@@ -21,9 +21,10 @@ export class DecorMesh extends SimpleMesh {
 		readonly terrainSeed: number,
 		readonly decorSeed: number,
 		public radius: number = 5,
+		heightSource?: string,
 	) {
 		super(gfx, vertices);
-		this.pipeline = new DecorPipeline(gfx);
+		this.pipeline = new DecorPipeline(gfx, heightSource);
 		this.uniform = new DecorUniform(gfx);
 		this.createInstanceBuffers();
 		this.updateUniform();

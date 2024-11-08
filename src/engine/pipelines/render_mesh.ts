@@ -72,7 +72,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 				targets: [
 					// Albedo output
 					{
-						format: 'rgba8unorm', blend: {
+						format: 'rgba16float', blend: {
 							alpha: { operation: 'add', srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
 							color: { operation: 'add', srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
 						}

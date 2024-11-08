@@ -2,9 +2,8 @@ import { Gfx, Size } from 'engine';
 import { QuadMesh } from 'engine/mesh';
 import { Pipeline } from 'engine/pipelines';
 import shaderSource from './terrain.wgsl';
-import { UniformBuffer } from 'engine/uniform_buffer';
+import defaultHeightShader from './terrain_height.wgsl';
 import { Point3 } from 'engine/math';
-import { Color } from 'engine/color';
 import { RingBuffer } from 'engine/ring_buffer';
 import { ColorScheme } from '../color_scheme';
 
@@ -16,7 +15,7 @@ export class TerrainPipeline extends Pipeline {
 	private chunkUniformBuffer: RingBuffer;
 	private terrainColors: GPUTexture;
 
-	constructor(gfx: Gfx, colorScheme: ColorScheme) {
+	constructor(gfx: Gfx, colorScheme: ColorScheme, heightShader: string = defaultHeightShader) {
 		super(gfx);
 
 		const { device } = gfx;
@@ -44,7 +43,7 @@ export class TerrainPipeline extends Pipeline {
 		);
 
 
-		const shader = device.createShaderModule({ label: 'TerrainPipeline Shader', code: shaderSource });
+		const shader = device.createShaderModule({ label: 'TerrainPipeline Shader', code: shaderSource + '\n' + heightShader });
 		const bindGroupLayout = device.createBindGroupLayout({
 			entries: [
 				{
