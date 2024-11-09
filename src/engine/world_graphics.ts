@@ -270,9 +270,11 @@ export class WorldGraphics {
 			const { seed: decorSeed, spread, radius, meshId } = world.getComponent(entity, DecorComponent)!;
 			let decor = this.decors.get(entity);
 			if (!decor) {
+				const materialComp = world.getComponent(entity, MaterialComponent)!;
 				console.debug('Adding Decor for entity', entity, meshId);
 				const mesh: SimpleMesh = this.getResource(meshId);
 				decor = scene.addMesh(new DecorMesh(this.gfx, [], [0, 0], 1.0, spread, terrainSeed, decorSeed, radius, this.heightShaderSource));
+				decor.material = this.getMaterialForComponent(materialComp) || decor.material;
 				decor.object.vertexBuffer = mesh.vertexBuffer;
 				decor.object.vertexCount = mesh.vertexCount;
 				decor.object.variantCount = mesh.variantCount;

@@ -165,24 +165,24 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	// Haze over the sun
 	var y = p.y * 5.0;
 	let freq = 8.0;
-	let amp = 0.6;
-	let hazeOffset = vec2(PIH, 0.0);
+	let amp = 0.7;
+	let hazeOffset = vec2(PIH, 0.3);
 	var x = (ss(-PI, PI, p.x * freq) - 0.5) * PI;
 	if p.z < 0.0 {
 		x = PIH;
 	}
 	y += sin(x - hazeOffset.x) * amp + hazeOffset.y;
-	var haze = 1.0 - ss(0.1, 0.5, y);
+	var haze = (1.0 - ss(0.0, 0.8, y));
 
 
 	// Clear sky
-	let star = pow(ss(0.93, 1.0, length(bar)), 3.0);
+	let star = pow(ss(0.90, 1.0, length(bar)), 2.0);
 	let skyColor = vec4(vec3(star), star);
 
 	// Wire
 	if pixEdge < thickness {
 		let e = 1.0 - smoothstep(max(0.0, thickness-2.0), thickness, pixEdge) - star;
-		haze = clamp(haze, e, 1.0);
+		haze = max(haze, e/2.0);
 	}
 
 	color = mix(skyColor, hazeColor, haze);

@@ -12,13 +12,6 @@ struct Vertex {
 	softness: f32,
 }
 
-struct Material {
-	faceColor: u32,
-	wireColorTop: u32,
-	wireColorBot: u32,
-	shape: u32,
-}
-
 struct VertexIn {
 	@builtin(vertex_index) id: u32,
 	@builtin(instance_index) instance: u32,
@@ -67,12 +60,9 @@ struct Pawn {
 	variantIndex: u32,
 }
 
-struct Shadow {
-	position: vec3f,
-	radius: f32,
-	umbra: f32,
-	shape: u32,
-	color: u32,
+struct Material {
+	faceColor: u32,
+	wireColor: u32,
 }
 
 
@@ -125,8 +115,10 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let offsetModel = pawn.model * transform;
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * camera.view;
-	var p = offsetModel * vec4(v.position, 1.0);
-	var position = mvp * p;
+	var p = vec4(shapeCar(v.position), 1.0);
+	// Bobbing
+	p.y += sin(camera.t*3.0) / 5.0 + 0.1;
+	var position = mvp * offsetModel * p;
 
 	out.position = position;
 	out.originalPosition = p.xyz / p.w;
@@ -160,21 +152,13 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 	let bar = in.barycentric;
 	var minEdge = min(bar.x, bar.z);
-	if material.shape == 0u {
-		minEdge = min(minEdge, bar.y);
-	}
 	let der = sqrt(pow(dpdx(minEdge), 2.0) + pow(dpdy(minEdge), 2.0));
 	let pixEdge = minEdge / der;
-	let thickness = 1.1;
+	let thickness = 1.2;
 
 	// Draw animated pulse
 	let t = abs((camera.t/8.0 + 20.2) - in.originalPosition.z / 5120.0);
-	let topColor = uintToColor(material.wireColorTop).rgb;
-	let botColor = uintToColor(material.wireColorBot).rgb;
-	let z = ss(0.0, 1.0, in.originalPosition.y/10.0);
-
-	let baseColor = rgbToHsl(mix(botColor, topColor, z));
-
+	let baseColor = rgbToHsl(uintToColor(material.wireColor).rgb);
 	let pulseColor = vec3(baseColor.x, baseColor.y, min(1.0, baseColor.z + 0.5));
 	let wireColor = mix(
 		hslToRgb(baseColor),
@@ -192,10 +176,10 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	// Mip level to cleanup moire patterns
 	let dx = length(dpdx(bar));
 	let dy = length(dpdy(bar));
-	let mip = smoothstep(-2.0, 0.0, log2(max(dx, dy)));
+	let mip = smoothstep(-2.0, -0.0, log2(max(dx, dy)));
 	if mip > 0.0 {
 		color = mix(color, mix(in.color, wireColor, mip/2.0), mip);
-		normal = vec4(0.0);//vec4(in.normal*vec3(1.0, 2.0, 1.0), 0.0);
+		normal = vec4(0.0);
 	}
 
 
@@ -208,32 +192,66 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	return out;
 }
 
-const PI: f32 = 3.14159265;
-fn pointToLonLat(point: vec3<f32>) -> vec2<f32> {
-	let v = normalize(point);
-	let lat = acos(v.y) - PI / 2.0;
-	let lon = atan2(v.z, v.x) + PI / 2.0;
-	return vec2(lon, lat);
-}
+fn shapeCar(pp: vec3f) -> vec3f {
+	var p = pp;
+	let noseScale = 1.0-ss(0.0, 1.0, (p.z*0.5+0.5))/2.0;
+	let archScale = 1.0-ss(0.0, 1.0, sin(p.z*2.5-1.3)/2.0);
 
-fn lonLatToUV(ll: vec2<f32>) -> vec2<f32> {
-	let x = ll.x / PI / 2.0;
-	let y = ll.y / PI + 0.5;
-	return vec2(fract(x), fract(y));
-}
+	p.x *= noseScale;
 
-fn pointToUV(point: vec3<f32>) -> vec2<f32> {
-	return lonLatToUV(pointToLonLat(point));
-}
-
-fn terrainNoise(p: vec3<f32>, octaves: i32) -> f32 {
-	var n = fractalNoise(p, octaves);
-	if n > SEA_LEVEL {
-		// Flatter beaches, pointier mountains
-		n = SEA_LEVEL + pow((n - SEA_LEVEL)/(1.0-SEA_LEVEL), 2.0);
+	var bodyScale = noseScale;
+	if p.y < 0.0 {
+		bodyScale *= archScale;
 	}
-	return n;
+
+	var yt = ss(0.0, 1.0, abs(p.x)) - 0.4;
+	p.y *= (1.0 - yt) * bodyScale;
+
+	// Level with bottom
+	p.y += noseScale/2.0;
+
+	var zt = ss(0.0, 1.0, abs(p.y-0.2))/3.0;
+	if p.z > 0.0 {
+		p.z *= (1.0 - zt);
+	}
+	else {
+		p.z *= (1.0 + zt);
+	}
+
+	// Level with bottom
+	p.z += noseScale/2.0;
+
+	return p;
 }
+
+fn shapeWeirdShip(pp: vec3f) -> vec3f {
+	var p = pp;
+	let noseScale = 1.0-ss(0.0, 1.0, (p.z*0.5+0.5))/2.0;
+	let archScale = 1.0-ss(0.0, 1.0, sin(p.z*2.5-1.3)/2.0);
+
+	p.x *= noseScale;
+
+	var bodyScale = noseScale;
+	if p.y < 0.0 {
+		bodyScale *= archScale;
+	}
+
+	var yt = ss(0.0, 1.0, abs(p.x)) - 0.4;
+	p.y *= (1.0 - yt) * bodyScale;
+
+	// Level with bottom
+	p.y += noseScale/2.0;
+
+	var zt = ss(0.0, 1.0, abs(p.y)) - 0.4;
+	p.z *= (1.0 - zt) * bodyScale;
+
+	// Level with bottom
+	p.z += noseScale/2.0;
+
+	return p;
+}
+
+const PI: f32 = 3.14159265;
 
 @import "engine/shaders/noise.wgsl";
 @import "engine/shaders/color.wgsl";

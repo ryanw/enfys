@@ -1,7 +1,7 @@
 fn landHeight(op: vec3f, t: f32) -> f32 {
 	let seed = vec3(313.0);
 	let amp = 64.0;
-	let freq = 1.0/110.0;
+	let freq = 1.0/256.0;
 	let offset = 2.0;
 	let roadWidth = 3.5;
 	let octaves = 3;

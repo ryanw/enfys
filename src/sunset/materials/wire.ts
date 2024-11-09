@@ -9,12 +9,14 @@ import { UniformBuffer } from "engine/uniform_buffer";
 export class WireMaterial extends Material {
 	readonly uniform: UniformBuffer;
 	private _faceColor: bigint;
-	private _wireColor: bigint;
+	private _wireColorTop: bigint;
+	private _wireColorBot: bigint;
 
 	constructor(
 		readonly gfx: Gfx,
 		faceColor: number | bigint | Color,
-		wireColor: number | bigint | Color,
+		wireColorTop: number | bigint | Color,
+		wireColorBot: number | bigint | Color,
 		public triangle: boolean = false,
 	) {
 		super();
@@ -23,14 +25,20 @@ export class WireMaterial extends Material {
 		} else {
 			this._faceColor = BigInt(faceColor);
 		}
-		if (Array.isArray(wireColor)) {
-			this._wireColor = colorToBigInt(wireColor);
+		if (Array.isArray(wireColorTop)) {
+			this._wireColorTop = colorToBigInt(wireColorTop);
 		} else {
-			this._wireColor = BigInt(wireColor);
+			this._wireColorTop = BigInt(wireColorTop);
+		}
+		if (Array.isArray(wireColorBot)) {
+			this._wireColorBot = colorToBigInt(wireColorBot);
+		} else {
+			this._wireColorBot = BigInt(wireColorBot);
 		}
 		this.uniform = new UniformBuffer(gfx, [
 			['faceColor', 'u32'],
-			['wireColor', 'u32'],
+			['wireColorTop', 'u32'],
+			['wireColorBot', 'u32'],
 			['shape', 'u32'],
 		]);
 		this.updateUniform();
@@ -41,8 +49,13 @@ export class WireMaterial extends Material {
 		this.updateUniform();
 	}
 
-	set wireColor(color: number | bigint) {
-		this._wireColor = BigInt(color);
+	set wireColorTop(color: number | bigint) {
+		this._wireColorTop = BigInt(color);
+		this.updateUniform();
+	}
+
+	set wireColorBot(color: number | bigint) {
+		this._wireColorBot = BigInt(color);
 		this.updateUniform();
 	}
 
@@ -53,7 +66,8 @@ export class WireMaterial extends Material {
 	updateUniform() {
 		this.uniform.replace({
 			faceColor: this._faceColor,
-			wireColor: this._wireColor,
+			wireColorTop: this._wireColorTop,
+			wireColorBot: this._wireColorBot,
 			shape: this.triangle ? 0 : 1,
 		});
 	}

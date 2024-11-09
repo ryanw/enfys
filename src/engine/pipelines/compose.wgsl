@@ -1,5 +1,5 @@
 const BLEND_TO_ALPHA: bool = false;
-const DRAW_SHADOWS: bool = true;
+const DRAW_SHADOWS: bool = false;
 const DRAW_WATER: bool = true;
 const DISTORT_WATER: vec2f = vec2(16.0, 0.4);
 const WATER_LEVEL = -0.8;

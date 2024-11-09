@@ -102,10 +102,11 @@ export function terrain(world: World, target?: Entity) {
 }
 
 let decorRngIdx = 0;
-export function decor(world: World, mesh: ResourceId, seed: number, spread: number, radius: number, target?: Entity): Entity {
+export function decor(world: World, mesh: ResourceId, material: ResourceId, seed: number, spread: number, radius: number, target?: Entity): Entity {
 	const idx = decorRngIdx;
 	decorRngIdx += 1;
 	return world.createEntity([
 		new DecorComponent(mesh, seed + idx, spread, radius, target),
+		new MaterialComponent(material),
 	]);
 }
