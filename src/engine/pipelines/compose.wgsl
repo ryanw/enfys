@@ -1,7 +1,8 @@
 const BLEND_TO_ALPHA: bool = false;
 const DRAW_SHADOWS: bool = true;
 const DRAW_WATER: bool = true;
-const DISTORT_WATER: vec2f = vec2(32.0, 0.3);
+const DISTORT_WATER: vec2f = vec2(16.0, 0.4);
+const WATER_LEVEL = -0.8;
 const DRAW_FOG: bool = true;
 const EDGE_MODE: i32 = 4;
 const EDGE_INVERT: bool = true;
@@ -85,6 +86,11 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 	return out;
 }
 
+fn getWaterLevel(p: vec3f) -> f32 {
+	let n0 = (fractalNoise(p/DISTORT_WATER.x/2.0 + vec3(0.0, u.t / 50.0, 0.0), 3) - 0.5) * DISTORT_WATER.y * 4.0;
+	let s = pow(abs(sin(u.t/6.0)), 7.0) * 4.0;
+	return WATER_LEVEL + n0 + s;
+}
 
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4f {
@@ -95,9 +101,10 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	let depth = textureLoad(depthTex, depthCoord, 0).r;
 	let pos = worldFromScreen(uv, depth, u.invMvp);
 
-	if u.waterColor > 0u &&  DISTORT_WATER.x > 0.0 && pos.y < 0.0 {
-		let n0 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
-		let n1 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 10.0, 0.0), 3) - 0.5) / 10.0;
+	let waterLevel = getWaterLevel(pos);
+	if u.waterColor > 0u &&  DISTORT_WATER.x > 0.0 && pos.y < waterLevel {
+		let n0 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 30.0, 0.0), 2) - 0.5) / 10.0;
+		let n1 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 30.0, 0.0), 2) - 0.5) / 10.0;
 		uv.x = uv.x + n0 * DISTORT_WATER.y;
 		uv.y = uv.y + n1 * DISTORT_WATER.y;
 	}
@@ -106,7 +113,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	var ripDepth = textureLoad(depthTex, ripDepthCoord, 0).r;
 	var ripPos = worldFromScreen(uv, ripDepth, u.invMvp);
 	// Don't show objects outside of the water as shimmering inside
-	if pos.y < 0.0 && ripPos.y >= 0.0 {
+	if pos.y < 0.0 && ripPos.y >= waterLevel {
 		uv = in.uv;
 		ripDepth = depth;
 		ripPos = pos;
@@ -302,7 +309,31 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	// Draw water -- depth test to fix water behind fog
-	if DRAW_WATER && u.waterColor > 0u && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
+	if DRAW_WATER && u.waterColor > 0u && depth < 1.0 && renderMode == 0 && pos.y < waterLevel {
+		var waterColor = uintToColor(u.waterColor);
+		let foamColor = vec4(0.8, 0.9, 1.0, 1.0);
+		var y = pos.y - waterLevel;
+		y /= -128.0;
+		if y > 0.0 {
+			let waterDepth = ss(0.0, 1.5, pow(y, 0.4));
+			//let waterDepth = ss(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
+			if waterDepth > 0.0 {
+				var waterColor = uintToColor(u.waterColor);
+				let foamColor = vec4(0.8, 0.9, 1.0, 1.0);
+				let a = waterColor.a;
+				waterColor.a = 1.0;
+				color = mix(color, waterColor, clamp(waterDepth + a, 0.0, 1.0));
+
+				// Foam near the edges
+				let foamEdge = 1.0 / 50.0;
+				if (waterDepth < foamEdge) {
+					let foamFactor = 1.0 - waterDepth/foamEdge;
+					color = mix(color, foamColor, clamp(foamFactor, 0.0, 1.0));
+				}
+			}
+		}
+	}
+	if false && DRAW_WATER && u.waterColor > 0u && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
 		// Animate waves near edges
 		let noiseScale = 0.03;
 		let noiseOffset = vec3(u.t/37.0,u.t/24.0, u.t/47.0) * 20.0;
