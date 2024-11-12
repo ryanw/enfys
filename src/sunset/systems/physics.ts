@@ -10,6 +10,7 @@ export class SimplePhysicsSystem extends System {
 			const vel = world.getComponent(entity, VelocityComponent)!;
 			const tra = world.getComponent(entity, TransformComponent)!;
 			tra.position = vec.add(tra.position, vec.scale(vel.velocity, dt));
+			tra.rotation = vec.add(tra.rotation, vec.scale(vel.angular, dt));
 		}
 	}
 }

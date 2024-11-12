@@ -105,8 +105,9 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	if u.waterColor > 0u &&  DISTORT_WATER.x > 0.0 && pos.y < waterLevel {
 		let n0 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 30.0, 0.0), 2) - 0.5) / 10.0;
 		let n1 = (fractalNoise(pos/DISTORT_WATER.x + vec3(0.0, u.t / 30.0, 0.0), 2) - 0.5) / 10.0;
-		uv.x = uv.x + n0 * DISTORT_WATER.y;
-		uv.y = uv.y + n1 * DISTORT_WATER.y;
+		let distortFactor = (waterLevel - pos.y) / 3.0;
+		uv.x = uv.x + n0 * DISTORT_WATER.y * distortFactor;
+		uv.y = uv.y + n1 * DISTORT_WATER.y * distortFactor;
 	}
 
 	var ripDepthCoord = vec2u(depthSize * uv);
@@ -315,7 +316,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 		var y = pos.y - waterLevel;
 		y /= -128.0;
 		if y > 0.0 {
-			let waterDepth = ss(0.0, 1.5, pow(y, 0.4));
+			let waterDepth = ss(0.0, 1.0, pow(y, 0.3));
 			//let waterDepth = ss(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
 			if waterDepth > 0.0 {
 				var waterColor = uintToColor(u.waterColor);
@@ -325,32 +326,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 				color = mix(color, waterColor, clamp(waterDepth + a, 0.0, 1.0));
 
 				// Foam near the edges
-				let foamEdge = 1.0 / 50.0;
-				if (waterDepth < foamEdge) {
-					let foamFactor = 1.0 - waterDepth/foamEdge;
-					color = mix(color, foamColor, clamp(foamFactor, 0.0, 1.0));
-				}
-			}
-		}
-	}
-	if false && DRAW_WATER && u.waterColor > 0u && depth < 1.0 && renderMode == 0 && pos.y < 20.0 {
-		// Animate waves near edges
-		let noiseScale = 0.03;
-		let noiseOffset = vec3(u.t/37.0,u.t/24.0, u.t/47.0) * 20.0;
-		let n0 = fractalNoise((vec3(pos.x, pos.y, pos.z) + noiseOffset) * noiseScale, 3) - 0.5;
-		let y = (-pos.y + n0 * 2.0) / 128.0;
-		if y > 0.0 {
-			let waterDepth = ss(0.0, 1.5, pow(y, 0.4));
-			//let waterDepth = ss(0.0, 1.5, pow((-pos.y + n0 * 2.0) / 128.0, 0.4));
-			if waterDepth > 0.0 {
-				var waterColor = uintToColor(u.waterColor);
-				let foamColor = vec4(0.8, 0.9, 1.0, 1.0);
-				let a = waterColor.a;
-				waterColor.a = 1.0;
-				color = mix(color, waterColor, clamp(waterDepth + a, 0.0, 1.0));
-
-				// Foam near the edges
-				let foamEdge = 1.0 / 50.0;
+				let foamEdge = 1.0 / 10.0;
 				if (waterDepth < foamEdge) {
 					let foamFactor = 1.0 - waterDepth/foamEdge;
 					color = mix(color, foamColor, clamp(foamFactor, 0.0, 1.0));

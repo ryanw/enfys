@@ -186,8 +186,18 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		centreThickness + lineBlur,
 		abs(lineVal),
 	);
-	out.albedo = mix(roadColor, lineColor, gap * centreLine);
-	out.normal = normal;
+
+	// FIXME curb should be constant size like wireframe
+	let curbColor = uintToColor(0xffbb11ffu);
+	let curbWidth = 1.05;
+	let curb = smoothstep(0.9 - lineBlur, 0.9 + lineBlur, abs(lineVal) - 8.0 + curbWidth);
+	let surfaceColor = mix(roadColor, lineColor, gap * centreLine);
+	out.albedo = mix(surfaceColor, curbColor, curb);
+	if curb < 0.999 {
+		out.normal = normal;
+	} else {
+		out.normal = vec4(0.0);
+	}
 	out.metaOutput = in.triangleId % 0xff;
 
 

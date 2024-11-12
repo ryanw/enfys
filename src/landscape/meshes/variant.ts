@@ -1,13 +1,15 @@
 import { Gfx } from 'engine';
+import { Point3 } from 'engine/math';
 import { ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
 
 export class VariantMesh extends SimpleMesh {
-	constructor(gfx: Gfx, readonly seed: number = 123, variantCount: number = 1, instances?: Array<ColorInstance>) {
+	constructor(gfx: Gfx, readonly seed: number = 123, variantCount: number = 1, scale: number = 1, instances?: Array<ColorInstance>) {
 		super(gfx, [], instances);
 		const models: Array<Array<ColorVertex>> = [];
 
 		for (let i = 0; i < variantCount; i++) {
 			const model = this.generateVariant(i);
+			model.forEach(v => v.position = v.position.map(n => n * scale) as Point3);
 			models.push(model);
 		}
 

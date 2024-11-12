@@ -39,6 +39,7 @@ export class GunComponent extends Component {
 export class VelocityComponent extends Component {
 	constructor(
 		public velocity: Vector3 = [0, 0, 0],
+		public angular: Vector3 = [0, 0, 0],
 	) {
 		super();
 	}

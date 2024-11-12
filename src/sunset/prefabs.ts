@@ -10,14 +10,15 @@ import { VehicleComponent } from "./components/vehicle";
 import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engine/ecs/components/camera";
 import { ResourceId } from "engine/resource";
 import { DecorComponent } from "engine/ecs/components/decor";
+import { ParticlesComponent } from "engine/ecs/components/particles";
 
 const CAR_SPEED = 16.0;
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
-		new TransformComponent([0, 0, 0], [0.1, 0, 0]),
+		new TransformComponent([0, 0, 0], [0.1, -0.2, 0]),
 		new CameraComponent(),
-		new OrbitCameraComponent(target, [0, 3, -4]),
+		new OrbitCameraComponent(target, [0, 2, -4]),
 	]);
 }
 
@@ -54,10 +55,10 @@ export function sun(world: World, position: Point3, scale: number = 1) {
 	]);
 }
 
-export function planet(world: World, position: Point3, scale: number = 1) {
+export function planet(world: World, position: Point3, scale: number = 1, speed: number = 1.0) {
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0], [scale, scale, scale]),
-		new VelocityComponent([0, 0, CAR_SPEED]),
+		new VelocityComponent([0, 0, CAR_SPEED], [0, speed, 0]),
 		new MeshComponent('planet'),
 		new MaterialComponent('planet-material'),
 	]);
@@ -75,10 +76,11 @@ export function road(world: World, position: Point3) {
 export function car(world: World, position: Point3) {
 	return world.createEntity([
 		new TransformComponent(position),
-		new VelocityComponent([0, 0, CAR_SPEED]),
+		new VelocityComponent([0, 0, CAR_SPEED], [0, 0, 0]),
 		new VehicleComponent(),
 		new MeshComponent('car'),
 		new MaterialComponent('car-material'),
+		new ParticlesComponent('tiny-cube', 256, true, [0, 0.5, -0.5]),
 	]);
 }
 
@@ -96,7 +98,7 @@ export function building(world: World, position: Point3, size: Vector3 = [1, 1, 
 export function terrain(world: World, target?: Entity) {
 	return world.createEntity([
 		new TransformComponent(),
-		new TerrainComponent(431, 456, target, false, [64, 256]),
+		new TerrainComponent(431, 456, target, false, [256, 256]),
 		new MaterialComponent('terrain-material'),
 	]);
 }
@@ -106,6 +108,7 @@ export function decor(world: World, mesh: ResourceId, material: ResourceId, seed
 	const idx = decorRngIdx;
 	decorRngIdx += 1;
 	return world.createEntity([
+		new TransformComponent([0,0,0], [0,0,0], [2,2,2]),
 		new DecorComponent(mesh, seed + idx, spread, radius, target),
 		new MaterialComponent(material),
 	]);

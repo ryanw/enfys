@@ -7,7 +7,7 @@ import { multiply, rotation, transformPoint, translation } from 'engine/math/tra
 import { add } from 'engine/math/vectors';
 
 const MIN_DISTANCE = 3;
-const MAX_DISTANCE = 20000;
+const MAX_DISTANCE = 96;
 
 export class OrbitCameraInputSystem extends System {
 	bindings: Record<string, Key> = {
@@ -19,7 +19,7 @@ export class OrbitCameraInputSystem extends System {
 		'e': Key.Up,
 		'shift': Key.Boost,
 	};
-	distance: number = 16;
+	distance: number = 12;
 	readonly heldKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
@@ -44,21 +44,23 @@ export class OrbitCameraInputSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
+		const { abs, pow, sign } = Math;
 		this.updateGamepads();
 
 		const rotateSpeed = 4.0;
 		let pitch = 0;
 		let yaw = 0;
-		for (const [key, value] of this.axis.entries()) {
-			if (Math.abs(value) < DEADZONE) {
+		for (const [key, amount] of this.axis.entries()) {
+			if (abs(amount) < DEADZONE) {
 				continue;
 			}
+			const value = pow(amount, 3.0) * rotateSpeed;
 			switch (key) {
 			case XboxAxis.RightStickX:
-				yaw = value * rotateSpeed;
+				yaw = value;
 				break;
 			case XboxAxis.RightStickY:
-				pitch = value * rotateSpeed;
+				pitch = value;
 				break;
 			}
 		}

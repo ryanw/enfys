@@ -5,8 +5,8 @@ import { TransformComponent } from './ecs/components';
 import { CameraComponent } from './ecs/components/camera';
 import { MeshComponent } from './ecs/components/mesh';
 import { World } from './ecs/world';
-import { Point3, Vector3 } from './math';
-import { multiply, multiplyVector, rotation, scaling, translation } from './math/transform';
+import { Matrix4, Point3, Vector3 } from './math';
+import { identity, multiply, multiplyVector, rotation, scaling, translation } from './math/transform';
 import { SimpleMesh } from './mesh';
 import { Pawn } from './pawn';
 import { ResourceId } from './resource';
@@ -26,6 +26,7 @@ import { DecorMesh } from './decor_mesh';
 import { MaterialComponent } from './ecs/components/material';
 import { colorToInt } from './color';
 import { DecorPipeline } from './pipelines/decor';
+import { add } from './math/vectors';
 
 export type Resource = {};
 
@@ -126,7 +127,7 @@ export class WorldGraphics {
 		const saw = new Set();
 		for (const entity of entities) {
 			saw.add(entity);
-			const { meshId, count: particleCount, emissive } = world.getComponent(entity, ParticlesComponent)!;
+			const { meshId, count: particleCount, emissive, offset } = world.getComponent(entity, ParticlesComponent)!;
 			const { position: emitterPosition, rotation: emitterRotation } = world.getComponent(entity, TransformComponent)!;
 
 			let particles = this.particles.get(entity);
@@ -141,7 +142,7 @@ export class WorldGraphics {
 				particles.object.vertexCount = mesh.vertexCount;
 				particles.object.variantCount = mesh.variantCount;
 			}
-			particles.object.origin = emitterPosition;
+			particles.object.origin = add(emitterPosition, offset);
 			particles.object.direction = multiplyVector(rotation(...emitterRotation), [0, -1, 0, 0]).slice(0, 3) as Vector3;
 			particles.object.update(performance.now() / 1000.0);
 			particles.object.count = particleCount;
@@ -165,12 +166,7 @@ export class WorldGraphics {
 			saw.add(entity);
 
 			const { meshId: meshResourceId } = world.getComponent(entity, MeshComponent)!;
-			const { position, scale, rotation: rot } = world.getComponent(entity, TransformComponent)!;
-			const transform = multiply(
-				translation(...position),
-				rotation(rot[0], rot[1], 0),
-				scaling(...scale),
-			);
+			const transform = transformForEntity(world, entity);
 			// FIXME only update if transform has changed
 
 			let [idx, pawn] = this.meshes.get(entity) || [];
@@ -435,4 +431,16 @@ export class MissingResource extends Error {
 	constructor(id: ResourceId) {
 		super(`Resource Not Found: ${id}`);
 	}
+}
+
+function transformForEntity(world: World, entity: Entity): Matrix4 {
+	if (!world.hasComponent(entity, TransformComponent)) {
+		return identity();
+	}
+	const { position, scale, rotation: rot } = world.getComponent(entity, TransformComponent)!;
+	return multiply(
+		translation(...position),
+		rotation(rot[0], rot[1], 0),
+		scaling(...scale),
+	);
 }
