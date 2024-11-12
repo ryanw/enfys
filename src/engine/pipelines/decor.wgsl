@@ -39,7 +39,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 	p -= vec3(8.0 * f32(num.x), 0.0, 8.0 * f32(num.y)) * spacing;
 	//p -= vec3(2.0 * f32(num.x), 0.0, 2.0 * f32(num.y)) * spacing;
 	p += vec3(1.0, 0.0, 1.0) * spacing/2.0;
-	p.y = landHeight(p, u.terrainSeed);
+	p.y = decorHeight(p, u.terrainSeed);
 	var dp = p + vec3(u.decorSeed / 1000000.0);
 
 	var n = rnd3(dp);
@@ -61,7 +61,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		var n1 = (rnd3(dp + vec3(323.0)) - 0.5) * u.spacing.y;
 		p.x += n0;
 		p.z += n1;
-		p.y = landHeight(p, u.terrainSeed);
+		p.y = decorHeight(p, u.terrainSeed);
 
 		// Test for clipping
 		for (var i = 0; i < 6; i++) {

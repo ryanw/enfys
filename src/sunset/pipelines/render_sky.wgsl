@@ -176,12 +176,16 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 
 	// Clear sky
-	let star = pow(ss(0.90, 1.0, length(bar)), 2.0);
-	let skyColor = vec4(vec3(star), star);
+	let sn0 = fractalNoise(p*3.0 + vec3(0.0, 0.0, camera.t/6.0), 2);
+	let sn1 = smoothstep(0.9, 1.0, fractalNoise(p*64.0 + vec3(1000.0), 1));
+	var skyColor = hsl(0.9, 0.5, 0.5) * sn0/4.0;
+	var starColor = hsl(0.2, 1.0, 0.5) * sn1/2.0;
+	skyColor += starColor;
 
 	// Wire
 	if pixEdge < thickness {
-		let e = 1.0 - smoothstep(max(0.0, thickness-2.0), thickness, pixEdge) - star;
+		let vertex = ss(0.7, 0.9, length(bar));
+		let e = 1.0 - smoothstep(max(0.0, thickness-2.0), thickness, pixEdge) - vertex;
 		haze = max(haze, e/2.0);
 	}
 

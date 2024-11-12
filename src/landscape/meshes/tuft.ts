@@ -29,7 +29,7 @@ export class TuftMesh extends VariantMesh {
 			const z = rnd(-spread, spread);
 			const rot = rotation(0, rnd(-Math.PI, Math.PI), 0);
 
-			const blade: Array<ColorVertex> = buildCylinder(height, radius, [2, 3]).map(p => {
+			const blade: Array<ColorVertex> = buildCylinder(height, radius, [2, 4]).map(p => {
 				const s = 1.0 - smoothstep(0.1, 0.5, p[1]/height);
 				const h = scaling(s, 1, s);
 				const position = add<Point3>(transformPoint(multiply(rot, h), p), [x, y, z]);

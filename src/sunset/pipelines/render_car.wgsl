@@ -117,7 +117,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let mvp = camera.projection * camera.view;
 	var p = vec4(shapeCar(v.position), 1.0);
 	// Bobbing
-	p.y += sin(camera.t*3.0) / 5.0 + 0.1;
+	//p.y += sin(camera.t*3.0) / 5.0 + 0.1;
 	var position = mvp * offsetModel * p;
 
 	out.position = position;

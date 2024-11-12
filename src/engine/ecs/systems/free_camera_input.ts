@@ -5,6 +5,7 @@ import { FreeCameraComponent } from '../components/camera';
 import { World } from '../world';
 import { add, normalize, scale } from 'engine/math/vectors';
 import { Vector3 } from 'engine/math';
+import { multiply, multiplyVector } from 'engine/math/transform';
 
 export class FreeCameraInputSystem extends System {
 	bindings: Record<string, Key> = {
@@ -40,7 +41,7 @@ export class FreeCameraInputSystem extends System {
 	}
 
 	updateMovement(dt: number, world: World) {
-		const speed = this.heldKeys.has(Key.Boost) ? 1024 : 64;
+		const speed = this.heldKeys.has(Key.Boost) ? 256 : 64;
 		const adjustment: Vector3 = [0, 0, 0];
 		for (const key of this.heldKeys) {
 			switch (key) {
@@ -72,7 +73,8 @@ export class FreeCameraInputSystem extends System {
 		const entities = world.entitiesWithComponents([FreeCameraComponent, TransformComponent]);
 		for (const entity of entities) {
 			const transform = world.getComponent(entity, TransformComponent)!;
-			const movement = scale(normalize(adjustment), speed * dt);
+			const direction = multiplyVector(transform.rotationMatrix(), normalize(adjustment));
+			const movement = scale(direction, speed * dt);
 			transform.position = add(transform.position, movement);
 		}
 	}

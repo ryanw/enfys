@@ -14,3 +14,11 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 	n += offset;
 	return n;
 }
+
+fn decorHeight(op: vec3f, t: f32) -> f32 {
+	if abs(op.x) < 12.0 {
+		// Don't spawn on road
+		return -100.0;
+	}
+	return landHeight(op, t);
+}
