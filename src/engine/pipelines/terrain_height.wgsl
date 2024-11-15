@@ -4,42 +4,6 @@ var<private> valleys_spline: array<f32, 10>    = array<f32, 10>(0.0, 0.2, 0.4, 0
 
 const BUILDING_CELL_SIZE: f32 = 256.0;
 
-fn buildingCell(pp: vec2f, seed: f32) -> f32 {
-	var p = floor(pp / BUILDING_CELL_SIZE) * BUILDING_CELL_SIZE;
-	let isBuilding = rnd2(p + seed) < 1.0/24.0;
-	if !isBuilding {
-		return -1.0;
-	}
-	let centre = p + vec2(BUILDING_CELL_SIZE / 2.0);
-	return length(centre - pp) / BUILDING_CELL_SIZE * 2.0;
-}
-
-fn landscapeNoise(p: vec3f) -> f32 {
-
-	var worldScale = 2.0;
-	var worldHeight = 1024.0;
-	var waterLevel = -8.0;
-
-	var t0 = continents(p * worldScale);
-	var t1 = erosion(p * worldScale);
-	var t2 = valleys(p * worldScale);
-
-	var t = t0 * t1 * t2;
-	t *= worldHeight;
-	t -= waterLevel;
-
-	return t;
-}
-
-fn lumpLandscapeNoise(p: vec3f) -> f32 {
-	var t0 = continents(p);
-	var t1 = erosion(p);
-	var t2 = valleys(p);
-	var t = 0.0 + (t0 * t1 * t2);
-
-	return t * 512.0;
-}
-
 fn landHeight(op: vec3f, t: f32) -> f32 {
 	var scale = 4096.0;
 
@@ -80,6 +44,46 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 
 
 	return n;
+}
+fn decorHeight(op: vec3f, t: f32) -> f32 {
+	return landHeight(op, t);
+}
+
+
+fn buildingCell(pp: vec2f, seed: f32) -> f32 {
+	var p = floor(pp / BUILDING_CELL_SIZE) * BUILDING_CELL_SIZE;
+	let isBuilding = rnd2(p + seed) < 1.0/24.0;
+	if !isBuilding {
+		return -1.0;
+	}
+	let centre = p + vec2(BUILDING_CELL_SIZE / 2.0);
+	return length(centre - pp) / BUILDING_CELL_SIZE * 2.0;
+}
+
+fn landscapeNoise(p: vec3f) -> f32 {
+
+	var worldScale = 2.0;
+	var worldHeight = 1024.0;
+	var waterLevel = -8.0;
+
+	var t0 = continents(p * worldScale);
+	var t1 = erosion(p * worldScale);
+	var t2 = valleys(p * worldScale);
+
+	var t = t0 * t1 * t2;
+	t *= worldHeight;
+	t -= waterLevel;
+
+	return t;
+}
+
+fn lumpLandscapeNoise(p: vec3f) -> f32 {
+	var t0 = continents(p);
+	var t1 = erosion(p);
+	var t2 = valleys(p);
+	var t = 0.0 + (t0 * t1 * t2);
+
+	return t * 512.0;
 }
 
 fn spline(t: f32, s: array<f32, 10>) -> f32 {
