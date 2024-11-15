@@ -52,6 +52,10 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
 	const gfx: Gfx = await Gfx.attach(el);
 	const scene = new Scene(gfx);
+	const rootSeed = 4;//Math.random() * 0xffffff | 0;
+	let seedIdx = 0;
+	const nextSeed = () => (rootSeed + 123 * seedIdx++) % 0xffffff;
+
 	scene.waterColor = hsl(0.9, 0.7, 0.4, 0.5);
 	scene.fogColor = hsl(0.52, 0.7, 0.4);
 	gfx.configure({
@@ -65,7 +69,6 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	gfx.registerMaterials(MATERIALS);
 
 	const graphics = new WorldGraphics(gfx, heightShaderSource);
-	graphics.insertResource('planet', new Icosphere(gfx, 1));
 	graphics.insertResource('sun', new Icosphere(gfx, 4));
 	graphics.insertResource('sky', new InnerIcosphere(gfx, 4));
 	graphics.insertResource('road', new CubeMesh(gfx, [0, 0, 256], [8, 0.2, 2000]));
@@ -76,7 +79,6 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	graphics.insertResource('decor-flowers', new FlowersMesh(gfx, 0, 32, 5));
 	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.05));
 
-	graphics.insertResource('planet-material', new WireMaterial(gfx, 0xff000000n, 0xff11ffffn, 0xff11ffffn, true));
 	graphics.insertResource('sun-material', new SunMaterial(gfx, scene.fogColor));
 	graphics.insertResource('terrain-material', new WireMaterial(gfx, 0xff554411n, 0xffffbb11n, 0xffbb11ffn));
 	graphics.insertResource('tree-material', new WireMaterial(gfx, 0xff11aa33n, 0xff11ffaan, 0xffbb11ffn, true));
@@ -84,6 +86,11 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	graphics.insertResource('road-material', new RoadMaterial(gfx, 0xff111111n, 0xff11ffffn));
 	graphics.insertResource('car-material', new CarMaterial(gfx, 0xff117722n, 0xff11ff33n));
 	graphics.insertResource('sky-material', new SkyMaterial(gfx, scene.fogColor));
+
+	for (let i = 0; i < 3; i++) {
+		graphics.insertResource(`planet${i}`, new Icosphere(gfx, 4));
+		graphics.insertResource(`planet${i}-material`, new PlanetMaterial(gfx, nextSeed()));
+	}
 
 
 	const world = new World();
@@ -93,19 +100,21 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new FreeCameraInputSystem(el));
 
-	const skyRadius = 3400.0;
-	const skyPoint = (dir: Vector3) => vec.scale(vec.normalize(dir), skyRadius);
-	prefabs.light(world, [2.8, 0, 0]);
-	prefabs.sky(world, skyRadius);
-	prefabs.planet(world, skyPoint([100, 80, 400]), 150, 0.1);
-	prefabs.planet(world, skyPoint([-150, 30, 400]), 150, 0.3);
-	prefabs.sun(world, skyPoint([0, 0.04, 1]), 500);
-	prefabs.road(world, [0, 2, 0]);
-
 	const car = prefabs.car(world, [-2, 3, 0]);
 	const cam1 = prefabs.orbitCamera(world, car);
 	const cam2 = prefabs.freeCamera(world);
+
+	const skyRadius = 3400.0;
+	const skyPoint = (dir: Vector3) => vec.scale(vec.normalize(dir), skyRadius * 0.9);
+	prefabs.light(world, [2.8, 0, 0]);
+	prefabs.sky(world, skyRadius);
+	prefabs.planet(world, skyPoint([100, 80, 400]), 150, 0.1);
+	prefabs.planet(world, skyPoint([-150, 70, 400]), 100, 0.3);
+	prefabs.sun(world, skyPoint([0, 0.04, 1]), 500);
+	prefabs.road(world, [0, 2, 0]);
 	prefabs.terrain(world, cam1);
+	//prefabs.planet(world, [0, 0, 300], 100, 0.3);
+
 	prefabs.decor(world, 'decor-trees', 'tree-material', 1000, 48, 3, cam1);
 	prefabs.decor(world, 'decor-tufts', 'tree-material', 2000, 24, 2, cam1);
 	prefabs.decor(world, 'decor-flowers', 'tree-material', 3000, 32, 2, cam1);

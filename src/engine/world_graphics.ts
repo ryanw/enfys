@@ -175,6 +175,7 @@ export class WorldGraphics {
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
 				pawn = this.instanceMeshes.get(mesh);
 				if (!pawn) {
+					// FIXME support different material per mesh
 					const materialComp = world.getComponent(entity, MaterialComponent);
 					let material;
 					if (materialComp) {
@@ -266,11 +267,11 @@ export class WorldGraphics {
 			const { seed: decorSeed, spread, radius, meshId } = world.getComponent(entity, DecorComponent)!;
 			let decor = this.decors.get(entity);
 			if (!decor) {
-				const materialComp = world.getComponent(entity, MaterialComponent)!;
+				const materialComp = world.getComponent(entity, MaterialComponent);
 				console.debug('Adding Decor for entity', entity, meshId);
 				const mesh: SimpleMesh = this.getResource(meshId);
 				decor = scene.addMesh(new DecorMesh(this.gfx, [], [0, 0], 1.0, spread, terrainSeed, decorSeed, radius, this.heightShaderSource));
-				decor.material = this.getMaterialForComponent(materialComp) || decor.material;
+				decor.material = (materialComp && this.getMaterialForComponent(materialComp)) || decor.material;
 				decor.object.vertexBuffer = mesh.vertexBuffer;
 				decor.object.vertexCount = mesh.vertexCount;
 				decor.object.variantCount = mesh.variantCount;
@@ -410,6 +411,7 @@ export class WorldGraphics {
 	}
 
 	private getMaterialForComponent(comp: MaterialComponent): Material {
+		if (!comp) debugger;
 		if (comp.custom != null) {
 			const material = this.getResource<Material>(comp.custom);
 			if (!material) {

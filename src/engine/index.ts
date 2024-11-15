@@ -65,7 +65,10 @@ export class Gfx {
 	static async attach(canvas: HTMLCanvasElement): Promise<Gfx> {
 		if (!navigator?.gpu) throw new UnsupportedError();
 		const adapter = await navigator.gpu.requestAdapter();
-		adapter?.requestAdapterInfo().then(info => console.info("Got GPU:", info));
+		try {
+			adapter?.requestAdapterInfo().then(info => console.info("Got GPU:", info));
+		} catch (e) {
+		}
 		if (!adapter) throw new UnsupportedError();
 		const device = await adapter.requestDevice();
 		if (!device) throw new UnsupportedError();

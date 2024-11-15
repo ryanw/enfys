@@ -55,12 +55,15 @@ export function sun(world: World, position: Point3, scale: number = 1) {
 	]);
 }
 
+const planetCount = 3;
+let planetIdx = 0;
 export function planet(world: World, position: Point3, scale: number = 1, speed: number = 1.0) {
+	planetIdx = (planetIdx + 1) % planetCount;
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0], [scale, scale, scale]),
 		new VelocityComponent([0, 0, CAR_SPEED], [0, speed, 0]),
-		new MeshComponent('planet'),
-		new MaterialComponent('planet-material'),
+		new MeshComponent(`planet${planetIdx}`),
+		new MaterialComponent(`planet${planetIdx}-material`),
 	]);
 }
 

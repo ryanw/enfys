@@ -12,6 +12,11 @@ struct Vertex {
 	softness: f32,
 }
 
+struct Material {
+	color: u32,
+	seed: u32,
+}
+
 struct VertexIn {
 	@builtin(vertex_index) id: u32,
 	@builtin(instance_index) instance: u32,
@@ -59,10 +64,6 @@ struct Pawn {
 	variantIndex: u32,
 }
 
-struct Material {
-	color: u32,
-}
-
 struct Shadow {
 	position: vec3f,
 	radius: f32,
@@ -84,7 +85,7 @@ var<uniform> material: Material;
 @group(0) @binding(3)
 var<storage, read> vertices: array<PackedVertex>;
 
-const SEA_LEVEL = 0.55;
+const SEA_LEVEL = 0.5;
 
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
@@ -107,7 +108,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	);
 
 	var vp = normalize(v.position);
-	let scale = 1.0/6.0;
+	let scale = 1.0/4.0;
 	let n0 = (max(SEA_LEVEL, terrainNoise(vp, 3)) * scale) - scale;
 	let terrainOffset = (vp * n0);
 
@@ -141,20 +142,28 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	if color.a == 0.0 {
 		discard;
 	}
+
+	let r0 = rnd3u(vec3(material.seed));
+	let r1 = rnd3u(vec3(material.seed + 100));
+	let r2 = rnd3u(vec3(material.seed + 200));
+
+	let seaColor = hsl(r0, 0.4, 0.4);
+	let landColor = hsl((r0 + 0.3) % 1.0, 0.4, 0.4);
+
 	var p = normalize(in.originalPosition);
-	out.normal = vec4(p * -1.0, 1.0);
+	//out.normal = vec4(p * -1.0, 1.0);
 	let ll = pointToLonLat(p);
 
-	let n0 = terrainNoise(p, 2);
+	var n0 = terrainNoise(p, 2);
 
 	var brightness = 1.0;
 	if n0 <= SEA_LEVEL {
-		brightness = n0 + (1.0 - SEA_LEVEL);
-		color = vec4(0.2, 0.3, 0.5, 1.0);
+		//brightness = n0 + (1.0 - SEA_LEVEL);
+		color = seaColor;
 	}
 	else {
-		brightness = n0 + SEA_LEVEL;
-		color = vec4(0.2, 0.6, 0.3, 1.0);
+		//brightness = n0 + SEA_LEVEL;
+		color = landColor;
 	}
 
 
@@ -183,7 +192,8 @@ fn pointToUV(point: vec3<f32>) -> vec2<f32> {
 }
 
 fn terrainNoise(p: vec3<f32>, octaves: i32) -> f32 {
-	var n = fractalNoise(p/2.0, octaves);
+	var seed = vec3(f32(material.seed)/1000.0);
+	var n = fractalNoise(p/2.0 + seed, octaves);
 	if n > SEA_LEVEL {
 		// Flatter beaches, pointier mountains
 		n = SEA_LEVEL + pow((n - SEA_LEVEL)/(1.0-SEA_LEVEL), 2.0);

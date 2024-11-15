@@ -195,7 +195,9 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	let mip = smoothstep(-2.0, 0.0, log2(max(dx, dy)));
 	if mip > 0.0 {
 		color = mix(color, mix(in.color, wireColor, mip/2.0), mip);
-		normal = vec4(0.0);//vec4(in.normal*vec3(1.0, 2.0, 1.0), 0.0);
+		if mip > 0.5 {
+			normal = vec4(0.0);//vec4(in.normal*vec3(1.0, 2.0, 1.0), 0.0);
+		}
 	}
 
 
