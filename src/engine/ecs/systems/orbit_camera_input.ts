@@ -7,7 +7,7 @@ import { multiply, rotation, transformPoint, translation } from 'engine/math/tra
 import { add } from 'engine/math/vectors';
 
 const MIN_DISTANCE = 3;
-const MAX_DISTANCE = 96;
+const MAX_DISTANCE = 96000;
 
 export class OrbitCameraInputSystem extends System {
 	bindings: Record<string, Key> = {
@@ -44,7 +44,7 @@ export class OrbitCameraInputSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
-		const { abs, pow, sign } = Math;
+		const { abs, pow } = Math;
 		this.updateGamepads();
 
 		const rotateSpeed = 4.0;

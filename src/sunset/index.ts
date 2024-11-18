@@ -5,7 +5,7 @@
  */
 
 import { Gfx, MaterialTuple } from 'engine';
-import { CubeMesh, Icosphere, InnerIcosphere, QuadMesh } from 'engine/mesh';
+import { CubeMesh, Icosphere, InnerIcosphere } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { World } from 'engine/ecs/world';
 import { WorldGraphics } from 'engine/world_graphics';
@@ -34,6 +34,7 @@ import { RenderCarPipeline } from './pipelines/render_car';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
 import { TuftMesh } from '../landscape/meshes/tuft';
 import { FlowersMesh } from '../landscape/meshes/flowers';
+import { QueryRoadPipeline } from './pipelines/query_road';
 
 const PIXEL_SIZE = 1;
 const MATERIALS: Array<MaterialTuple> = [
@@ -71,7 +72,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const graphics = new WorldGraphics(gfx, heightShaderSource);
 	graphics.insertResource('sun', new Icosphere(gfx, 4));
 	graphics.insertResource('sky', new InnerIcosphere(gfx, 4));
-	graphics.insertResource('road', new CubeMesh(gfx, [0, 0, 256], [8, 0.2, 2000]));
+	graphics.insertResource('road', new CubeMesh(gfx, [0, 0, 1024], [8, 0.2, 1024]));
 	graphics.insertResource('building', new CubeMesh(gfx));
 	graphics.insertResource('car', new CubeMesh(gfx, [4, 2, 8] as any, [1.25, 0.5, 2]));
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, 0, 8, 2));
@@ -95,10 +96,10 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 	const world = new World();
 	world.addSystem(new TerrainSystem(gfx, 1, 1, 2));
-	world.addSystem(new VehicleSystem());
 	world.addSystem(new SimplePhysicsSystem());
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new FreeCameraInputSystem(el));
+	world.addSystem(new VehicleSystem(gfx));
 
 	const car = prefabs.car(world, [-2, 3, 0]);
 	const cam1 = prefabs.orbitCamera(world, car);
@@ -111,7 +112,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	prefabs.planet(world, skyPoint([100, 80, 400]), 150, 0.1);
 	prefabs.planet(world, skyPoint([-150, 70, 400]), 100, 0.3);
 	prefabs.sun(world, skyPoint([0, 0.04, 1]), 500);
-	prefabs.road(world, [0, 2, 0]);
+	prefabs.road(world, [0, 3, 0]);
 	prefabs.terrain(world, cam1);
 	//prefabs.planet(world, [0, 0, 300], 100, 0.3);
 
@@ -121,6 +122,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 	scene.currentCameraId = 1;
 	scene.primaryCameraId = 1;
+
 	gfx.run(async (dt) => {
 		world.tick(dt);
 		graphics.update(world, scene);

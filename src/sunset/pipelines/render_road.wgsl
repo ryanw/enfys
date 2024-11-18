@@ -34,6 +34,7 @@ struct VertexOut {
 	@location(4) modelPosition: vec3f,
 	@location(5) modelNormal: vec3f,
 	@location(6) barycentric: vec3f,
+	@location(7) roadNormal: vec3f,
 	@location(8) @interpolate(flat) triangleId: u32,
 	@location(9) @interpolate(flat) quadId: u32,
 }
@@ -122,9 +123,18 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	);
 	let offsetModel = pawn.model * transform;
 	let mv = camera.view * offsetModel;
-	let mvp = camera.projection * camera.view;
-	var p = offsetModel * vec4(v.position, 1.0);
-	var position = mvp * p;
+	let vp = camera.projection * camera.view;
+	let p = offsetModel * vec4(v.position, 1.0);
+
+	let roadCurve = roadPath(p.z);
+	let roadTan = roadTangent(p.z);
+	var rp = vec2(v.position.x, 0.0);
+	rp = rot2(atan2(-roadTan.x, -roadTan.y)) * rp;
+	rp.x += roadCurve;
+	rp.y += v.position.z;
+
+	var fp = offsetModel * vec4(rp.x, v.position.y, rp.y, 1.0);
+	var position = vp * fp;
 
 	out.position = position;
 	out.originalPosition = p.xyz / p.w;
@@ -133,6 +143,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.barycentric = barycentrics[in.id % 3u];
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
+	out.roadNormal = roadNormal(p.z);
 
 	let faceColor = uintToColor(material.faceColor);
 	let vertexColor = uintToColor(v.color);
@@ -201,6 +212,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	out.metaOutput = in.triangleId % 0xff;
 
 
+	//out.albedo = vec4(abs(in.roadNormal), 1.0);
 
 	return out;
 }
@@ -234,3 +246,5 @@ fn terrainNoise(p: vec3<f32>, octaves: i32) -> f32 {
 
 @import "engine/shaders/noise.wgsl";
 @import "engine/shaders/color.wgsl";
+@import "engine/shaders/helpers.wgsl";
+@import "../shaders/road_path.wgsl";

@@ -21,6 +21,23 @@ fn translate(offset: vec3f) -> mat4x4f {
 	);
 }
 
+fn lookAt(dir: vec3f, up: vec3f) -> mat4x4f {
+	let forward = normalize(dir);
+	let right = normalize(cross(up, forward));
+	let up2 = cross(forward, right);
+	return mat4x4f(
+		vec4(right, 0.0),
+		vec4(up2, 0.0),
+		vec4(forward, 0.0),
+		vec4(0.0, 0.0, 0.0, 1.0),
+	);
+}
+
+fn rot2(angle: f32) -> mat2x2f {
+	let c = cos(angle);
+	let s = sin(angle);
+	return mat2x2f(c, -s, s, c);
+}
 
 fn identity() -> mat4x4f {
 	return translate(vec3(0.0));
