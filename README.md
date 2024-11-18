@@ -2,7 +2,7 @@
 
 Enfys is a WebGPU 3D graphics engine written in TypeScript. I made it just for fun, don't expect long term support.
 
-[![Video demo](https://github.com/user-attachments/assets/3e981487-fc9a-4239-8f0f-eff0c177ca13)](https://youtu.be/gJqmrHGr5HI)
+[![Video demo](https://github.com/user-attachments/assets/0da4fde3-577e-40e5-9297-852766e29d8f)](https://youtu.be/1dXaWy73PjI)
 
 
 ## Running
