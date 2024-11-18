@@ -171,7 +171,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	let t = abs((camera.t/8.0 + 20.2) - in.originalPosition.z / 5120.0);
 	let topColor = uintToColor(material.wireColorTop).rgb;
 	let botColor = uintToColor(material.wireColorBot).rgb;
-	let z = ss(0.0, 1.0, in.originalPosition.y/10.0);
+	let z = ss(0.0, 1.5, in.originalPosition.y/10.0);
 
 	let baseColor = rgbToHsl(mix(botColor, topColor, z));
 

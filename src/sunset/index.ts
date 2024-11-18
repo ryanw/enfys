@@ -35,6 +35,7 @@ import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
 import { TuftMesh } from '../landscape/meshes/tuft';
 import { FlowersMesh } from '../landscape/meshes/flowers';
 import { QueryRoadPipeline } from './pipelines/query_road';
+import { FollowSystem } from './systems/follow';
 
 const PIXEL_SIZE = 1;
 const MATERIALS: Array<MaterialTuple> = [
@@ -97,24 +98,24 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const world = new World();
 	world.addSystem(new TerrainSystem(gfx, 1, 1, 2));
 	world.addSystem(new SimplePhysicsSystem());
+	world.addSystem(new VehicleSystem(gfx));
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new FreeCameraInputSystem(el));
-	world.addSystem(new VehicleSystem(gfx));
+	world.addSystem(new FollowSystem());
 
-	const car = prefabs.car(world, [-2, 3, 0]);
+	const car = prefabs.car(world, [-3, 6, 0]);
 	const cam1 = prefabs.orbitCamera(world, car);
 	const cam2 = prefabs.freeCamera(world);
 
 	const skyRadius = 3400.0;
 	const skyPoint = (dir: Vector3) => vec.scale(vec.normalize(dir), skyRadius * 0.9);
 	prefabs.light(world, [2.8, 0, 0]);
-	prefabs.sky(world, skyRadius);
-	prefabs.planet(world, skyPoint([100, 80, 400]), 150, 0.1);
-	prefabs.planet(world, skyPoint([-150, 70, 400]), 100, 0.3);
-	prefabs.sun(world, skyPoint([0, 0.04, 1]), 500);
-	prefabs.road(world, [0, 3, 0]);
+	prefabs.sky(world, skyRadius, car);
+	prefabs.planet(world, skyPoint([100, 80, 400]), 150, 0.1, car);
+	prefabs.planet(world, skyPoint([-150, 70, 400]), 100, 0.3, car);
+	prefabs.sun(world, skyPoint([0, 0.04, 1]), 500, car);
+	prefabs.road(world, [0, 5, 0], car);
 	prefabs.terrain(world, cam1);
-	//prefabs.planet(world, [0, 0, 300], 100, 0.3);
 
 	prefabs.decor(world, 'decor-trees', 'tree-material', 1000, 48, 3, cam1);
 	prefabs.decor(world, 'decor-tufts', 'tree-material', 2000, 24, 2, cam1);

@@ -2,7 +2,7 @@ const BLEND_TO_ALPHA: bool = false;
 const DRAW_SHADOWS: bool = false;
 const DRAW_WATER: bool = true;
 const DISTORT_WATER: vec2f = vec2(16.0, 0.4);
-const WATER_LEVEL = -0.8;
+const WATER_LEVEL = 0.0;
 const DRAW_FOG: bool = true;
 const EDGE_MODE: i32 = 4;
 const EDGE_INVERT: bool = true;
@@ -88,7 +88,7 @@ fn vs_main(@builtin(vertex_index) i: u32) -> VertexOut {
 
 fn getWaterLevel(p: vec3f) -> f32 {
 	let n0 = (fractalNoise(p/DISTORT_WATER.x/2.0 + vec3(0.0, u.t / 50.0, 0.0), 3) - 0.5) * DISTORT_WATER.y * 4.0;
-	let s = pow(abs(sin(u.t/6.0)), 7.0) * 4.0;
+	let s = pow(abs(sin(u.t/6.0)), 7.0) * 7.0;
 	return WATER_LEVEL + n0 + s;
 }
 

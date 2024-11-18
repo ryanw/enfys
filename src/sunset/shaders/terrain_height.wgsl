@@ -3,7 +3,7 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 	let amp = 64.0;
 	let freq = 1.0/256.0;
 	let offset = 2.0;
-	let roadWidth = 4.0;
+	let roadWidth = 4.5;
 	let octaves = 3;
 
 	// Basic lumps
@@ -11,7 +11,7 @@ fn landHeight(op: vec3f, t: f32) -> f32 {
 
 	// Flatten near the road
 	var scale = 1.0;
-	var minScale = 0.0;
+	var minScale = 0.1;
 	// Only flatten above sea level
 	if n >= 0.0 {
 		let roadOffset = roadPath(op.z);

@@ -11,8 +11,10 @@ import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engi
 import { ResourceId } from "engine/resource";
 import { DecorComponent } from "engine/ecs/components/decor";
 import { ParticlesComponent } from "engine/ecs/components/particles";
+import { FollowComponent } from "./components/follow";
 
 const CAR_SPEED = 16.0;
+const SKY_RADIUS = 3400.0;
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
@@ -37,19 +39,19 @@ export function light(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	]);
 }
 
-export function sky(world: World, scale: number = 1) {
+export function sky(world: World, scale: number = 1, target: Entity) {
 	return world.createEntity([
 		new TransformComponent([0, 0, 0], [0, 0, 0], [scale, scale, scale]),
-		new VelocityComponent([0, 0, CAR_SPEED]),
+		new FollowComponent(target, [1, 1, 1]),
 		new MeshComponent('sky'),
 		new MaterialComponent('sky-material'),
 	]);
 }
 
-export function sun(world: World, position: Point3, scale: number = 1) {
+export function sun(world: World, position: Point3, scale: number = 1, target: Entity) {
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0], [scale, scale, scale]),
-		new VelocityComponent([0, 0, CAR_SPEED]),
+		new FollowComponent(target, [1, 1, 1]),
 		new MeshComponent('sun'),
 		new MaterialComponent('sun-material'),
 	]);
@@ -57,20 +59,20 @@ export function sun(world: World, position: Point3, scale: number = 1) {
 
 const planetCount = 3;
 let planetIdx = 0;
-export function planet(world: World, position: Point3, scale: number = 1, speed: number = 1.0) {
+export function planet(world: World, position: Point3, scale: number = 1, speed: number = 1.0, target: Entity) {
 	planetIdx = (planetIdx + 1) % planetCount;
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0], [scale, scale, scale]),
-		new VelocityComponent([0, 0, CAR_SPEED], [0, speed, 0]),
+		new FollowComponent(target, [1, 1, 1]),
 		new MeshComponent(`planet${planetIdx}`),
 		new MaterialComponent(`planet${planetIdx}-material`),
 	]);
 }
 
-export function road(world: World, position: Point3) {
+export function road(world: World, position: Point3, target: Entity) {
 	return world.createEntity([
 		new TransformComponent(position),
-		new VelocityComponent([0, 0, CAR_SPEED]),
+		new FollowComponent(target, [0, 0, 1]),
 		new MeshComponent('road'),
 		new MaterialComponent('road-material'),
 	]);
@@ -111,7 +113,7 @@ export function decor(world: World, mesh: ResourceId, material: ResourceId, seed
 	const idx = decorRngIdx;
 	decorRngIdx += 1;
 	return world.createEntity([
-		new TransformComponent([0,0,0], [0,0,0], [2,2,2]),
+		new TransformComponent([0, 0, 0], [0, 0, 0], [2, 2, 2]),
 		new DecorComponent(mesh, seed + idx, spread, radius, target),
 		new MaterialComponent(material),
 	]);
