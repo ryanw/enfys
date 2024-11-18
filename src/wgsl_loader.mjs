@@ -1,9 +1,11 @@
+import path from 'path';
+
 export default function wgsl(config = {}) {
 	return {
 		name: 'wgsl',
 		transform(code, filename) {
 			if (filename.split('.').pop() !== 'wgsl') return;
-			let [source, imports] = transpileWgsl(code);
+			let [source, imports] = transpileWgsl(filename, code);
 			if (config.stripWhitespace) {
 				source = stripWhitespace(source);
 			}
@@ -16,8 +18,8 @@ export default function wgsl(config = {}) {
 				.slice(1, -1);
 
 			// Inject all the imports
-			let finalCode = Array.from(imports).map(file =>
-				`import __wgslSource$${djb2(file)} from ${JSON.stringify(file)};`
+			let finalCode = `// File: ${filename}\n` + Array.from(imports).map(file =>
+				`// Import: ${file}\nimport __wgslSource$${djb2(file)} from ${JSON.stringify(file)};`
 			).join('\n');
 
 			// Append the actual code
@@ -42,14 +44,21 @@ function stripWhitespace(source) {
 		.replace(/\s([,:;=+-/*{}()[\]])/g, '$1');
 }
 
-function transpileWgsl(source) {
+function transpileWgsl(sourceFilename, source) {
 	const imports = new Set();
+	const dirname = path.dirname(sourceFilename);
 	const compiled = source.replace(/@import\s+(?:"([^"]*)"|'([^']*)')\s*;?/gm, (_match, filename) => {
-		imports.add(filename);
-		const sourceVariableName = '__wgslSource$' + djb2(filename);
-		return '\n${' + sourceVariableName + '}\n';
+		const fullName = filename[0] === '.' ? path.normalize(path.join(dirname, filename)) : filename;
+		imports.add(fullName);
+		const hash = hashFilename(fullName);
+		const sourceVariableName = '__wgslSource$' + hash;
+		return `// Import: ${fullName}\n` + '${' + sourceVariableName + '}\n';
 	});
 	return [compiled, imports];
+}
+
+function hashFilename(filename) {
+	return djb2(filename);
 }
 
 function djb2(str) {
