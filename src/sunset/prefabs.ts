@@ -13,12 +13,9 @@ import { DecorComponent } from "engine/ecs/components/decor";
 import { ParticlesComponent } from "engine/ecs/components/particles";
 import { FollowComponent } from "./components/follow";
 
-const CAR_SPEED = 16.0;
-const SKY_RADIUS = 3400.0;
-
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
-		new TransformComponent([0, 0, 0], [0.1, -0.2, 0]),
+		new TransformComponent([0, 0, 0], [0.2, -0.2, 0]),
 		new CameraComponent(),
 		new OrbitCameraComponent(target, [0, 2, -4]),
 	]);
@@ -81,7 +78,7 @@ export function road(world: World, position: Point3, target: Entity) {
 export function car(world: World, position: Point3) {
 	return world.createEntity([
 		new TransformComponent(position),
-		new VelocityComponent([0, 0, CAR_SPEED], [0, 0, 0]),
+		new VelocityComponent([0, 0, 0], [0, 0, 0]),
 		new VehicleComponent(),
 		new MeshComponent('car'),
 		new MaterialComponent('car-material'),

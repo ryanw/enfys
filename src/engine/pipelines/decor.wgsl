@@ -63,7 +63,8 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>, @builtin(num_workgro
 		p.z += n1;
 		p.y = decorHeight(p, u.terrainSeed);
 
-		let roadOffset = roadPath(p.z);
+		// FIXME this is outside the engine project
+		let roadOffset = roadPath(p.z).x;
 		if abs(p.x - roadOffset) < 8.0 {
 			// Remove near the road
 			return;

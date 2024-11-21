@@ -34,7 +34,6 @@ struct VertexOut {
 	@location(4) modelPosition: vec3f,
 	@location(5) modelNormal: vec3f,
 	@location(6) barycentric: vec3f,
-	@location(7) roadNormal: vec3f,
 	@location(8) @interpolate(flat) triangleId: u32,
 	@location(9) @interpolate(flat) quadId: u32,
 }
@@ -127,13 +126,13 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let p = offsetModel * vec4(v.position, 1.0);
 
 	let roadCurve = roadPath(p.z);
-	let roadTan = roadTangent(p.z);
+	let roadTan = roadTangent(p.z).xz;
 	var rp = vec2(v.position.x, 0.0);
 	rp = rot2(atan2(-roadTan.x, -roadTan.y)) * rp;
-	rp.x += roadCurve;
+	rp.x += roadCurve.x;
 	rp.y += v.position.z;
 
-	var fp = offsetModel * vec4(rp.x, v.position.y, rp.y, 1.0);
+	var fp = offsetModel * vec4(rp.x, v.position.y + roadCurve.y, rp.y, 1.0);
 	var position = vp * fp;
 
 	out.position = position;
@@ -143,7 +142,6 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.barycentric = barycentrics[in.id % 3u];
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
-	out.roadNormal = roadNormal(p.z);
 
 	let faceColor = uintToColor(material.faceColor);
 	let vertexColor = uintToColor(v.color);
@@ -211,9 +209,6 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 	out.metaOutput = in.triangleId % 0xff;
 
-
-	//out.albedo = vec4(abs(in.roadNormal), 1.0);
-
 	return out;
 }
 
@@ -235,16 +230,7 @@ fn pointToUV(point: vec3<f32>) -> vec2<f32> {
 	return lonLatToUV(pointToLonLat(point));
 }
 
-fn terrainNoise(p: vec3<f32>, octaves: i32) -> f32 {
-	var n = fractalNoise(p, octaves);
-	if n > SEA_LEVEL {
-		// Flatter beaches, pointier mountains
-		n = SEA_LEVEL + pow((n - SEA_LEVEL)/(1.0-SEA_LEVEL), 2.0);
-	}
-	return n;
-}
-
 @import "engine/shaders/noise.wgsl";
 @import "engine/shaders/color.wgsl";
 @import "engine/shaders/helpers.wgsl";
-@import "../shaders/road_path.wgsl";
+@import "../shaders/terrain_height.wgsl";

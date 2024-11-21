@@ -36,6 +36,7 @@ import { TuftMesh } from '../landscape/meshes/tuft';
 import { FlowersMesh } from '../landscape/meshes/flowers';
 import { QueryRoadPipeline } from './pipelines/query_road';
 import { FollowSystem } from './systems/follow';
+import { VehicleInputSystem } from './systems/vehicle_input';
 
 const PIXEL_SIZE = 1;
 const MATERIALS: Array<MaterialTuple> = [
@@ -73,7 +74,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const graphics = new WorldGraphics(gfx, heightShaderSource);
 	graphics.insertResource('sun', new Icosphere(gfx, 4));
 	graphics.insertResource('sky', new InnerIcosphere(gfx, 4));
-	graphics.insertResource('road', new CubeMesh(gfx, [0, 0, 1024], [8, 0.2, 1024]));
+	graphics.insertResource('road', new CubeMesh(gfx, [0, 0, 1024], [8, 0.2, 2048]));
 	graphics.insertResource('building', new CubeMesh(gfx));
 	graphics.insertResource('car', new CubeMesh(gfx, [4, 2, 8] as any, [1.25, 0.5, 2]));
 	graphics.insertResource('decor-trees', new TreeMesh(gfx, 0, 8, 2));
@@ -97,8 +98,9 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 	const world = new World();
 	world.addSystem(new TerrainSystem(gfx, 1, 1, 2));
-	world.addSystem(new SimplePhysicsSystem());
 	world.addSystem(new VehicleSystem(gfx));
+	world.addSystem(new VehicleInputSystem(el));
+	world.addSystem(new SimplePhysicsSystem());
 	world.addSystem(new OrbitCameraInputSystem(el));
 	world.addSystem(new FreeCameraInputSystem(el));
 	world.addSystem(new FollowSystem());
@@ -125,7 +127,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	scene.primaryCameraId = 1;
 
 	gfx.run(async (dt) => {
-		world.tick(dt);
+		await world.tick(dt);
 		graphics.update(world, scene);
 		await gfx.draw(scene, scene.activeCamera);
 	});

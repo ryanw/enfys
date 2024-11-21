@@ -1,22 +1,22 @@
 import { Gfx } from 'engine';
 import queryRoadSource from './query_road.wgsl';
 import { Pipeline } from 'engine/pipelines';
-import { Vector2 } from 'engine/math';
+import { Vector2, Vector3 } from 'engine/math';
 import { UniformBuffer } from 'engine/uniform_buffer';
 
 export type QueryRoadResult = {
-	tangent: Vector2,
-	x: number,
+	tangent: Vector3,
+	offset: Vector2,
 };
 
-const RESULT_SIZE = 16; // bytes - 4xf32
+const RESULT_SIZE = 32; // bytes - aligned size_of<QueryRoadResult>
 
 export class QueryRoadPipeline extends Pipeline {
 	protected pipeline: GPUComputePipeline;
 	private uniformBuffer: UniformBuffer;
 	private resultBuffer: GPUBuffer;
 	private readBuffer: GPUBuffer;
-	private previousResult: Readonly<QueryRoadResult> = { tangent: [0, 0], x: 0 }
+	private previousResult: Readonly<QueryRoadResult> = { tangent: [0, 0, 0], offset: [0, 0] }
 
 	constructor(gfx: Gfx) {
 		super(gfx);
@@ -96,14 +96,17 @@ export class QueryRoadPipeline extends Pipeline {
 		pass.dispatchWorkgroups(1);
 		pass.end();
 
-		// Copy vec3f to the read buffer
-		enc.copyBufferToBuffer(this.resultBuffer, 0, this.readBuffer, 0, 3 * 4);
+		// Copy vec4f to the read buffer
+		enc.copyBufferToBuffer(this.resultBuffer, 0, this.readBuffer, 0, RESULT_SIZE);
 		device.queue.submit([enc.finish()]);
 
 		// Read back the result
 		await this.readBuffer.mapAsync(GPUMapMode.READ);
 		const result = new Float32Array(this.readBuffer.getMappedRange());
-		this.previousResult = Object.freeze({ tangent: [result[0], result[1]], x: result[2] } as QueryRoadResult);
+		this.previousResult = Object.freeze({
+			tangent: Array.from(result.slice(0, 3)),
+			offset: Array.from(result.slice(4, 7)),
+		} as QueryRoadResult);
 		this.readBuffer.unmap();
 
 		return this.previousResult;
