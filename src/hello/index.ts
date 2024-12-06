@@ -8,9 +8,11 @@ import { Gfx } from 'engine';
 import { Icosahedron } from 'engine/mesh';
 import { Camera } from 'engine/camera';
 import { Scene } from 'engine/scene';
-import { multiply, rotation, translation } from 'engine/math/transform';
+import { identity, multiply, rotation, translation } from 'engine/math/transform';
 import { FreeCameraController } from 'engine/input/free_camera';
 import { SimpleMaterial } from 'engine/material';
+import { OrbitCameraController } from 'engine/input/orbit_camera';
+import { Matrix4 } from 'engine/math';
 
 /**
  * Start the demo
@@ -22,16 +24,34 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	const cameraController = new FreeCameraController(el, camera);
 	const scene = new Scene(gfx);
 
-	const icos = Array.from({ length: 100 }, () => {
+	const mesh = new Icosahedron(gfx);
+	scene.addMesh(mesh, new SimpleMaterial(gfx, 0xffffffff));
+	const icos: Array<[number, Matrix4]> = Array.from({ length: 100 }, () => {
 		const x = (Math.random() - 0.5) * 100.0;
 		const y = (Math.random() - 0.5) * 100.0;
 		const z = Math.random() * 100.0;
-		return scene.addMesh(new Icosahedron(gfx), new SimpleMaterial(gfx, 0xff0000ff), translation(x, y, z));
+		const transform = translation(x, y, z);
+		const idx = mesh.pushInstance({
+			instanceColor: 0,
+			transform,
+			variantIndex: 0,
+			live: 1
+		});
+
+		return [idx, transform];
 	});
 
 	function update(dt: number) {
-		for (const ico of icos) {
-			ico.transform = multiply(ico.transform, rotation(0, 1 * dt, 0));
+		for (const pair of icos) {
+			const [idx, oldTransform] = pair;
+			const transform = multiply(oldTransform, rotation(0, 1 * dt, 0));
+			pair[1] = transform;
+			mesh.writeInstance(idx, {
+				instanceColor: 0,
+				transform,
+				variantIndex: 0,
+				live: 1
+			});
 		}
 	}
 
