@@ -1,10 +1,11 @@
 import { calculateNormals } from 'engine';
-import { ColorVertex, buildIcosphere, buildCylinder } from 'engine/mesh';
+import { ColorVertex, buildCylinder } from 'engine/mesh';
 import { VariantMesh } from './variant';
 import { add, scale } from 'engine/math/vectors';
 import { randomizer } from 'engine/noise';
 import { multiply, rotation, transformPoint, translation } from 'engine/math/transform';
 import { Point3, Vector3 } from 'engine/math';
+import { buildIcosphere } from 'engine/meshes/icosphere';
 
 export class BombMesh extends VariantMesh {
 	override generateVariant(i: number): Array<ColorVertex> {

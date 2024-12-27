@@ -5,7 +5,6 @@
  */
 
 import { Gfx } from 'engine';
-import { CubeMesh } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { DotMaterial } from 'engine/material';
 import { ui } from './ui';
@@ -32,6 +31,7 @@ import { Sound } from 'engine/sound';
 import { thrusterSound } from './sounds/thruster';
 import { SoundSystem } from 'engine/ecs/systems/sound';
 import { BombMesh, LaserMesh } from './meshes/projectiles';
+import { CubeMesh } from 'engine/meshes/cube';
 
 /**
  * Procedurally generated alien worlds

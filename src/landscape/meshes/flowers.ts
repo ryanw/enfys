@@ -1,12 +1,13 @@
-import { Gfx, calculateNormals } from 'engine';
+import { calculateNormals } from 'engine';
 import { colorToInt, hsl } from 'engine/color';
 import { Point3 } from 'engine/math';
 import { rotation, transformPoint } from 'engine/math/transform';
 import { add, scale } from 'engine/math/vectors';
-import { ColorVertex, buildCylinder, CUBE_VERTS, buildIcosahedron, PointVertex } from 'engine/mesh';
+import { ColorVertex, buildCylinder } from 'engine/mesh';
 import { randomizer } from 'engine/noise';
 import { VariantMesh } from './variant';
 import { jiggleVertices } from '.';
+import { buildIcosahedron } from 'engine/meshes/icosahedron';
 
 export class FlowersMesh extends VariantMesh {
 	generateVariant(i: number): Array<ColorVertex> {

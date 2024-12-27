@@ -1,5 +1,5 @@
 import { Gfx, Size } from 'engine';
-import { QuadMesh } from 'engine/mesh';
+import { QuadMesh } from 'engine/meshes/quad';
 import { Pipeline } from 'engine/pipelines';
 import shaderSource from './terrain.wgsl';
 import defaultHeightShader from './terrain_height.wgsl';

@@ -1,12 +1,13 @@
 import { calculateNormals } from 'engine';
-import { Point3, Vector2, Vector3 } from 'engine/math';
-import { ColorVertex, buildCylinder, buildIcosahedron, buildIcosphere } from 'engine/mesh';
-import { add, dot, magnitude, normalize, scale, subtract } from 'engine/math/vectors';
+import { Point3, Vector3 } from 'engine/math';
+import { ColorVertex, buildCylinder } from 'engine/mesh';
+import { add, magnitude, normalize, scale, subtract } from 'engine/math/vectors';
 import { randomizer } from 'engine/noise';
 import { VariantMesh } from './variant';
 import { LSystem } from '../lsystem';
 import { multiply, multiplyVector, rotation, rotationFromVector, transformPoint, translation } from 'engine/math/transform';
 import { colorToInt, hsl } from 'engine/color';
+import { buildIcosphere } from 'engine/meshes/icosphere';
 
 function buildBranch(p0: Point3, p1: Point3, radius: number = 1.0): Array<ColorVertex> {
 	const mid = scale(add(p0, p1), 0.5);

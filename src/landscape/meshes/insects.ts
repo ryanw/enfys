@@ -2,10 +2,11 @@ import { Gfx, calculateNormals } from 'engine';
 import { colorToBigInt, hsl } from 'engine/color';
 import { Point3 } from 'engine/math';
 import { add, scale } from 'engine/math/vectors';
-import { ColorVertex, buildIcosphere } from 'engine/mesh';
-import { random, randomizer } from 'engine/noise';
+import { ColorVertex } from 'engine/mesh';
+import { randomizer } from 'engine/noise';
 import { VariantMesh } from './variant';
-import { buildSegment, jiggleVertices } from '.';
+import { buildSegment } from '.';
+import { buildIcosphere } from 'engine/meshes/icosphere';
 
 export class InsectsMesh extends VariantMesh {
 	constructor(gfx: Gfx, readonly seed: number, variantCount: number = 32) {

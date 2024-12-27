@@ -3,7 +3,7 @@ import { GBuffer } from './gbuffer';
 import { Material } from './material';
 import { Matrix4, Point3, Vector2, Vector3 } from './math';
 import { transformPoint } from './math/transform';
-import { cross, normalize, subtract } from './math/vectors';
+import { add, cross, normalize, scale, subtract } from './math/vectors';
 import { NormalVertex } from './mesh';
 import { MaterialPipeline } from './pipelines/material';
 import { Renderer } from './renderer';
@@ -367,4 +367,17 @@ export function calculateNormals(vertices: Array<NormalVertex>, transform?: Matr
 		vertices[i + 1].normal = normal;
 		vertices[i + 2].normal = normal;
 	}
+}
+
+export function subdivideFace(face: Triangle, divisions: number): Array<Triangle> {
+	if (divisions <= 0) {
+		return [face];
+	}
+	const [a, b, c] = face;
+	const d: Point3 = scale(add(a, b), 0.5);
+	const e: Point3 = scale(add(b, c), 0.5);
+	const f: Point3 = scale(add(c, a), 0.5);
+
+	const faces: Array<Triangle> = [[a, d, f], [d, b, e], [f, e, c], [f, d, e]];
+	return faces.flatMap(face => subdivideFace(face, divisions - 1))
 }

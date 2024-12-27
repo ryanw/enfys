@@ -5,13 +5,13 @@
  */
 
 import { Gfx } from 'engine';
-import { Icosahedron } from 'engine/mesh';
 import { EulerCamera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, translation } from 'engine/math/transform';
 import { FreeCameraController } from 'engine/input/free_camera';
 import { SimpleMaterial } from 'engine/material';
 import { Matrix4 } from 'engine/math';
+import { Icosahedron } from 'engine/meshes/icosahedron';
 
 /**
  * Start the demo

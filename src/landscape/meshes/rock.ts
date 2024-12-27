@@ -1,9 +1,10 @@
 import { calculateNormals } from 'engine';
-import { ColorVertex, buildIcosphere } from 'engine/mesh';
+import { ColorVertex } from 'engine/mesh';
 import { jiggleVertices } from '.';
 import { VariantMesh } from './variant';
 import { scale } from 'engine/math/vectors';
 import { randomizer } from 'engine/noise';
+import { buildIcosphere } from 'engine/meshes/icosphere';
 
 export class RockMesh extends VariantMesh {
 	override generateVariant(i: number): Array<ColorVertex> {

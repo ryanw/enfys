@@ -5,7 +5,6 @@
  */
 
 import { Gfx, MaterialTuple } from 'engine';
-import { CubeMesh, Icosphere, InnerIcosphere } from 'engine/mesh';
 import { Scene } from 'engine/scene';
 import { World } from 'engine/ecs/world';
 import { WorldGraphics } from 'engine/world_graphics';
@@ -34,9 +33,10 @@ import { RenderCarPipeline } from './pipelines/render_car';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
 import { TuftMesh } from '../landscape/meshes/tuft';
 import { FlowersMesh } from '../landscape/meshes/flowers';
-import { QueryRoadPipeline } from './pipelines/query_road';
 import { FollowSystem } from './systems/follow';
 import { VehicleInputSystem } from './systems/vehicle_input';
+import { Icosphere, InnerIcosphere } from 'engine/meshes/icosphere';
+import { CubeMesh } from 'engine/meshes/cube';
 
 const PIXEL_SIZE = 1;
 const MATERIALS: Array<MaterialTuple> = [
