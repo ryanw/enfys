@@ -1,6 +1,6 @@
 import { Gfx } from 'engine';
 import defaultSource from './render_mesh.wgsl';
-import { Camera } from 'engine/camera';
+import { EulerCamera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
 import { Pawn } from 'engine/pawn';
@@ -182,7 +182,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 		}
 	}
 
-	drawBatch(encoder: GPUCommandEncoder, pawns: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer) {
+	drawBatch(encoder: GPUCommandEncoder, pawns: Array<Pawn<SimpleMesh>>, camera: EulerCamera, target: GBuffer) {
 		if (pawns.length === 0) {
 			return;
 		}

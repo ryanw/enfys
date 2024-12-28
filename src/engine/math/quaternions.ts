@@ -27,6 +27,8 @@ export function inverse(quat: Quaternion): Quaternion {
  * Multiply quaternions together
  */
 export function multiply(...quats: Array<Quaternion>): Quaternion {
+	if (quats.length === 0) throw new Error("Must provide at least 1 quaternion");
+
 	let result: Quaternion = [...quats[0]];
 	for (let i = 1; i < quats.length; i++) {
 		const q0 = result;
@@ -35,7 +37,7 @@ export function multiply(...quats: Array<Quaternion>): Quaternion {
 		const y = q0[3] * q1[1] - q0[0] * q1[2] + q0[1] * q1[3] + q0[2] * q1[0];
 		const z = q0[3] * q1[2] + q0[0] * q1[1] - q0[1] * q1[0] + q0[2] * q1[3];
 		const w = q0[3] * q1[3] - q0[0] * q1[0] - q0[1] * q1[1] - q0[2] * q1[2];
-		result = [x, y, z, w]
+		result = [x, y, z, w];
 	}
 	return result;
 }

@@ -99,7 +99,7 @@ export class FreeCameraController {
 		if (this.disabled) return;
 		const x = e.movementX / 1000;
 		const y = e.movementY / 1000;
-		this.camera.rotate(y, x);
+		this.camera.rotate(y, x, 0);
 	};
 
 	onKeyDown = (e: KeyboardEvent) => {

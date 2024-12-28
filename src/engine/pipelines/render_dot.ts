@@ -1,6 +1,6 @@
 import { Gfx } from 'engine';
 import shaderSource from './render_dot.wgsl';
-import { Camera } from 'engine/camera';
+import { EulerCamera } from 'engine/camera';
 import { GBuffer } from 'engine/gbuffer';
 import { SimpleMesh } from 'engine/mesh';
 import { Pawn } from 'engine/pawn';
@@ -87,7 +87,7 @@ export class RenderDotPipeline extends MaterialPipeline {
 		// Stars don't cast shadows
 	}
 
-	override drawBatch(encoder: GPUCommandEncoder, entities: Array<Pawn<SimpleMesh>>, camera: Camera, target: GBuffer) {
+	override drawBatch(encoder: GPUCommandEncoder, entities: Array<Pawn<SimpleMesh>>, camera: EulerCamera, target: GBuffer) {
 		if (entities.length === 0) {
 			return;
 		}

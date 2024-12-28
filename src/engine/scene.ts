@@ -4,7 +4,7 @@ import { Color, Gfx } from 'engine';
 import { Mesh, SimpleMesh } from './mesh';
 import { ShadowBuffer } from './shadow_buffer';
 import { Pawn } from './pawn';
-import { Camera, ClippingPlanes } from './camera';
+import { EulerCamera, ClippingPlanes } from './camera';
 import { transformPoint } from './math/transform';
 import { dot, magnitude, subtract } from './math/vectors';
 import { DirectionalLight } from './light';
@@ -21,14 +21,14 @@ export class Scene {
 	waterColor: Color = [0, 0, 0, 0];
 	fogColor: Color = [0, 0, 0, 0];
 	pawns: Array<Pawn<unknown>> = [];
-	cameras: Array<Camera> = [];
+	cameras: Array<EulerCamera> = [];
 	currentCameraId = 0;
 	primaryCameraId = 0;
 	shadowBuffer: ShadowBuffer;
 	light: DirectionalLight;
 
 	constructor(readonly gfx: Gfx) {
-		this.addCamera(new Camera(gfx));
+		this.addCamera(new EulerCamera(gfx));
 		this.light = new DirectionalLight(gfx);
 		this.shadowBuffer = new ShadowBuffer(gfx, 32);
 		this.light.rotate(0.2, -0.3);
@@ -41,11 +41,11 @@ export class Scene {
 		});
 	}
 
-	get activeCamera(): Camera {
+	get activeCamera(): EulerCamera {
 		return this.cameras[this.currentCameraId % this.cameras.length];
 	}
 
-	get primaryCamera(): Camera {
+	get primaryCamera(): EulerCamera {
 		return this.cameras[this.primaryCameraId % this.cameras.length];
 	}
 
@@ -70,7 +70,7 @@ export class Scene {
 		}
 	}
 
-	addCamera<T extends Camera>(camera: T): CameraId {
+	addCamera<T extends EulerCamera>(camera: T): CameraId {
 		this.cameras.push(camera);
 
 		return this.cameras.length - 1;

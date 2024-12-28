@@ -1,5 +1,5 @@
 import { Gfx, Size } from 'engine';
-import { Camera } from './camera';
+import { EulerCamera } from './camera';
 import { Entity } from './ecs';
 import { TransformComponent } from './ecs/components';
 import { CameraComponent } from './ecs/components/camera';
@@ -47,7 +47,7 @@ export class WorldGraphics {
 	private lights: Map<Entity, DirectionalLight> = new Map();
 	private particles: Map<Entity, Pawn<Particles>> = new Map();
 	private terrains: Map<Entity, Map<ChunkKey, Pawn<SimpleMesh>>> = new Map();
-	private cameras: Map<Entity, Camera> = new Map();
+	private cameras: Map<Entity, EulerCamera> = new Map();
 	private resources: Map<ResourceId, Resource> = new Map();
 	private queuedTerrain: Map<ChunkKey, QueuedChunk> = new Map();
 	private activeTerrain: Map<ChunkKey, Chunk> = new Map();
@@ -83,7 +83,7 @@ export class WorldGraphics {
 			saw.add(entity);
 			let camera = this.cameras.get(entity);
 			if (!camera) {
-				camera = new Camera(scene.gfx);
+				camera = new EulerCamera(scene.gfx);
 				this.cameras.set(entity, camera);
 				scene.addCamera(camera);
 			}

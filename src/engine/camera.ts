@@ -1,25 +1,24 @@
 import { Gfx, Triangle, calculateNormal } from 'engine';
-import { Matrix4, Plane, Point3, Vector3 } from './math';
-import { identity, transformPoint, inverse, multiply, multiplyVector, perspectiveProjection, rotation, scaling, translation, orthographicProjection } from './math/transform';
+import { Matrix4, Plane, Point3, Quaternion, Vector3 } from './math';
+import { identity, transformPoint, inverse, multiply, multiplyVector, perspectiveProjection, rotation, scaling, translation, orthographicProjection, rotationFromQuaternion } from './math/transform';
 import { UniformBuffer } from './uniform_buffer';
-
+import * as quat from './math/quaternions';
 
 export type ClippingPlanes = [Plane, Plane, Plane, Plane, Plane, Plane];
 
 /**
  * A camera in 3D space
  */
-export class Camera {
+export abstract class Camera {
 	readonly uniform: UniformBuffer;
-	private _position: Point3 = [0.0, 0.0, 0.0];
-	private _rotation: Vector3 = [0.0, 0.0, 0.0];
-	private _scaling: Vector3 = [1.0, 1.0, 1.0];
-	private _view: Matrix4 = identity();
-	private _projection: Matrix4 = identity();
-	private _aspect: number = 1.0;
-	private _fov: number = 45.0;
-	private _near: number = 1.0;
-	private _far: number = 10000.0;
+	protected _position: Point3 = [0.0, 0.0, 0.0];
+	protected _scaling: Vector3 = [1.0, 1.0, 1.0];
+	protected _view: Matrix4 = identity();
+	protected _projection: Matrix4 = identity();
+	protected _aspect: number = 1.0;
+	protected _fov: number = 45.0;
+	protected _near: number = 1.0;
+	protected _far: number = 10000.0;
 
 	constructor(readonly gfx: Gfx) {
 		this.uniform = new UniformBuffer(gfx, [
@@ -29,33 +28,26 @@ export class Camera {
 			['t', 'f32'],
 			['isShadowMap', 'u32'],
 		]);
-		this.updateView();
 	}
 
-	clippingPlanes(): ClippingPlanes {
-		const invProj = inverse(multiply(this.projection, this.view))!;
-		const planes = [];
-		for (let i = 0; i < 6; i++) {
-			const idx = i * 3;
-			const triangle: Triangle = [
-				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 0]),
-				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 1]),
-				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 2]),
-			];
-			planes[i] = [
-				triangle[0],
-				calculateNormal(triangle),
-			];
-		}
-		return planes as ClippingPlanes;
-	}
+	/**
+	 * Move the camera relative to its current position
+	 * @param direction Direction and amount to move the camera
+	 */
+	abstract translate(direction: Vector3): void;
+
+	/**
+	 * Rotate the camera
+	 * @param pitch Pitch in radians
+	 * @param yaw Yaw in radians
+	 * @param roll Roll in radians
+	 */
+	abstract rotate(pitch: number, yaw: number, roll: number): void;
+
+	abstract rotationMatrix(): Matrix4;
 
 	get position(): Point3 {
 		return [...this._position];
-	}
-
-	get rotation(): Vector3 {
-		return [...this._rotation];
 	}
 
 	get scaling(): Vector3 {
@@ -64,11 +56,6 @@ export class Camera {
 
 	set position(position: Point3) {
 		this._position = [...position];
-		this.updateView();
-	}
-
-	set rotation(rotation: Vector3) {
-		this._rotation = [...rotation];
 		this.updateView();
 	}
 
@@ -136,6 +123,54 @@ export class Camera {
 		});
 	}
 
+	updateView() {
+		const rot = this.rotationMatrix();
+		const tra = translation(...this._position);
+		const sca = scaling(...this._scaling);
+		const view = multiply(tra, rot, sca);
+		this._view = inverse(view)!;
+		this.updateUniform();
+	}
+
+	clippingPlanes(): ClippingPlanes {
+		const invProj = inverse(multiply(this.projection, this.view))!;
+		const planes = [];
+		for (let i = 0; i < 6; i++) {
+			const idx = i * 3;
+			const triangle: Triangle = [
+				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 0]),
+				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 1]),
+				transformPoint(invProj, FRUS_PLANE_VERTS[idx + 2]),
+			];
+			planes[i] = [
+				triangle[0],
+				calculateNormal(triangle),
+			];
+		}
+		return planes as ClippingPlanes;
+	}
+}
+
+/**
+ * A camera in 3D space that uses Euler angles to represent its rotation
+ */
+export class EulerCamera extends Camera {
+	protected _rotation: Vector3 = [0.0, 0.0, 0.0];
+
+	constructor(gfx: Gfx) {
+		super(gfx);
+		this.updateView();
+	}
+
+	get rotation(): Vector3 {
+		return [...this._rotation];
+	}
+
+	set rotation(rotation: Vector3) {
+		this._rotation = [...rotation];
+		this.updateView();
+	}
+
 	/**
 	 * Move the camera relative to its current position
 	 * @param direction Direction and amount to move the camera
@@ -185,14 +220,56 @@ export class Camera {
 			rotation(this._rotation[0], 0, 0),
 		);
 	}
+}
 
-	updateView() {
+/**
+ * A camera in 3D space. Uses a quaternion to represent its rotation
+ */
+export class QuaternionCamera extends Camera {
+	protected _rotation: Quaternion = quat.identity();
+
+	constructor(gfx: Gfx) {
+		super(gfx);
+		this.updateView();
+	}
+
+	get rotation(): Quaternion {
+		return [...this._rotation];
+	}
+
+	set rotation(rotation: Quaternion) {
+		this._rotation = [...rotation];
+		this.updateView();
+	}
+
+	/**
+	 * Move the camera relative to its current position
+	 * @param direction Direction and amount to move the camera
+	 */
+	translate(direction: Vector3) {
+		const trans = translation(...direction);
 		const rot = this.rotationMatrix();
-		const tra = translation(...this._position);
-		const sca = scaling(...this._scaling);
-		const view = multiply(tra, rot, sca);
-		this._view = inverse(view)!;
-		this.updateUniform();
+		const invRot = inverse(rot)!;
+		const pos = transformPoint(multiply(trans, invRot), this._position);
+		this._position = transformPoint(rot, pos);
+		this.updateView();
+	}
+
+	/**
+	 * Rotate the camera
+	 * @param pitch Pitch in radians
+	 * @param yaw Yaw in radians
+	 * @param roll Roll in radians
+	 */
+	rotate(pitch: number, yaw: number = 0, roll: number = 0) {
+		if (pitch === 0.0 && yaw === 0.0 && roll === 0.0) return;
+		const rot = quat.quaternionFromEuler(pitch, yaw, roll);
+		this._rotation = quat.multiply(this._rotation, rot);
+		this.updateView();
+	}
+
+	rotationMatrix(): Matrix4 {
+		return rotationFromQuaternion(this._rotation);
 	}
 }
 
