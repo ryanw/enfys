@@ -1,5 +1,6 @@
 import { Matrix4, Point3, Vector4 } from '.';
-import { transformPoint, multiply, rotation, multiplyVector, inverse, determinant, matrixToRows } from './transform';
+import { quaternionFromEuler } from './quaternions';
+import { transformPoint, multiply, rotation, multiplyVector, inverse, determinant, matrixToRows, rotationFromQuaternion } from './transform';
 
 describe('transform matrix', () => {
 	test('multiplying matrices together', () => {
@@ -139,5 +140,11 @@ describe('transform matrix', () => {
 				expect(result[i][j]).toBeCloseTo(expected[i][j], 0.0001);
 			}
 		}
+	});
+
+	test('converts a quaternion to a rotation matrix', () => {
+		const expectedRot = rotation(0, 0.5, 0);
+		const actualRot = rotationFromQuaternion(quaternionFromEuler(0, 0.5, 0));
+		expect(actualRot).toEqual(expectedRot);
 	});
 });

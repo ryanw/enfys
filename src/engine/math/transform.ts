@@ -1,4 +1,4 @@
-import { Matrix4, Point3, Point4, Vector3, Vector4 } from '.';
+import { Matrix4, Point3, Point4, Quaternion, Vector3, Vector4 } from '.';
 import * as vec from './vectors';
 import { cross, dot, normalize } from './vectors';
 
@@ -335,6 +335,18 @@ export function lookAt(eye: Point3, target: Point3, up: Vector3 = [0, 1, 0]): Ma
 		...vec.scale(right, 1), 0,
 		...vec.scale(nup, 1), 0,
 		...vec.scale(forward, -1), 0,
+		0, 0, 0, 1
+	];
+}
+
+/**
+ * Convert a quaternion into a rotation matrix
+ */
+export function rotationFromQuaternion([x, y, z, w]: Quaternion): Matrix4 {
+	return [
+		1 - 2 * (y ** 2 + z ** 2), 2 * (x * y + z * w), 2 * (x * z - y * w), 0,
+		2 * (x * y - z * w), 1 - 2 * (x ** 2 + z ** 2), 2 * (y * z + x * w), 0,
+		2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x ** 2 + y ** 2), 0,
 		0, 0, 0, 1
 	];
 }
