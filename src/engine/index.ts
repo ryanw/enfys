@@ -24,7 +24,7 @@ export type MaterialTuple = [
 export interface Config {
 	ditherSize: number;
 	ditherDepth: number;
-	drawEdges: boolean;
+	drawEdges: number;
 	drawShadows: boolean;
 	renderMode: number;
 	fog: number;

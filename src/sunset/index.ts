@@ -63,7 +63,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	scene.fogColor = hsl(0.52, 0.7, 0.4);
 	gfx.configure({
 		renderMode: 0,
-		drawEdges: false,
+		drawEdges: 0,
 		ditherSize: 0,
 		ditherDepth: 5,
 		canvasPixelRatio: 1 / PIXEL_SIZE,

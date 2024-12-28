@@ -14,11 +14,10 @@ export class Icosphere extends SimpleMesh {
 			position => ({
 				softness: 0.0,
 				position: [...position],
-				normal: [0, 0, 0],
+				normal: normalize(position),
 				color: BigInt(0xffffffff),
 			} as ColorVertex),
 		);
-		calculateNormals(vertices);
 		super(gfx, vertices, instances);
 	}
 }
@@ -31,11 +30,10 @@ export class InnerIcosphere extends SimpleMesh {
 			position => ({
 				softness: 0.0,
 				position: [...position],
-				normal: [0, 0, 0],
+				normal: normalize(position),
 				color: BigInt(0xffffffff),
 			} as ColorVertex),
 		);
-		calculateNormals(vertices);
 		super(gfx, vertices, instances);
 	}
 }

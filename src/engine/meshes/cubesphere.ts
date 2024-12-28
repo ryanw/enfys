@@ -1,64 +1,77 @@
-import { Gfx, calculateNormals, subdivideFace } from 'engine';
-import { normalize } from '../math/vectors';
-import { BuildCallback, ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
-import { ICOSAHEDRON_TRIS, ICOSAHEDRON_VERTICES } from './icosahedron';
+import { Gfx } from 'engine';
+import { Point2, Point3, Vector3 } from 'engine/math';
+import { add, cross, normalize, scale } from 'engine/math/vectors';
+import { ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
 
 
 /**
  * Sphere Mesh created from subdivided icosahedron
  */
 export class CubeSphere extends SimpleMesh {
-	constructor(gfx: Gfx, divisions: number, instances?: Array<ColorInstance>) {
-		const vertices = buildCubeSphere(
-			divisions,
-			position => ({
-				softness: 0.0,
-				position: [...position],
-				normal: [0, 0, 0],
-				color: BigInt(0xffffffff),
-			} as ColorVertex),
-		);
-		calculateNormals(vertices);
+	constructor(gfx: Gfx, divisions: number = 1, instances?: Array<ColorInstance>) {
+		const buildVertex = (position: Point3): ColorVertex => ({
+			softness: 0.0,
+			position: [...position],
+			normal: normalize(position),
+			color: BigInt(0xffffffff),
+		})
+		const vertices = [
+			...buildCubeFace(divisions, [0, 1, 0], buildVertex),
+			...buildCubeFace(divisions, [0, -1, 0], buildVertex),
+			...buildCubeFace(divisions, [1, 0, 0], buildVertex),
+			...buildCubeFace(divisions, [-1, 0, 0], buildVertex),
+			...buildCubeFace(divisions, [0, 0, 1], buildVertex),
+			...buildCubeFace(divisions, [0, 0, -1], buildVertex),
+		];
 		super(gfx, vertices, instances);
 	}
 }
 
-export class InnerCubeSphere extends SimpleMesh {
-	constructor(gfx: Gfx, divisions: number, instances?: Array<ColorInstance>) {
-		const vertices = buildCubeSphere(
-			divisions,
-			true,
-			position => ({
-				softness: 0.0,
-				position: [...position],
-				normal: [0, 0, 0],
-				color: BigInt(0xffffffff),
-			} as ColorVertex),
-		);
-		calculateNormals(vertices);
-		super(gfx, vertices, instances);
+/**
+ * Build one side of the cube sphere.
+ * @param divisions Number of times to subdivide the face
+ * @param normal Direction face should point
+ */
+export function buildCubeFace<T>(
+	divisions: number,
+	normal: Vector3,
+	callback: (position: Point3, index: number) => T,
+): Array<T> {
+	const data: Array<T> = new Array(divisions * divisions);
+	const axisA: Point3 = [normal[1], normal[2], normal[0]];
+	const axisB = cross(normal, axisA);
+
+	const vertices = new Array(divisions * divisions);
+	const triangles = new Array((divisions - 1) * (divisions - 1));
+
+	const d = divisions + 2;
+
+	let tri = 0;
+	const sub = 1 / (d - 1);
+	for (let y = 0; y < d; y++) {
+		for (let x = 0; x < d; x++) {
+			const p: Point2 = [x * sub, y * sub];
+			const hp = [(p[0] - 0.5) * 2.0, (p[1] - 0.5) * 2.0];
+			let position = normal;
+			position = add(position, scale([hp[0], hp[0], hp[0]], axisA));
+			position = add(position, scale([hp[1], hp[1], hp[1]], axisB));
+			position = normalize(position);
+			const i = x + y * d;
+			vertices[i] = callback(position, i);
+
+			if (x < d - 1 && y < d - 1) {
+				triangles[tri++] = i;
+				triangles[tri++] = i + d + 1;
+				triangles[tri++] = i + d;
+				triangles[tri++] = i;
+				triangles[tri++] = i + 1;
+				triangles[tri++] = i + d + 1;
+			}
+		}
 	}
-}
 
-export function buildCubeSphere<T>(divisions: number, invert: boolean, callback: BuildCallback<T>): Array<T>;
-export function buildCubeSphere<T>(divisions: number, callback: BuildCallback<T>): Array<T>;
-export function buildCubeSphere<T>(divisions: number, invertOrCallback: boolean | BuildCallback<T>, maybeCallback?: BuildCallback<T>): Array<T> {
-	const [invert, callback] = typeof invertOrCallback === 'boolean'
-		? [invertOrCallback, maybeCallback]
-		: [false, invertOrCallback];
-
-	const vertices = ICOSAHEDRON_TRIS.map(
-		([v0, v1, v2]) => {
-			const p0 = ICOSAHEDRON_VERTICES[invert ? v0 : v0];
-			const p1 = ICOSAHEDRON_VERTICES[invert ? v2 : v1];
-			const p2 = ICOSAHEDRON_VERTICES[invert ? v1 : v2];
-			return subdivideFace([p0, p1, p2], divisions)
-				.map(face => face
-					.map((p, i) =>
-						callback!(normalize(p), i)
-					)
-				);
-		}).flat().flat();
-
-	return vertices;
+	for (let i = 0; i < triangles.length; i++) {
+		data[i] = vertices[triangles[i]];
+	}
+	return data;
 }

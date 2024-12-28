@@ -60,7 +60,7 @@ export function ui(wrapper: HTMLElement, gfx: Gfx, sound: Sound, seed: number) {
 			ditherSize: parseInt(ditherSizeInp.value),
 			ditherDepth: parseInt(ditherDepthInp.value),
 			fog: parseFloat(fogInp.value),
-			drawEdges: edgesChk.checked,
+			drawEdges: edgesChk.checked ? 2 : 0,
 			renderMode: modeSel.selectedIndex,
 		});
 	}

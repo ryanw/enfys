@@ -5,7 +5,7 @@ const DISTORT_WATER: vec2f = vec2(16.0, 0.4);
 const WATER_LEVEL = 0.0;
 const DRAW_FOG: bool = true;
 const EDGE_MODE: i32 = 4;
-const EDGE_INVERT: bool = true;
+const EDGE_INVERT: bool = false;
 const EDGE_COLOR: vec4f = vec4(0.0, 0.0, 0.0, 0.6);
 const DITHER_SHADOWS: bool = false;
 const DEBUG_SHADOW_MAP: i32 = -1;
@@ -211,7 +211,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			}
 		}
 		else if EDGE_MODE == 4 {
-			var thickness = 5;
+			var thickness = u.drawEdges;
 			isEdge = 0.0;
 			for (var y = 0; y < thickness; y++) {
 				for (var x = 0; x < thickness; x++) {
@@ -219,12 +219,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 					let metaP = vec2i(metaCoord) + off;
 					let n = textureLoad(metaTex, metaP, 0).r;
 					if n != metaVal {
-						let l = length(vec2f(off));
-						let t = f32(thickness)/2.0;
-						if l <= t {
-							let v = ss(0.0, 1.0, l/t);
-							isEdge = max(isEdge, 1.0 - v);
-						}
+						isEdge = 1.0;
 					}
 				}
 			}
@@ -336,16 +331,17 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	}
 
 	// Draw edges
-	if EDGE_INVERT {
-		isEdge = 1.0 - isEdge;
-	}
-	if isEdge == 0.0 {
-	} else {
-		// Fade out in distance
-		//let ef = ss(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
-		//color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
-		//color = vec4(vec3(1.0-isEdge/8.0), 1.0);
-		//color = vec4(mix(color.rgb, EDGE_COLOR.rgb, isEdge * EDGE_COLOR.a), color.a);
+	if u.drawEdges > 0 {
+		if EDGE_INVERT {
+			isEdge = 1.0 - isEdge;
+		}
+		if isEdge == 0.0 {
+		} else {
+			let ef = ss(1.0 / 100.0, 1.0 / 600.0, 1.0-depth);
+			color = mix(vec4(1.0), color, clamp(ef + 0.5, 0.0, 1.0));
+			color = vec4(vec3(1.0-isEdge/8.0), 1.0);
+			color = vec4(mix(color.rgb, EDGE_COLOR.rgb, isEdge * EDGE_COLOR.a), color.a);
+		}
 	}
 
 

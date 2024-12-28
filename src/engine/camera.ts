@@ -7,7 +7,7 @@ import * as quat from './math/quaternions';
 export type ClippingPlanes = [Plane, Plane, Plane, Plane, Plane, Plane];
 
 /**
- * A camera in 3D space
+ * A camera in 3D space. Uses euler angles.
  */
 export abstract class Camera {
 	readonly uniform: UniformBuffer;

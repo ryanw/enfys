@@ -16,7 +16,7 @@ export class ComposePipeline extends Pipeline {
 	config: Config = {
 		ditherSize: 1,
 		ditherDepth: 4,
-		drawEdges: false,
+		drawEdges: 0,
 		drawShadows: true,
 		renderMode: 0,
 		fog: 1.0,
