@@ -156,7 +156,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	//out.normal = vec4(p * -1.0, 1.0);
 	let ll = pointToLonLat(p);
 
-	var n0 = terrainNoise(p, 6, material.seed);
+	var n0 = terrainNoise(p, 4, material.seed);
 
 	var brightness = 1.0;
 	if n0 <= SEA_LEVEL {

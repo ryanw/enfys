@@ -28,7 +28,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	var p = vec3(vertex.position[0], vertex.position[1], vertex.position[2]);
 	var vp = normalize(p.xyz);
 	let scale = 1.0/4.0;
-	let n0 = (terrainNoise(vp, 4, u.seed) * scale) - scale;
+	let n0 = (terrainNoise(vp, 3, u.seed) * scale) - scale;
 	p += vp * n0;
 	vertex.position[0] = p.x;
 	vertex.position[1] = p.y;

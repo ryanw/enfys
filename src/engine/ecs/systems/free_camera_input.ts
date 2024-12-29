@@ -5,7 +5,7 @@ import { FreeCameraComponent } from '../components/camera';
 import { World } from '../world';
 import { add, normalize, scale } from 'engine/math/vectors';
 import { Vector3 } from 'engine/math';
-import { multiply, multiplyVector, rotationFromQuaternion } from 'engine/math/transform';
+import { multiply, multiplyVector, rotationFromQuaternion, translation } from 'engine/math/transform';
 import * as quats from 'engine/math/quaternions';
 
 export class FreeCameraInputSystem extends System {
@@ -16,8 +16,11 @@ export class FreeCameraInputSystem extends System {
 		'd': Key.Right,
 		'q': Key.Down,
 		'e': Key.Up,
+		'z': Key.RollLeft,
+		'x': Key.RollRight,
 		'shift': Key.Boost,
 	};
+	sensitivity: Vector3 = [1, 1, 1];
 	readonly heldKeys = new Set<Key>;
 	private world?: World;
 
@@ -44,6 +47,7 @@ export class FreeCameraInputSystem extends System {
 	updateMovement(dt: number, world: World) {
 		const speed = this.heldKeys.has(Key.Boost) ? 256 : 64;
 		const adjustment: Vector3 = [0, 0, 0];
+		let roll = 0;
 		for (const key of this.heldKeys) {
 			switch (key) {
 			case Key.Forward:
@@ -64,19 +68,34 @@ export class FreeCameraInputSystem extends System {
 			case Key.Down:
 				adjustment[1] = -1;
 				break;
+				case Key.RollLeft:
+					roll = this.sensitivity[2] * dt;
+					if (this.heldKeys.has(Key.Boost)) roll *= 3;
+					break;
+				case Key.RollRight:
+					roll = -this.sensitivity[2] * dt;
+					if (this.heldKeys.has(Key.Boost)) roll *= 3;
+					break;
 			}
 		}
 
-		if (adjustment[0] === 0 && adjustment[1] === 0 && adjustment[2] === 0) {
+		const hasAdjust = !!(adjustment[0] === 0 || adjustment[1] === 0 || adjustment[2] === 0);
+		if (roll === 0 && !hasAdjust) {
 			return;
 		}
 
 		const entities = world.entitiesWithComponents([FreeCameraComponent, TransformComponent]);
 		for (const entity of entities) {
 			const transform = world.getComponent(entity, TransformComponent)!;
-			const direction = multiplyVector(rotationFromQuaternion(transform.rotation), normalize(adjustment));
-			const movement = scale(direction, speed * dt);
-			transform.position = add(transform.position, movement);
+			if (hasAdjust) {
+				const direction = multiplyVector(rotationFromQuaternion(transform.rotation), normalize(adjustment));
+				const movement = scale(direction, speed * dt);
+				transform.position = add(transform.position, movement);
+			}
+			if (roll) {
+				const rot = quats.quaternionFromEuler(0, 0, roll);
+				transform.rotation = quats.multiply(transform.rotation, rot);
+			}
 		}
 	}
 
@@ -116,9 +135,8 @@ export class FreeCameraInputSystem extends System {
 	};
 
 	onMouseMove = (e: MouseEvent) => {
-		const x = e.movementX / 1000;
-		const y = e.movementY / 1000;
-		// Moving the mouse X rotates the camera around the Y axis
+		const x = e.movementX / 1000 * this.sensitivity[0];
+		const y = e.movementY / 1000 * this.sensitivity[1];
 		this.rotateCameras(y, x);
 	};
 
