@@ -1,7 +1,6 @@
-import { Gfx, Size, Triangle, calculateNormals } from 'engine';
-import { Matrix4, PHI, Point2, Point3, Vector2, Vector3 } from './math';
-import { add, normalize, scale } from './math/vectors';
-import { multiply, rotationFromVector, scaling, transformPoint, translation } from './math/transform';
+import { Gfx } from 'engine';
+import { Matrix4, Point2, Point3, Vector2, Vector3 } from './math';
+import { add } from './math/vectors';
 
 export type BuildCallback<T> = (position: Point3, index: number) => T;
 
@@ -197,6 +196,9 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 	}
 
 	uploadVertices(vertices: Array<V>, vertexCount?: number) {
+		if (vertices.length === 0 && this.vertexCount === 0) return;
+
+		console.log("Replacing vertices", vertices.length, this.vertexBuffer);
 		const { device } = this.gfx;
 		const keys = this.vertexOrder.length === 0 && vertices.length > 0
 			? Object.keys(vertices[0]).sort() as Array<keyof V>
@@ -205,7 +207,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		// Write vertices
 		const vertexData = toArrayBuffer(vertices, keys);
 		const vertexBuffer = device.createBuffer({
-			label: 'Mesh Vertex Buffer',
+			label: `Mesh<${this.constructor.name}> Vertex Buffer`,
 			size: vertexData.byteLength,
 			usage: GPUBufferUsage.STORAGE | GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
 		});
@@ -215,6 +217,7 @@ export class Mesh<V extends Vertex<V>, I extends Vertex<I> = object> {
 		this.vertexCount = vertexCount ?? vertices.length;
 		this.variantCount = vertices.length / this.vertexCount;
 		this.vertexBuffer = vertexBuffer;
+		console.log("Replaced vertex buffer", this.vertexBuffer);
 	}
 
 	destroy() {

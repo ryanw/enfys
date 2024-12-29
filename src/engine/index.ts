@@ -70,7 +70,9 @@ export class Gfx {
 		} catch (e) {
 		}
 		if (!adapter) throw new UnsupportedError();
-		const device = await adapter.requestDevice();
+		const device = await adapter.requestDevice({
+			requiredFeatures: ['timestamp-query'],
+		});
 		if (!device) throw new UnsupportedError();
 		return new Gfx(canvas, adapter, device);
 	}

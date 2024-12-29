@@ -85,8 +85,6 @@ var<uniform> material: Material;
 @group(0) @binding(3)
 var<storage, read> vertices: array<PackedVertex>;
 
-const SEA_LEVEL = 0.5;
-
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
 	var out: VertexOut;
@@ -107,10 +105,12 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		packedVertex.softness,
 	);
 
+	/*
 	var vp = normalize(v.position);
 	let scale = 1.0/4.0;
-	let n0 = (max(SEA_LEVEL, terrainNoise(vp, 4)) * scale) - scale;
+	let n0 = (max(SEA_LEVEL, terrainNoise(vp, 4, material.seed)) * scale) - scale;
 	let terrainOffset = (vp * n0);
+	*/
 
 	let transform = mat4x4(
 		in.transform0,
@@ -121,7 +121,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let offsetModel = pawn.model * transform;
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * camera.view;
-	var p = offsetModel * vec4(v.position + terrainOffset, 1.0);
+	//var p = offsetModel * vec4(v.position + terrainOffset, 1.0);
+	var p = offsetModel * vec4(v.position, 1.0);
 	var position = mvp * p;
 
 	out.position = position;
@@ -130,6 +131,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.color = vec4(1.0);
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
+	out.normal = v.normal;
 
 	return out;
 }
@@ -148,13 +150,13 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	let r2 = rnd3u(vec3(material.seed + 3000));
 
 	let seaColor = hsl(r0, 0.4, 0.4);
-	let landColor = hsl((r0 + 0.3) % 1.0, 0.4, 0.4);
+	let landColor = hsl(r1, 0.4, 0.4);
 
 	var p = normalize(in.originalPosition);
 	//out.normal = vec4(p * -1.0, 1.0);
 	let ll = pointToLonLat(p);
 
-	var n0 = terrainNoise(p, 5);
+	var n0 = terrainNoise(p, 6, material.seed);
 
 	var brightness = 1.0;
 	if n0 <= SEA_LEVEL {
@@ -167,7 +169,9 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 
 
-	out.albedo = vec4(color.rgb * brightness, color.a);
+	//out.albedo = vec4(color.rgb * brightness, color.a);
+	out.albedo = vec4(color.rgb, color.a);
+	out.normal = vec4(in.normal, 0.0);
 	out.metaOutput = in.triangleId % 0xff;
 
 	return out;
@@ -191,15 +195,6 @@ fn pointToUV(point: vec3<f32>) -> vec2<f32> {
 	return lonLatToUV(pointToLonLat(point));
 }
 
-fn terrainNoise(p: vec3<f32>, octaves: i32) -> f32 {
-	var seed = vec3(f32(material.seed)/1000.0);
-	var n = fractalNoise(p/2.0 + seed, octaves);
-	if n > SEA_LEVEL {
-		// Flatter beaches, pointier mountains
-		n = SEA_LEVEL + pow((n - SEA_LEVEL)/(1.0-SEA_LEVEL), 2.0);
-	}
-	return n;
-}
-
+@import "./terrain_noise.wgsl";
 @import "engine/shaders/noise.wgsl";
 @import "engine/shaders/color.wgsl";
