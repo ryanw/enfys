@@ -17,6 +17,8 @@ import * as prefabs from './prefabs';
 import { CubeSphere } from 'engine/meshes/cubesphere';
 import { PlanetTerrainPipeline } from './pipelines/planet_terrain';
 import { CalculateNormalsPipeline } from 'engine/pipelines/calculate_normals';
+import { CubeMesh } from 'engine/meshes/cube';
+import { PhysicsSystem } from './systems/physics';
 
 /**
  * Start the game
@@ -28,7 +30,12 @@ export async function main(el: HTMLCanvasElement) {
 	const world = await initWorld(gfx);
 
 	const camera = prefabs.freeCamera(world);
-	const planet = prefabs.planet(world, [0, 0, 300], 100);
+	const planet0 = prefabs.planet(world, [0, 0, 300], 100);
+	const planet1 = prefabs.planet(world, [400, 0, 300], 40);
+	const player0 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
+	const player1 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
+	const player2 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
+	const player3 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
 
 	scene.currentCameraId = 1;
 	scene.primaryCameraId = 1;
@@ -57,15 +64,18 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	gfx.registerMaterials([
 		[PlanetMaterial, RenderPlanetPipeline],
 	]);
+	const graphics = new WorldGraphics(gfx);
 
 	const planetSeed = 123;
-
-	const graphics = new WorldGraphics(gfx);
 	const planetMesh = new CubeSphere(gfx, 256);
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
 	const calcNormals = new CalculateNormalsPipeline(gfx);
+
+	const shipMesh = new CubeSphere(gfx, 1);
+
 	await planetTerrain.compute(planetMesh, planetSeed);
 	await calcNormals.compute(planetMesh);
+	graphics.insertResource('player-ship', shipMesh);
 	graphics.insertResource('planet', planetMesh);
 	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed));
 	return graphics;
@@ -75,5 +85,6 @@ async function initWorld(gfx: Gfx): Promise<World> {
 	const world = new World();
 	world.addSystem(new OrbitCameraInputSystem(gfx.canvas));
 	world.addSystem(new FreeCameraInputSystem(gfx.canvas));
+	world.addSystem(new PhysicsSystem(gfx));
 	return world;
 }

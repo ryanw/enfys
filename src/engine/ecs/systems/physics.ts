@@ -1,7 +1,7 @@
 import { add, scale } from 'engine/math/vectors';
 import { System } from '.';
 import { World } from '../world';
-import { EulerTransformComponent, VelocityComponent } from '../components';
+import { EulerTransformComponent, TransformComponent, VelocityComponent } from '../components';
 import { Gfx } from 'engine';
 import { PhysicsComponent } from '../components/physics';
 import { Entity } from '..';
@@ -39,11 +39,11 @@ export class PhysicsSystem extends System {
 	}
 
 	async updatePhysics(dt: number, world: World) {
-		const entities = world.entitiesWithComponents([VelocityComponent, EulerTransformComponent]);
+		const entities = world.entitiesWithComponents([VelocityComponent, TransformComponent]);
 
 		for (const entity of entities) {
 			// Update entity position
-			const tra = world.getComponent(entity, EulerTransformComponent)!;
+			const tra = world.getComponent(entity, TransformComponent)!;
 			const vel = world.getComponent(entity, VelocityComponent)!;
 			const phy = world.getComponent(entity, PhysicsComponent);
 			const gravity = GRAVITY * (phy ? phy.gravityMultiplier : 1);
