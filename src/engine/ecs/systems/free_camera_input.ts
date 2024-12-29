@@ -5,7 +5,8 @@ import { FreeCameraComponent } from '../components/camera';
 import { World } from '../world';
 import { add, normalize, scale } from 'engine/math/vectors';
 import { Vector3 } from 'engine/math';
-import { multiply, multiplyVector } from 'engine/math/transform';
+import { multiply, multiplyVector, rotationFromQuaternion } from 'engine/math/transform';
+import * as quats from 'engine/math/quaternions';
 
 export class FreeCameraInputSystem extends System {
 	bindings: Record<string, Key> = {
@@ -73,7 +74,7 @@ export class FreeCameraInputSystem extends System {
 		const entities = world.entitiesWithComponents([FreeCameraComponent, TransformComponent]);
 		for (const entity of entities) {
 			const transform = world.getComponent(entity, TransformComponent)!;
-			const direction = multiplyVector(transform.rotationMatrix(), normalize(adjustment));
+			const direction = multiplyVector(rotationFromQuaternion(transform.rotation), normalize(adjustment));
 			const movement = scale(direction, speed * dt);
 			transform.position = add(transform.position, movement);
 		}
@@ -87,7 +88,8 @@ export class FreeCameraInputSystem extends System {
 		for (const entity of entities) {
 			const transform = world.getComponent(entity, TransformComponent)!;
 			const s = Math.PI;
-			transform.rotation = add(transform.rotation, [x * s, y * s, 0]);
+			const rot = quats.quaternionFromEuler(x * s, y * s, 0);
+			transform.rotation = quats.multiply(transform.rotation, rot);
 		}
 	}
 

@@ -3,6 +3,11 @@ import { Component } from '.';
 import { Entity } from '..';
 
 export class CameraComponent extends Component {
+	constructor(
+		public useQuaternion: boolean = false
+	) {
+		super();
+	}
 }
 
 export class OrbitCameraComponent extends Component {

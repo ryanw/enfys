@@ -1,7 +1,7 @@
 import { add, scale } from 'engine/math/vectors';
 import { System } from '.';
 import { World } from '../world';
-import { TransformComponent, VelocityComponent } from '../components';
+import { EulerTransformComponent, VelocityComponent } from '../components';
 import { Gfx } from 'engine';
 import { PhysicsComponent } from '../components/physics';
 import { Entity } from '..';
@@ -26,7 +26,7 @@ export class PhysicsSystem extends System {
 		const phy = world.getComponent(entity, PhysicsComponent);
 		if (!phy) return;
 
-		const tra = world.getComponent(entity, TransformComponent)!;
+		const tra = world.getComponent(entity, EulerTransformComponent)!;
 		const vel = world.getComponent(entity, VelocityComponent)!;
 		let damp = 0.5 * dt * phy.frictionMultiplier;
 		if (phy.grounded) {
@@ -39,11 +39,11 @@ export class PhysicsSystem extends System {
 	}
 
 	async updatePhysics(dt: number, world: World) {
-		const entities = world.entitiesWithComponents([VelocityComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([VelocityComponent, EulerTransformComponent]);
 
 		for (const entity of entities) {
 			// Update entity position
-			const tra = world.getComponent(entity, TransformComponent)!;
+			const tra = world.getComponent(entity, EulerTransformComponent)!;
 			const vel = world.getComponent(entity, VelocityComponent)!;
 			const phy = world.getComponent(entity, PhysicsComponent);
 			const gravity = GRAVITY * (phy ? phy.gravityMultiplier : 1);

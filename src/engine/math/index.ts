@@ -29,5 +29,5 @@ export type Matrix4 = [
 	number, number, number, number,
 	number, number, number, number,
 ];
-export type Quaternion = Vector4;
+export type Quaternion = [number, number, number, number];
 export type Plane = [Point3, Vector3];

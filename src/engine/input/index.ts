@@ -28,6 +28,8 @@ export enum Key {
 	Left,
 	Right,
 	Up,
+	RollLeft,
+	RollRight,
 	Down,
 	Boost,
 	Thrust,

@@ -1,5 +1,5 @@
 import { Entity } from 'engine/ecs';
-import { Component, GunComponent, NetworkComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { Component, GunComponent, NetworkComponent, PlayerComponent, EulerTransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from 'engine/ecs/components/camera';
 import { MeshComponent } from 'engine/ecs/components/mesh';
 import { World } from 'engine/ecs/world';
@@ -25,21 +25,21 @@ export default {
 export function lightPrefab(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new LightComponent(),
-		new TransformComponent([0, 0, 0], rotation),
+		new EulerTransformComponent([0, 0, 0], rotation),
 	]);
 }
 
 export function opponentPrefab(world: World, position: Point3 = [0, 0, 0]): Entity {
 	return world.createEntity([
 		new ShipComponent(),
-		new TransformComponent(position),
+		new EulerTransformComponent(position),
 		new MeshComponent('player-ship'),
 	]);
 }
 
 export function laserPrefab(world: World, networked: boolean, position: Point3, rotation: Vector3, velocity: Vector3): Entity {
 	const components: Array<Component> = [
-		new TransformComponent(position, rotation),
+		new EulerTransformComponent(position, rotation),
 		new VelocityComponent(velocity),
 		new PhysicsComponent(0, 0),
 		new MeshComponent('laser'),
@@ -52,7 +52,7 @@ export function laserPrefab(world: World, networked: boolean, position: Point3, 
 
 export function bombPrefab(world: World, networked: boolean, position: Point3, rotation: Vector3, velocity: Vector3): Entity {
 	const components: Array<Component> = [
-		new TransformComponent(position, rotation),
+		new EulerTransformComponent(position, rotation),
 		new VelocityComponent(velocity),
 		new PhysicsComponent(),
 		new MeshComponent('bomb'),
@@ -71,7 +71,7 @@ export function playerPrefab(world: World, position: Point3 = [0, 0, 0]): Entity
 		new PhysicsComponent(),
 		new ParticlesComponent('tiny-cube', 0, true),
 		new ShipComponent(),
-		new TransformComponent(position),
+		new EulerTransformComponent(position),
 		new VelocityComponent([0, 0, 0]),
 		new MeshComponent('player-ship'),
 	]);
@@ -81,7 +81,7 @@ export function animalPrefab(world: World, mesh: ResourceId, position: Point3 = 
 	return world.createEntity([
 		new PhysicsComponent(),
 		new InsectComponent(),
-		new TransformComponent(position),
+		new EulerTransformComponent(position),
 		new VelocityComponent([0, 0, 0]),
 		new MeshComponent(mesh),
 	]);
@@ -89,7 +89,7 @@ export function animalPrefab(world: World, mesh: ResourceId, position: Point3 = 
 
 export function orbitCamPrefab(world: World, target: Entity): Entity {
 	return world.createEntity([
-		new TransformComponent([0, 0, 0], [0.3, 0, 0]),
+		new EulerTransformComponent([0, 0, 0], [0.3, 0, 0]),
 		new CameraComponent(),
 		new OrbitCameraComponent(target),
 	]);
@@ -97,7 +97,7 @@ export function orbitCamPrefab(world: World, target: Entity): Entity {
 
 export function freeCamPrefab(world: World): Entity {
 	return world.createEntity([
-		new TransformComponent(),
+		new EulerTransformComponent(),
 		new CameraComponent(),
 		new FreeCameraComponent(),
 	]);

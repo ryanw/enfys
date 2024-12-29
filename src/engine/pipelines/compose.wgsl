@@ -215,7 +215,7 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 			isEdge = 0.0;
 			for (var y = 0; y < thickness; y++) {
 				for (var x = 0; x < thickness; x++) {
-					let off = vec2(-thickness/2) + vec2(x, y);
+					let off = vec2(-thickness/2) + vec2(x+1, y+1);
 					let metaP = vec2i(metaCoord) + off;
 					let n = textureLoad(metaTex, metaP, 0).r;
 					if n != metaVal {

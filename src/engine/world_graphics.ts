@@ -1,12 +1,12 @@
 import { Gfx, Size } from 'engine';
-import { EulerCamera } from './camera';
+import { Camera, EulerCamera, QuaternionCamera } from './camera';
 import { Entity } from './ecs';
-import { TransformComponent } from './ecs/components';
+import { EulerTransformComponent, TransformComponent } from './ecs/components';
 import { CameraComponent } from './ecs/components/camera';
 import { MeshComponent } from './ecs/components/mesh';
 import { World } from './ecs/world';
 import { Matrix4, Point3, Vector3 } from './math';
-import { identity, multiply, multiplyVector, rotation, scaling, translation } from './math/transform';
+import { identity, multiply, multiplyVector, rotation, rotationFromQuaternion, scaling, translation } from './math/transform';
 import { SimpleMesh } from './mesh';
 import { Pawn } from './pawn';
 import { ResourceId } from './resource';
@@ -27,6 +27,7 @@ import { MaterialComponent } from './ecs/components/material';
 import { colorToInt } from './color';
 import { DecorPipeline } from './pipelines/decor';
 import { add } from './math/vectors';
+import { quaternionFromEuler, quaternionToEuler } from './math/quaternions';
 
 export type Resource = {};
 
@@ -47,7 +48,7 @@ export class WorldGraphics {
 	private lights: Map<Entity, DirectionalLight> = new Map();
 	private particles: Map<Entity, Pawn<Particles>> = new Map();
 	private terrains: Map<Entity, Map<ChunkKey, Pawn<SimpleMesh>>> = new Map();
-	private cameras: Map<Entity, EulerCamera> = new Map();
+	private cameras: Map<Entity, Camera> = new Map();
 	private resources: Map<ResourceId, Resource> = new Map();
 	private queuedTerrain: Map<ChunkKey, QueuedChunk> = new Map();
 	private activeTerrain: Map<ChunkKey, Chunk> = new Map();
@@ -62,6 +63,7 @@ export class WorldGraphics {
 
 	update(world: World, scene: Scene) {
 		this.updateCameras(world, scene);
+		//this.updateEulerCameras(world, scene);
 		this.updateLights(world, scene);
 		this.updateMeshes(world, scene);
 		this.updateTerrain(world, scene);
@@ -81,15 +83,21 @@ export class WorldGraphics {
 		const saw = new Set();
 		for (const entity of entities) {
 			saw.add(entity);
+			const { useQuaternion } = world.getComponent(entity, CameraComponent)!;
 			let camera = this.cameras.get(entity);
 			if (!camera) {
-				camera = new EulerCamera(scene.gfx);
+				camera = useQuaternion ? new QuaternionCamera(scene.gfx) : new EulerCamera(scene.gfx);
 				this.cameras.set(entity, camera);
 				scene.addCamera(camera);
 			}
 			const { position, rotation } = world.getComponent(entity, TransformComponent)!;
 			camera.position = [...position];
-			camera.rotation = [...rotation];
+			if (camera instanceof EulerCamera) {
+				throw new Error("Not implemented");
+			}
+			else if (camera instanceof QuaternionCamera) {
+				camera.rotation = [...rotation];
+			}
 		}
 
 		const removed: Array<Entity> = [...this.cameras.keys()].filter(e => !saw.has(e));
@@ -112,7 +120,7 @@ export class WorldGraphics {
 				light = scene.light;
 				this.lights.set(entity, light);
 			}
-			light.rotation = lightRotation;
+			light.rotation = quaternionToEuler(lightRotation);
 			light.updateForCamera(scene.primaryCamera);
 		}
 
@@ -143,7 +151,7 @@ export class WorldGraphics {
 				particles.object.variantCount = mesh.variantCount;
 			}
 			particles.object.origin = add(emitterPosition, offset);
-			particles.object.direction = multiplyVector(rotation(...emitterRotation), [0, -1, 0, 0]).slice(0, 3) as Vector3;
+			particles.object.direction = multiplyVector(rotationFromQuaternion(emitterRotation), [0, -1, 0, 0]).slice(0, 3) as Vector3;
 			particles.object.update(performance.now() / 1000.0);
 			particles.object.count = particleCount;
 		}

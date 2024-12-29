@@ -56,5 +56,6 @@ export function buildIcosphere<T>(divisions: number, invertOrCallback: boolean |
 				);
 		}).flat().flat();
 
+	console.debug("Created icosphere with %d triangles", vertices.length/3);
 	return vertices;
 }

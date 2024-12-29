@@ -5,7 +5,7 @@ import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
 import { Entity } from 'engine/ecs';
 import { VehicleComponent } from '../components/vehicle';
-import { TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { EulerTransformComponent, VelocityComponent } from 'engine/ecs/components';
 
 const IDLE_SPEED = 32.0;
 
@@ -38,7 +38,7 @@ export class VehicleInputSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
-		const entities = world.entitiesWithComponents([VehicleComponent, VelocityComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([VehicleComponent, VelocityComponent, EulerTransformComponent]);
 		for (const entity of entities) {
 			this.updateMovement(dt, world, entity);
 		}

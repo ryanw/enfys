@@ -3,7 +3,7 @@ import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
 import { TerrainComponent } from '../components/terrain';
 import { Entity } from 'engine/ecs';
-import { TransformComponent } from 'engine/ecs/components';
+import { EulerTransformComponent } from 'engine/ecs/components';
 import { generateChunks, toChunkHash } from 'engine/terrain';
 import { Point3 } from 'engine/math';
 
@@ -23,7 +23,7 @@ export class TerrainSystem extends System {
 			const { target } = world.getComponent(entity, TerrainComponent)!;
 			let position = [0,0,0] as Point3;
 			if (target) {
-				position = world.getComponent(target, TransformComponent)!.position;
+				position = world.getComponent(target, EulerTransformComponent)!.position;
 			}
 			this.move(world, entity, position[0], position[2]);
 		}

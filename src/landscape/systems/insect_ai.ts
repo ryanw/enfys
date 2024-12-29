@@ -1,7 +1,7 @@
 import { System } from "engine/ecs/systems";
 import { World } from "engine/ecs/world";
 import { InsectComponent, InsectMode } from "../components/insect";
-import { TransformComponent, VelocityComponent } from "engine/ecs/components";
+import { EulerTransformComponent, VelocityComponent } from "engine/ecs/components";
 import { randomizer } from "engine/noise";
 import { add, magnitude, normalize, scale, subtract } from "engine/math/vectors";
 import { Point3 } from "engine/math";
@@ -10,10 +10,10 @@ import { PhysicsComponent } from "engine/ecs/components/physics";
 export class InsectAISystem extends System {
 	async tick(dt: number, world: World) {
 		const { atan2, abs, PI } = Math;
-		const entities = world.entitiesWithComponents([InsectComponent, PhysicsComponent, VelocityComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([InsectComponent, PhysicsComponent, VelocityComponent, EulerTransformComponent]);
 		for (const entity of entities) {
 			const rnd = randomizer(entity + performance.now());
-			const tra = world.getComponent(entity, TransformComponent)!;
+			const tra = world.getComponent(entity, EulerTransformComponent)!;
 			const vel = world.getComponent(entity, VelocityComponent)!;
 			const bug = world.getComponent(entity, InsectComponent)!;
 			const phy = world.getComponent(entity, PhysicsComponent)!;

@@ -3,7 +3,7 @@ import { VehicleComponent } from "../components/vehicle";
 import { World } from "engine/ecs/world";
 import { QueryRoadPipeline, QueryRoadResult } from "../pipelines/query_road";
 import { Gfx } from "engine";
-import { TransformComponent } from "engine/ecs/components";
+import { EulerTransformComponent } from "engine/ecs/components";
 import { add, magnitude, scale, subtract } from "engine/math/vectors";
 import { Vector3 } from "engine/math";
 import { Entity } from "engine/ecs";
@@ -21,16 +21,16 @@ export class VehicleSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
-		const entities = world.entitiesWithComponents([VehicleComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([VehicleComponent, EulerTransformComponent]);
 		const b = 32.0;
 		let t = dt * b;
 		for (const entity of entities) {
-			const tra = world.getComponent(entity, TransformComponent)!;
+			const tra = world.getComponent(entity, EulerTransformComponent)!;
 
 			const result = this.cache.get(entity);
 			if (result) {
 				const { tangent, offset: [x, y] } = result;
-				const tra = world.getComponent(entity, TransformComponent)!;
+				const tra = world.getComponent(entity, EulerTransformComponent)!;
 				const angleY = Math.atan2(-tangent[0], -tangent[2]);
 				const angleX = Math.atan2(tangent[1], -tangent[2]);
 

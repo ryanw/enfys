@@ -23,6 +23,7 @@ export class CubeSphere extends SimpleMesh {
 			...buildCubeFace(divisions, [0, 0, 1], buildVertex),
 			...buildCubeFace(divisions, [0, 0, -1], buildVertex),
 		];
+		console.debug("Created cubesphere with %d triangles", vertices.length / 3);
 		super(gfx, vertices, instances);
 	}
 }

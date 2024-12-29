@@ -1,4 +1,4 @@
-import { Matrix4, Point3, Vector3 } from 'engine/math';
+import { Matrix4, Point3, Quaternion, Vector3 } from 'engine/math';
 import { multiply, rotation } from 'engine/math/transform';
 
 export abstract class Component { }
@@ -46,6 +46,16 @@ export class VelocityComponent extends Component {
 }
 
 export class TransformComponent extends Component {
+	constructor(
+		public position: Point3 = [0, 0, 0],
+		public rotation: Quaternion = [0, 0, 0, 1],
+		public scale: Vector3 = [1, 1, 1],
+	) {
+		super();
+	}
+}
+
+export class EulerTransformComponent extends Component {
 	constructor(
 		public position: Point3 = [0, 0, 0],
 		public rotation: Vector3 = [0, 0, 0],

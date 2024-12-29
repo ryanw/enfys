@@ -1,4 +1,4 @@
-import { Quaternion } from '.';
+import { Quaternion, Vector3 } from '.';
 import { magnitude, scale } from './vectors';
 
 /**
@@ -68,4 +68,24 @@ export function quaternionFromEuler(pitch: number, yaw: number, roll: number): Q
 	const w = cr * cp * cy + sr * sp * sy;
 
 	return [x, y, z, w];
+}
+
+
+/**
+ * Convert a Quaternion into Euler angles
+ */
+export function quaternionToEuler([x, y, z, w]: Quaternion): Vector3 {
+	const { min, max, asin, atan2 } = Math;
+	const t0 = 2 * (w * x + y * z);
+	const t1 = 1 - 2 * (x * x + y * y);
+	const roll = atan2(t0, t1);
+
+	const t2 = min(1, max(-1, 2 * (w * y - z * x)));
+	const pitch = asin(t2)
+
+	const t3 = 2 * (w * z + x * y)
+	const t4 = 1 - 2 * (y * y + z * z)
+	const yaw = atan2(t3, t4)
+
+	return [pitch, yaw, roll];
 }

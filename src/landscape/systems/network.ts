@@ -2,7 +2,7 @@ import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
 import { JoinMessage, LeaveMessage, TransformMessage, ServerMessages, Socket, SpawnMessage, DespawnMessage } from 'engine/net/socket';
 import prefabs, { opponentPrefab } from '../prefabs';
-import { NetworkComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { NetworkComponent, PlayerComponent, EulerTransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { Point3, Vector3 } from 'engine/math';
 import { magnitude, subtract } from 'engine/math/vectors';
 import { Entity } from 'engine/ecs';
@@ -56,9 +56,9 @@ export class NetworkSystem extends System {
 	}
 
 	async updateNetworkComponents(world: World) {
-		const entities = world.entitiesWithComponents([NetworkComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([NetworkComponent, EulerTransformComponent]);
 		for (const entity of entities) {
-			const transform = world.getComponent(entity, TransformComponent)!;
+			const transform = world.getComponent(entity, EulerTransformComponent)!;
 			const velocity = world.getComponent(entity, VelocityComponent)?.velocity ?? [0, 0, 0];
 			if (!this.activeEntities.has(entity)) {
 				// New entity
@@ -116,7 +116,7 @@ export class NetworkSystem extends System {
 				console.error("Unknown player", move);
 				continue;
 			}
-			const transform = world.getComponent(playerEntity, TransformComponent)!;
+			const transform = world.getComponent(playerEntity, EulerTransformComponent)!;
 			const velocity = world.getComponent(playerEntity, VelocityComponent)!;
 			transform.position = [...move.position];
 			transform.rotation = [...move.rotation];
@@ -133,9 +133,9 @@ export class NetworkSystem extends System {
 		if (this.lastSend === 0 || (now - this.lastSend) > delay) {
 			this.lastSend = now;
 			// Tell server where player is
-			const entities = world.entitiesWithComponents([PlayerComponent, VelocityComponent, TransformComponent]);
+			const entities = world.entitiesWithComponents([PlayerComponent, VelocityComponent, EulerTransformComponent]);
 			for (const entity of entities) {
-				const { position, rotation } = world.getComponent(entity, TransformComponent)!;
+				const { position, rotation } = world.getComponent(entity, EulerTransformComponent)!;
 				const { velocity } = world.getComponent(entity, VelocityComponent)!;
 				const state: PlayerState = { position, velocity, rotation };
 				const d0 = magnitude(subtract(this.previousState.position, state.position));

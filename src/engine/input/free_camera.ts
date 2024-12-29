@@ -13,9 +13,12 @@ export class FreeCameraController {
 		'd': Key.Right,
 		'q': Key.Down,
 		'e': Key.Up,
+		'z': Key.RollLeft,
+		'x': Key.RollRight,
 		'shift': Key.Boost,
 	};
 	target: Point3 = [0, 0, 0];
+	sensitivity: Vector3 = [1, 1, 1];
 	readonly heldKeys = new Set<Key>;
 	readonly gfx: Gfx;
 
@@ -40,27 +43,40 @@ export class FreeCameraController {
 		if (this.disabled) return;
 		const speed = this.heldKeys.has(Key.Boost) ? 1024 : 64;
 		const adjustment: Vector3 = [0, 0, 0];
+		let roll = 0;
 		for (const key of this.heldKeys) {
 			switch (key) {
-			case Key.Forward:
-				adjustment[2] = 1;
-				break;
-			case Key.Backward:
-				adjustment[2] = -1;
-				break;
-			case Key.Left:
-				adjustment[0] = -1;
-				break;
-			case Key.Right:
-				adjustment[0] = 1;
-				break;
-			case Key.Up:
-				adjustment[1] = 1;
-				break;
-			case Key.Down:
-				adjustment[1] = -1;
-				break;
+				case Key.Forward:
+					adjustment[2] = 1;
+					break;
+				case Key.Backward:
+					adjustment[2] = -1;
+					break;
+				case Key.Left:
+					adjustment[0] = -1;
+					break;
+				case Key.Right:
+					adjustment[0] = 1;
+					break;
+				case Key.Up:
+					adjustment[1] = 1;
+					break;
+				case Key.Down:
+					adjustment[1] = -1;
+					break;
+				case Key.RollLeft:
+					roll = -this.sensitivity[2];
+					if (this.heldKeys.has(Key.Boost)) roll *= 3;
+					break;
+				case Key.RollRight:
+					roll = this.sensitivity[2];
+					if (this.heldKeys.has(Key.Boost)) roll *= 3;
+					break;
 			}
+		}
+
+		if (roll !== 0) {
+			this.camera.rotate(0, 0, roll * dt);
 		}
 
 		if (adjustment[0] === 0 && adjustment[1] === 0 && adjustment[2] === 0) {
@@ -97,8 +113,8 @@ export class FreeCameraController {
 
 	onMouseMove = (e: MouseEvent) => {
 		if (this.disabled) return;
-		const x = e.movementX / 1000;
-		const y = e.movementY / 1000;
+		const x = e.movementX / 500 * this.sensitivity[0];
+		const y = e.movementY / 500 * this.sensitivity[1];
 		this.camera.rotate(y, x, 0);
 	};
 

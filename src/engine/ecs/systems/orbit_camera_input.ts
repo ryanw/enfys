@@ -1,6 +1,6 @@
 import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
 import { System } from '.';
-import { TransformComponent } from '../components';
+import { EulerTransformComponent } from '../components';
 import { OrbitCameraComponent } from '../components/camera';
 import { World } from '../world';
 import { multiply, rotation, transformPoint, translation } from 'engine/math/transform';
@@ -65,12 +65,12 @@ export class OrbitCameraInputSystem extends System {
 			}
 		}
 
-		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([OrbitCameraComponent, EulerTransformComponent]);
 		for (const entity of entities) {
-			const trans = world.getComponent(entity, TransformComponent)!;
+			const trans = world.getComponent(entity, EulerTransformComponent)!;
 			const { target, offset } = world.getComponent(entity, OrbitCameraComponent)!;
 			if (!target) continue;
-			const { position: targetPoint} = world.getComponent(target, TransformComponent)!;
+			const { position: targetPoint} = world.getComponent(target, EulerTransformComponent)!;
 
 
 			trans.rotation = add(trans.rotation, [pitch * dt, yaw * dt, 0]);
@@ -133,9 +133,9 @@ export class OrbitCameraInputSystem extends System {
 		const { world } = this;
 		if (!world) return;
 
-		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([OrbitCameraComponent, EulerTransformComponent]);
 		for (const entity of entities) {
-			const transform = world.getComponent(entity, TransformComponent)!;
+			const transform = world.getComponent(entity, EulerTransformComponent)!;
 			const s = Math.PI;
 			transform.rotation = add(transform.rotation, [x * s, y * s, 0]);
 		}

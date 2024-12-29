@@ -4,7 +4,7 @@ import { Point3, Vector3 } from 'engine/math';
 import { multiply, multiplyVector, rotation, transformPoint } from 'engine/math/transform';
 import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
-import { GunComponent, PlayerComponent, TransformComponent, VelocityComponent } from 'engine/ecs/components';
+import { GunComponent, PlayerComponent, EulerTransformComponent, VelocityComponent } from 'engine/ecs/components';
 import { ShipComponent, ShipMode } from '../components/ship';
 import { Entity } from 'engine/ecs';
 import { ParticlesComponent } from 'engine/ecs/components/particles';
@@ -60,7 +60,7 @@ export class PlayerInputSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
-		const entities = world.entitiesWithComponents([PlayerComponent, ShipComponent, VelocityComponent, TransformComponent]);
+		const entities = world.entitiesWithComponents([PlayerComponent, ShipComponent, VelocityComponent, EulerTransformComponent]);
 		for (const entity of entities) {
 			this.updateMovement(dt, world, entity);
 		}
@@ -70,7 +70,7 @@ export class PlayerInputSystem extends System {
 		this.updateGamepads();
 
 		const ship = world.getComponent(entity, ShipComponent)!;
-		const transform = world.getComponent(entity, TransformComponent)!;
+		const transform = world.getComponent(entity, EulerTransformComponent)!;
 
 		for (const [key, _amount] of this.pressedKeys) {
 			switch (key) {
@@ -109,7 +109,7 @@ export class PlayerInputSystem extends System {
 	}
 
 	updateModeLand(dt: number, world: World, entity: Entity) {
-		const transform = world.getComponent(entity, TransformComponent)!;
+		const transform = world.getComponent(entity, EulerTransformComponent)!;
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
 		const particles = world.getComponent(entity, ParticlesComponent);
 
@@ -184,7 +184,7 @@ export class PlayerInputSystem extends System {
 	}
 
 	updateModeAir(dt: number, world: World, entity: Entity) {
-		const transform = world.getComponent(entity, TransformComponent)!;
+		const transform = world.getComponent(entity, EulerTransformComponent)!;
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
 		const particles = world.getComponent(entity, ParticlesComponent);
 
