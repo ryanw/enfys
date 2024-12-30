@@ -28,8 +28,8 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 
 	var p = vec3(vertex.position[0], vertex.position[1], vertex.position[2]);
 	var vp = normalize(p.xyz);
-	let scale = 1.0/4.0;
-	let n0 = terrainNoise(vp, 4, u.seed);
+	let scale = 1.0/8.0;
+	let n0 = terrainNoise(vp, 4, u.seed, u.seaLevel);
 	//let n0 = max(SEA_LEVEL, terrainNoise(vp, 4, u.seed)) * scale - scale/2.0;
 	p += vp * (max(u.seaLevel, n0) * scale - scale/2.0);
 	vertex.position[0] = p.x;

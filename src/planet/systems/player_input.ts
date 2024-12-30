@@ -67,7 +67,7 @@ export class PlayerInputSystem extends System {
 			}
 			switch (key) {
 				case XboxAxis.RightStickY:
-					tilt += value;
+					//tilt += value;
 					break;
 			}
 		}
@@ -144,15 +144,13 @@ export class PlayerInputSystem extends System {
 				continue;
 			}
 			switch (key) {
-				//case XboxAxis.RightStickX:
-				case XboxAxis.LeftStickX:
+				case XboxAxis.RightStickX:
 					roll -= value;
 					break;
 				case XboxAxis.LeftStickY:
 					pitch -= value;
 					break;
-				case XboxAxis.RightStickX:
-					//case XboxAxis.LeftStickX:
+				case XboxAxis.LeftStickX:
 					yaw += value;
 					break;
 				case XboxAxis.RightStickY:

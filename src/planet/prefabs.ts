@@ -10,13 +10,12 @@ import { quaternionFromEuler } from "engine/math/quaternions";
 import { GravityComponent } from "./components/gravity";
 import { ParticlesComponent } from "engine/ecs/components/particles";
 import { ColliderComponent } from "engine/ecs/components/collider";
-import { magnitude, magnitudeSquared } from "engine/math/vectors";
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
-		new TransformComponent([0, 0, 0], quaternionFromEuler(0.2, -0.2, 0)),
+		new TransformComponent([0, 0, 0]),
 		new CameraComponent(1.0, 100000.0),
-		new OrbitCameraComponent(target, 16, [0, 5, 0], quaternionFromEuler(0.5, 0, 0)),
+		new OrbitCameraComponent(target, 16, [0, 5, 0], quaternionFromEuler(0.6, 0, 0)),
 	]);
 }
 

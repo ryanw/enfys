@@ -15,6 +15,7 @@ struct Vertex {
 struct Material {
 	color: u32,
 	seed: u32,
+	seaLevel: f32,
 }
 
 struct VertexIn {
@@ -109,7 +110,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	/*
 	var vp = normalize(v.position);
 	let scale = 1.0/4.0;
-	let n0 = (max(SEA_LEVEL, terrainNoise(vp, 4, material.seed)) * scale) - scale;
+	let n0 = (max(material.seaLevel, terrainNoise(vp, 4, material.seed)) * scale) - scale;
 	let terrainOffset = (vp * n0);
 	*/
 
@@ -158,15 +159,15 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	//out.normal = vec4(p * -1.0, 1.0);
 	let ll = pointToLonLat(p);
 
-	var n0 = terrainNoise(p, 7, material.seed);
+	var n0 = terrainNoise(p, 7, material.seed, material.seaLevel);
 
 	var brightness = 1.0;
-	if n0 <= SEA_LEVEL {
-		brightness = n0 + (1.0 - SEA_LEVEL);
+	if n0 <= material.seaLevel {
+		brightness = n0 + (1.0 - material.seaLevel);
 		color = seaColor;
 	}
 	else {
-		brightness = n0 + SEA_LEVEL;
+		brightness = n0 + material.seaLevel;
 		color = landColor;
 	}
 

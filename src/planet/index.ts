@@ -95,17 +95,17 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 
 	const planetSeed = Math.random() * 0xffffff | 0;
 	const planetMesh = new CubeSphere(gfx, 320);
-	await planetTerrain.compute(planetMesh, planetSeed);
+	await planetTerrain.compute(planetMesh, planetSeed, { seaLevel: 0.3 });
 	await calcNormals.compute(planetMesh);
 	graphics.insertResource('planet', planetMesh);
-	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed));
+	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed, 0.38));
 
 	const moonSeed = planetSeed + 5342;
 	const moonMesh = new CubeSphere(gfx, 128);
 	await planetTerrain.compute(moonMesh, moonSeed);
 	await calcNormals.compute(moonMesh);
 	graphics.insertResource('moon', moonMesh);
-	graphics.insertResource('moon-material', new PlanetMaterial(gfx, moonSeed));
+	graphics.insertResource('moon-material', new PlanetMaterial(gfx, moonSeed, 0.0));
 
 	const starSeed = planetSeed + 3214;
 	const starMesh = new CubeSphere(gfx, 128);

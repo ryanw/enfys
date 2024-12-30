@@ -8,11 +8,13 @@ export class PlanetMaterial extends Material {
 	constructor(
 		readonly gfx: Gfx,
 		readonly seed: number,
+		readonly seaLevel: number,
 	) {
 		super();
 		this.uniform = new UniformBuffer(gfx, [
 			['color', 'u32'],
 			['seed', 'u32'],
+			['seaLevel', 'f32'],
 		]);
 		this.updateUniform();
 	}
@@ -21,6 +23,7 @@ export class PlanetMaterial extends Material {
 		this.uniform.replace( {
 			color: BigInt(0xffffff00),
 			seed: this.seed,
+			seaLevel: this.seaLevel,
 		});
 	}
 
