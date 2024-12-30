@@ -1,13 +1,14 @@
 import { DEADZONE, Key, XboxAxis, XboxButton } from 'engine/input';
 import { System } from '.';
-import { EulerTransformComponent } from '../components';
+import { TransformComponent } from '../components';
 import { OrbitCameraComponent } from '../components/camera';
 import { World } from '../world';
-import { multiply, rotation, transformPoint, translation } from 'engine/math/transform';
+import { inverse, multiply, rotation, rotationFromQuaternion, rotationFromVector, transformPoint, translation } from 'engine/math/transform';
 import { add } from 'engine/math/vectors';
+import * as quats from 'engine/math/quaternions';
 
-const MIN_DISTANCE = 3;
-const MAX_DISTANCE = 96;
+const MIN_DISTANCE = 1;
+const MAX_DISTANCE = 10000;
 
 export class OrbitCameraInputSystem extends System {
 	bindings: Record<string, Key> = {
@@ -19,7 +20,7 @@ export class OrbitCameraInputSystem extends System {
 		'e': Key.Up,
 		'shift': Key.Boost,
 	};
-	distance: number = 16;
+	distance: number = 512;
 	readonly heldKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
@@ -56,29 +57,25 @@ export class OrbitCameraInputSystem extends System {
 			}
 			const value = pow(amount, 3.0) * rotateSpeed;
 			switch (key) {
-			case XboxAxis.RightStickX:
-				yaw = value;
-				break;
-			case XboxAxis.RightStickY:
-				pitch = value;
-				break;
+				case XboxAxis.RightStickX:
+					yaw = value;
+					break;
+				case XboxAxis.RightStickY:
+					pitch = value;
+					break;
 			}
 		}
 
-		const entities = world.entitiesWithComponents([OrbitCameraComponent, EulerTransformComponent]);
+		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
 		for (const entity of entities) {
-			const trans = world.getComponent(entity, EulerTransformComponent)!;
+			const trans = world.getComponent(entity, TransformComponent)!;
 			const { target, offset } = world.getComponent(entity, OrbitCameraComponent)!;
 			if (!target) continue;
-			const { position: targetPoint} = world.getComponent(target, EulerTransformComponent)!;
+			const { position: targetPoint } = world.getComponent(target, TransformComponent)!;
 
 
-			trans.rotation = add(trans.rotation, [pitch * dt, yaw * dt, 0]);
-			const rotationMatrix = multiply(
-				rotation(0, 0, trans.rotation[2]),
-				rotation(0, trans.rotation[1], 0),
-				rotation(trans.rotation[0], 0, 0),
-			);
+			trans.rotation = quats.multiply(trans.rotation, quats.quaternionFromEuler(pitch * dt, yaw * dt, 0));
+			const rotationMatrix = rotationFromQuaternion(trans.rotation);
 
 			let transform = translation(...targetPoint);
 			transform = multiply(transform, rotationMatrix);
@@ -133,11 +130,20 @@ export class OrbitCameraInputSystem extends System {
 		const { world } = this;
 		if (!world) return;
 
-		const entities = world.entitiesWithComponents([OrbitCameraComponent, EulerTransformComponent]);
+		const s = Math.PI;
+		const rot = quats.quaternionFromEuler(x * s, y * s, 0);
+		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
 		for (const entity of entities) {
-			const transform = world.getComponent(entity, EulerTransformComponent)!;
-			const s = Math.PI;
-			transform.rotation = add(transform.rotation, [x * s, y * s, 0]);
+			const transform = world.getComponent(entity, TransformComponent)!;
+			//const trans = multiply(
+			//	inverse(translation(...transform.position))!,
+			//	rotationFromQuaternion(rot),
+			//	translation(...transform.position),
+			//);
+			//const p = transformPoint(trans, transform.position);
+			////transform.position = p;
+
+			transform.rotation = quats.multiply(transform.rotation, rot);
 		}
 	}
 

@@ -19,6 +19,10 @@ import { PlanetTerrainPipeline } from './pipelines/planet_terrain';
 import { CalculateNormalsPipeline } from 'engine/pipelines/calculate_normals';
 import { CubeMesh } from 'engine/meshes/cube';
 import { PhysicsSystem } from './systems/physics';
+import { SimpleMaterial } from 'engine/material';
+import { ShipMesh } from './meshes/ship';
+import { PlayerInputSystem } from './systems/player_input';
+import { TransformComponent } from 'engine/ecs/components';
 
 /**
  * Start the game
@@ -29,13 +33,22 @@ export async function main(el: HTMLCanvasElement) {
 	const graphics = await initGraphics(gfx);
 	const world = await initWorld(gfx);
 
-	const camera = prefabs.freeCamera(world);
-	const planet0 = prefabs.planet(world, [0, 0, 300], 100);
-	const planet1 = prefabs.planet(world, [400, 0, 300], 40);
-	const player0 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
-	const player1 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
-	const player2 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
-	const player3 = prefabs.player(world, [(Math.random() - 0.5) * 100, Math.random() * 100, 150]);
+	const star = prefabs.star(world, [0, 0, 0], 200);
+	const planet = prefabs.planet(world, [-600, 0, -200], 50);
+	const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
+	const player = prefabs.player(world, [400, 500, 0], [100, -100, 0]);
+
+	const bugs = [];
+	for (let i = 0; i < 100; i++) {
+		const bug = prefabs.bug(world, [
+			(Math.random() - 0.5) * 5000,
+			(Math.random() - 0.5) * 5000,
+			(Math.random() - 0.5) * 5000,
+		]);
+		bugs.push(bug);
+	}
+
+	const camera = prefabs.orbitCamera(world, player);
 
 	scene.currentCameraId = 1;
 	scene.primaryCameraId = 1;
@@ -65,26 +78,46 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 		[PlanetMaterial, RenderPlanetPipeline],
 	]);
 	const graphics = new WorldGraphics(gfx);
-
-	const planetSeed = 123;
-	const planetMesh = new CubeSphere(gfx, 256);
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
 	const calcNormals = new CalculateNormalsPipeline(gfx);
 
-	const shipMesh = new CubeSphere(gfx, 1);
+	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 1));
 
+	const playerMesh = new ShipMesh(gfx);
+	graphics.insertResource('player-ship', playerMesh);
+
+	const bugMesh = new CubeMesh(gfx);
+	graphics.insertResource('bug-ship', bugMesh);
+
+	const planetSeed = Math.random() * 0xffffff | 0;
+	const planetMesh = new CubeSphere(gfx, 256);
 	await planetTerrain.compute(planetMesh, planetSeed);
 	await calcNormals.compute(planetMesh);
-	graphics.insertResource('player-ship', shipMesh);
 	graphics.insertResource('planet', planetMesh);
 	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed));
+
+	const moonSeed = planetSeed + 5342;
+	const moonMesh = new CubeSphere(gfx, 128);
+	await planetTerrain.compute(moonMesh, moonSeed);
+	await calcNormals.compute(moonMesh);
+	graphics.insertResource('moon', moonMesh);
+	graphics.insertResource('moon-material', new PlanetMaterial(gfx, moonSeed));
+
+	const starSeed = planetSeed + 3214;
+	const starMesh = new Icosphere(gfx, 6);
+	await planetTerrain.compute(starMesh, starSeed);
+	await calcNormals.compute(starMesh);
+	graphics.insertResource('star', starMesh);
+	graphics.insertResource('star-material', new SimpleMaterial(gfx, 0xffffffffn));
+
 	return graphics;
 }
 
 async function initWorld(gfx: Gfx): Promise<World> {
 	const world = new World();
-	world.addSystem(new OrbitCameraInputSystem(gfx.canvas));
-	world.addSystem(new FreeCameraInputSystem(gfx.canvas));
 	world.addSystem(new PhysicsSystem(gfx));
+	world.addSystem(new FreeCameraInputSystem(gfx.canvas));
+	world.addSystem(new OrbitCameraInputSystem(gfx.canvas));
+	world.addSystem(new PlayerInputSystem(gfx.canvas));
 	return world;
 }

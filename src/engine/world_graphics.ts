@@ -83,10 +83,12 @@ export class WorldGraphics {
 		const saw = new Set();
 		for (const entity of entities) {
 			saw.add(entity);
-			const { useQuaternion } = world.getComponent(entity, CameraComponent)!;
+			const { near, far } = world.getComponent(entity, CameraComponent)!;
 			let camera = this.cameras.get(entity);
 			if (!camera) {
-				camera = useQuaternion ? new QuaternionCamera(scene.gfx) : new EulerCamera(scene.gfx);
+				camera = new QuaternionCamera(scene.gfx);
+				camera.near = near;
+				camera.far = far;
 				this.cameras.set(entity, camera);
 				scene.addCamera(camera);
 			}
@@ -450,7 +452,7 @@ function transformForEntity(world: World, entity: Entity): Matrix4 {
 	const { position, scale, rotation: rot } = world.getComponent(entity, TransformComponent)!;
 	return multiply(
 		translation(...position),
-		rotation(rot[0], rot[1], 0),
+		rotationFromQuaternion(rot),
 		scaling(...scale),
 	);
 }

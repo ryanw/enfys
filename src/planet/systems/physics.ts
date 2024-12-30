@@ -44,6 +44,10 @@ export class PhysicsSystem extends System {
 function calculateGravity(p: Point3, well: Point3, force: number): Vector3 {
 	const diff = subtract(well, p);
 	const distance = Math.max(10, magnitude(diff));
+	if (Math.abs(distance) < 100.0) {
+		// FIXME prevents things slingshotting when they reach the singularity
+		return [0, 0, 0];
+	}
 	const dir = normalize(diff);
 
 	return scale(dir, (1 / (distance ** 2)) * force * 1000);

@@ -62,10 +62,10 @@ export function quaternionFromEuler(pitch: number, yaw: number, roll: number): Q
 	const cr = cos(roll / 2);
 	const sr = sin(roll / 2);
 
-	const y = cr * cp * sy - sr * sp * cy;
-	const x = cr * sp * cy + sr * cp * sy;
-	const z = sr * cp * cy - cr * sp * sy;
 	const w = cr * cp * cy + sr * sp * sy;
+	const x = cr * sp * cy + sr * cp * sy;
+	const y = cr * cp * sy - sr * sp * cy;
+	const z = sr * cp * cy - cr * sp * sy;
 
 	return [x, y, z, w];
 }
