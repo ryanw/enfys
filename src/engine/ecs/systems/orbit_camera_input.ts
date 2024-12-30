@@ -20,7 +20,7 @@ export class OrbitCameraInputSystem extends System {
 		'e': Key.Up,
 		'shift': Key.Boost,
 	};
-	distance: number = 512;
+	distance: number = 32;
 	readonly heldKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};

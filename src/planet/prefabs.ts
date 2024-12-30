@@ -43,7 +43,7 @@ export function planet(world: World, position: Point3, scale: number = 1) {
 		new PhysicsComponent(),
 		new VelocityComponent([0, 0, 200]),
 		new MaterialComponent('planet-material'),
-		new GravityComponent(1000),
+		new GravityComponent(100),
 	]);
 }
 
@@ -69,7 +69,6 @@ export function bug(world: World, position: Point3 = [0, 0, 0]): Entity {
 			0
 		]),
 		new MeshComponent('bug-ship'),
-		new GravityComponent(1),
 	]);
 }
 

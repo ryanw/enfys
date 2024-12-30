@@ -23,9 +23,9 @@ export class PlayerInputSystem extends System {
 		'd': Key.RollRight,
 		'q': Key.Left,
 		'e': Key.Right,
-		' ': Key.Fire,
+		' ': Key.Thrust,
 		'alt': Key.Boost,
-		'shift': Key.Thrust,
+		'shift': Key.Brake,
 		[XboxButton[XboxButton.X]]: Key.Fire,
 		[XboxButton[XboxButton.B]]: Key.Pick,
 		[XboxButton[XboxButton.A]]: Key.Bomb,
@@ -63,7 +63,7 @@ export class PlayerInputSystem extends System {
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
 		const particles = world.getComponent(entity, ParticlesComponent);
 
-		const speed = this.heldKeys.has(Key.Boost) ? 2560 : 160;
+		const speed = this.heldKeys.has(Key.Boost) ? 2560 : 64;
 		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;
@@ -95,12 +95,14 @@ export class PlayerInputSystem extends System {
 				case Key.Thrust:
 					if (Math.abs(value) > DEADZONE) {
 						thrust = value;
-
 						movement[1] = value;
 					}
 					break;
 				case Key.Brake:
-					brake = value;
+					if (Math.abs(value) > DEADZONE) {
+						thrust = -value;
+						movement[1] = -value;
+					}
 					break;
 				case Key.Stable:
 					break;

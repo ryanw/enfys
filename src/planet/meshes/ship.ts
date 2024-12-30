@@ -61,7 +61,7 @@ function buildNGon(sides: number, size: number = 1): Array<Point3> {
 }
 
 export function buildShipMesh<T>(callback: (position: Point3, index: number) => T): Array<T> {
-	const hull = buildNGon(7, 0.666);
+	const hull = buildNGon(7, 0.0666);
 	return hull.map((p, i) => {
 		const s = 1.0 - (0.3 + p[2]);
 		const q = scale(p, [s, 1, 1]);

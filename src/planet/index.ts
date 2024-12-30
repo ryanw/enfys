@@ -22,7 +22,6 @@ import { PhysicsSystem } from './systems/physics';
 import { SimpleMaterial } from 'engine/material';
 import { ShipMesh } from './meshes/ship';
 import { PlayerInputSystem } from './systems/player_input';
-import { TransformComponent } from 'engine/ecs/components';
 
 /**
  * Start the game
@@ -35,8 +34,8 @@ export async function main(el: HTMLCanvasElement) {
 
 	const star = prefabs.star(world, [0, 0, 0], 200);
 	const planet = prefabs.planet(world, [-600, 0, -200], 50);
-	const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
-	const player = prefabs.player(world, [400, 500, 0], [100, -100, 0]);
+	//const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
+	const player = prefabs.player(world, [-600, 0, -320], [0, 0, 200]);
 
 	const bugs = [];
 	for (let i = 0; i < 100; i++) {
@@ -81,7 +80,7 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
 	const calcNormals = new CalculateNormalsPipeline(gfx);
 
-	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 1));
+	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.1));
 
 	const playerMesh = new ShipMesh(gfx);
 	graphics.insertResource('player-ship', playerMesh);
@@ -104,7 +103,7 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	graphics.insertResource('moon-material', new PlanetMaterial(gfx, moonSeed));
 
 	const starSeed = planetSeed + 3214;
-	const starMesh = new Icosphere(gfx, 6);
+	const starMesh = new Icosphere(gfx, 4);
 	await planetTerrain.compute(starMesh, starSeed);
 	await calcNormals.compute(starMesh);
 	graphics.insertResource('star', starMesh);
