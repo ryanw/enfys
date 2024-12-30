@@ -9,6 +9,7 @@ import { Entity } from 'engine/ecs';
 import { ParticlesComponent } from 'engine/ecs/components/particles';
 import { SoundComponent } from 'engine/ecs/components/sound';
 import * as quats from 'engine/math/quaternions';
+import { OrbitCameraComponent } from 'engine/ecs/components/camera';
 
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
@@ -46,10 +47,32 @@ export class PlayerInputSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
-		const entities = world.entitiesWithComponents([PlayerComponent, VelocityComponent, TransformComponent]);
+		let entities;
+
+		entities = world.entitiesWithComponents([PlayerComponent, VelocityComponent, TransformComponent]);
 		for (const entity of entities) {
 			this.updateMovement(dt, world, entity);
 		}
+		entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
+		for (const entity of entities) {
+			this.updateCamera(dt, world, entity);
+		}
+	}
+
+	updateCamera(dt: number, world: World, entity: Entity) {
+		let tilt = 0;
+		for (const [key, value] of this.axis.entries()) {
+			if (Math.abs(value) < DEADZONE) {
+				continue;
+			}
+			switch (key) {
+				case XboxAxis.RightStickY:
+					tilt += value;
+					break;
+			}
+		}
+		const cam = world.getComponent(entity, OrbitCameraComponent)!;
+		cam.rotation = quats.multiply(cam.rotation, quats.quaternionFromEuler(tilt * dt, 0, 0));
 	}
 
 	updateMovement(dt: number, world: World, entity: Entity) {
@@ -63,7 +86,7 @@ export class PlayerInputSystem extends System {
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
 		const particles = world.getComponent(entity, ParticlesComponent);
 
-		const speed = this.heldKeys.has(Key.Boost) ? 2560 : 64;
+		const speed = this.heldKeys.has(Key.Boost) ? 2560 : 256;
 		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;
@@ -129,7 +152,7 @@ export class PlayerInputSystem extends System {
 					pitch -= value;
 					break;
 				case XboxAxis.RightStickX:
-				//case XboxAxis.LeftStickX:
+					//case XboxAxis.LeftStickX:
 					yaw += value;
 					break;
 				case XboxAxis.RightStickY:

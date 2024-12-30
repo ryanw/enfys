@@ -2,14 +2,14 @@ struct PackedVertex {
 	position: array<f32, 3>,
 	normal: array<f32, 3>,
 	color: u32,
-	softness: f32,
+	alt: f32,
 }
 
 struct Vertex {
 	position: vec3f,
 	normal: vec3f,
 	color: u32,
-	softness: f32,
+	alt: f32,
 }
 
 struct Material {
@@ -38,8 +38,9 @@ struct VertexOut {
 	@location(3) originalPosition: vec3f,
 	@location(4) modelPosition: vec3f,
 	@location(5) modelNormal: vec3f,
-	@location(6) @interpolate(flat) triangleId: u32,
-	@location(7) @interpolate(flat) quadId: u32,
+	@location(6) alt: f32,
+	@location(7) @interpolate(flat) triangleId: u32,
+	@location(8) @interpolate(flat) quadId: u32,
 }
 
 struct FragmentOut {
@@ -102,7 +103,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		vec3(packedVertex.position[0], packedVertex.position[1], packedVertex.position[2]),
 		vec3(packedVertex.normal[0], packedVertex.normal[1], packedVertex.normal[2]),
 		packedVertex.color,
-		packedVertex.softness,
+		packedVertex.alt,
 	);
 
 	/*
@@ -132,6 +133,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
 	out.normal = v.normal;
+	out.alt = v.alt;
 
 	return out;
 }
@@ -156,7 +158,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	//out.normal = vec4(p * -1.0, 1.0);
 	let ll = pointToLonLat(p);
 
-	var n0 = terrainNoise(p, 4, material.seed);
+	var n0 = terrainNoise(p, 7, material.seed);
 
 	var brightness = 1.0;
 	if n0 <= SEA_LEVEL {
@@ -169,8 +171,8 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 
 
-	//out.albedo = vec4(color.rgb * brightness, color.a);
-	out.albedo = vec4(color.rgb, color.a);
+	out.albedo = vec4(color.rgb * brightness, color.a);
+	//out.albedo = vec4(color.rgb, color.a);
 	out.normal = vec4(in.normal, 0.0);
 	out.metaOutput = in.triangleId % 0xff;
 

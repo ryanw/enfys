@@ -1,4 +1,4 @@
-import { Vector3 } from 'engine/math';
+import { Quaternion, Vector3 } from 'engine/math';
 import { Component } from '.';
 import { Entity } from '..';
 
@@ -16,6 +16,7 @@ export class OrbitCameraComponent extends Component {
 		public target?: Entity,
 		public distance: number = 16,
 		public offset: Vector3 = [0, 0, 0],
+		public rotation: Quaternion = [0, 0, 0, 1],
 	) {
 		super();
 	}

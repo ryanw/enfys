@@ -9,12 +9,14 @@ import { Point3, Vector3 } from "engine/math";
 import { quaternionFromEuler } from "engine/math/quaternions";
 import { GravityComponent } from "./components/gravity";
 import { ParticlesComponent } from "engine/ecs/components/particles";
+import { ColliderComponent } from "engine/ecs/components/collider";
+import { magnitude, magnitudeSquared } from "engine/math/vectors";
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
 		new TransformComponent([0, 0, 0], quaternionFromEuler(0.2, -0.2, 0)),
-		new CameraComponent(0.1, 10000.0),
-		new OrbitCameraComponent(target),
+		new CameraComponent(1.0, 100000.0),
+		new OrbitCameraComponent(target, 16, [0, 5, 0], quaternionFromEuler(0.5, 0, 0)),
 	]);
 }
 
@@ -32,18 +34,20 @@ export function star(world: World, position: Point3, scale: number = 1) {
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('star'),
 		new MaterialComponent('star-material'),
-		new GravityComponent(16000),
+		new GravityComponent(64000),
+		new ColliderComponent(1.01 * scale),
 	]);
 }
 
-export function planet(world: World, position: Point3, scale: number = 1) {
+export function planet(world: World, position: Point3, scale: number = 1, velocity: Vector3 = [0, 0, 0]) {
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('planet'),
-		new PhysicsComponent(),
-		new VelocityComponent([0, 0, 200]),
+		//new PhysicsComponent(),
+		new ColliderComponent(1.01 * scale),
+		new VelocityComponent(velocity),
 		new MaterialComponent('planet-material'),
-		new GravityComponent(100),
+		new GravityComponent(100 * scale),
 	]);
 }
 
@@ -72,12 +76,13 @@ export function bug(world: World, position: Point3 = [0, 0, 0]): Entity {
 	]);
 }
 
-export function player(world: World, position: Point3 = [0, 0, 0], velocity: Vector3 = [0,0,0]): Entity {
+export function player(world: World, position: Point3 = [0, 0, 0], velocity: Vector3 = [0, 0, 0]): Entity {
+	const { PI } = Math;
 	const scale = 20.0;
 	return world.createEntity([
 		new PlayerComponent(),
 		new PhysicsComponent(),
-		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
+		new TransformComponent(position, quaternionFromEuler(PI / -2, 0, 0), [scale, scale, scale]),
 		new VelocityComponent(velocity),
 		new MeshComponent('player-ship'),
 		new ParticlesComponent('tiny-cube', 0, true),

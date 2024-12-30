@@ -32,10 +32,15 @@ export async function main(el: HTMLCanvasElement) {
 	const graphics = await initGraphics(gfx);
 	const world = await initWorld(gfx);
 
-	const star = prefabs.star(world, [0, 0, 0], 200);
-	const planet = prefabs.planet(world, [-600, 0, -200], 50);
-	const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
-	const player = prefabs.player(world, [-600, 0, -320], [0, 0, 200]);
+	const star = prefabs.star(world, [0, 0, 0], 2000);
+
+	const planetRad = 500;
+	const planet0 = prefabs.planet(world, [-6000, 0, 0], planetRad, [0, 0, 0]);
+	const player = prefabs.player(world, [-6000, 0, -planetRad - 100], [0, 0, 0]);
+
+	//const planet1 = prefabs.planet(world, [600, 0, -200], 200, [0, 0, 700]);
+	//const planet2 = prefabs.planet(world, [3000, 0, -1000], 2000, [-1000, 0, 1000]);
+	//const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
 
 	const bugs = [];
 	for (let i = 0; i < 100; i++) {
@@ -89,7 +94,7 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	graphics.insertResource('bug-ship', bugMesh);
 
 	const planetSeed = Math.random() * 0xffffff | 0;
-	const planetMesh = new CubeSphere(gfx, 256);
+	const planetMesh = new CubeSphere(gfx, 320);
 	await planetTerrain.compute(planetMesh, planetSeed);
 	await calcNormals.compute(planetMesh);
 	graphics.insertResource('planet', planetMesh);
@@ -103,8 +108,8 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	graphics.insertResource('moon-material', new PlanetMaterial(gfx, moonSeed));
 
 	const starSeed = planetSeed + 3214;
-	const starMesh = new Icosphere(gfx, 4);
-	await planetTerrain.compute(starMesh, starSeed);
+	const starMesh = new CubeSphere(gfx, 128);
+	await planetTerrain.compute(starMesh, starSeed, { seaLevel: 0 });
 	await calcNormals.compute(starMesh);
 	graphics.insertResource('star', starMesh);
 	graphics.insertResource('star-material', new SimpleMaterial(gfx, 0xffffffffn));

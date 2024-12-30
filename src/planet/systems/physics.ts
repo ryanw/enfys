@@ -1,4 +1,4 @@
-import { add, magnitude, normalize, scale, subtract } from 'engine/math/vectors';
+import { add, dot, lerp, magnitude, normalize, scale, subtract } from 'engine/math/vectors';
 import { Gfx } from 'engine';
 import { System } from 'engine/ecs/systems';
 import { World } from 'engine/ecs/world';
@@ -7,6 +7,15 @@ import { PhysicsComponent } from 'engine/ecs/components/physics';
 import { GravityComponent } from '../components/gravity';
 import { Point3, Vector3 } from 'engine/math';
 import { Entity } from 'engine/ecs';
+import { ColliderComponent } from 'engine/ecs/components/collider';
+
+interface Planet {
+	entity: Entity;
+	position: Point3;
+	velocity: Vector3;
+	radius: number;
+	force: number;
+}
 
 export class PhysicsSystem extends System {
 	constructor(private gfx: Gfx) {
@@ -17,17 +26,24 @@ export class PhysicsSystem extends System {
 		const bodies = world.entitiesWithComponents([GravityComponent, TransformComponent]);
 		const entities = world.entitiesWithComponents([PhysicsComponent, VelocityComponent, TransformComponent]);
 
-		let wells: Array<[Entity, Point3, Vector3, number]>;
+		let planets: Array<Planet>;
 
-		function refreshWells() {
-			wells = Array.from(bodies).map(ent => {
+		function refreshPlanets() {
+			planets = Array.from(bodies).map(ent => {
 				const { force } = world.getComponent(ent, GravityComponent)!;
 				const { position } = world.getComponent(ent, TransformComponent)!;
+				const collider = world.getComponent(ent, ColliderComponent);
 				const velocity = world.getComponent(ent, VelocityComponent);
-				return [ent, position, velocity?.velocity || [0, 0, 0], force];
+				return {
+					entity: ent,
+					position,
+					velocity: velocity?.velocity || [0, 0, 0],
+					force,
+					radius: collider?.radius ?? 10
+				};
 			});
 		}
-		refreshWells();
+		refreshPlanets();
 
 		function updateEntity(entity: Entity) {
 			const tra = world.getComponent(entity, TransformComponent)!;
@@ -37,22 +53,29 @@ export class PhysicsSystem extends System {
 			// Apply velocity
 			tra.position = add(tra.position, scale(vel.velocity, dt));
 
-			// Add every well's gravity to velocity
-			for (const [ent, position, _, force] of wells) {
+			// Add every planet's gravity to velocity
+			for (const { entity: ent, position, force } of planets) {
 				if (ent === entity) continue;
 				const gravity = calculateGravity(tra.position, position, force * dt);
 				vel.velocity = add(vel.velocity, gravity);
 			}
 
 			if (isPlayer) {
-				for (const [ent, position, wellVelocity, force] of wells) {
+				for (const { entity: ent, position, velocity: planetVelocity, force, radius } of planets) {
 					if (ent === entity) continue;
-					const radius = 45.0
+					const friction = 10.0;
 					if (hasCollided(tra.position, position, radius)) {
 						const normal = normalize(subtract(tra.position, position));
 						tra.position = add(position, scale(normal, radius));
-						//vel.velocity = add(vel.velocity, scale(normal, dt * 100));
-						vel.velocity = [...wellVelocity];
+						const relativeVel = subtract(vel.velocity, planetVelocity);
+						const dp = dot(relativeVel, normal);
+						vel.velocity = add(vel.velocity, scale(normal, -dp));
+						const speedDiff = magnitude(subtract(vel.velocity, planetVelocity));
+						if (Math.abs(speedDiff) < 1) {
+							vel.velocity = [...planetVelocity];
+						} else {
+							vel.velocity = lerp(vel.velocity, planetVelocity, friction * dt);
+						}
 					}
 				}
 			}
@@ -67,7 +90,7 @@ export class PhysicsSystem extends System {
 			updateEntity(entity);
 		}
 
-		refreshWells();
+		refreshPlanets();
 		const things = Array.from(entities).filter(e => !world.hasComponent(e, GravityComponent));
 		for (const entity of things) {
 			updateEntity(entity);

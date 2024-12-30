@@ -2,14 +2,15 @@ import { Gfx } from 'engine';
 import { Pipeline } from 'engine/pipelines';
 import shaderSource from './planet_terrain.wgsl';
 import { UniformBuffer } from 'engine/uniform_buffer';
-import { Point2, Vector2 } from 'engine/math';
-import { ColorVertex, Mesh, SimpleMesh } from 'engine/mesh';
+import { SimpleMesh } from 'engine/mesh';
 
-export interface TerrainChunk {
-	origin: Point2,
-	size: [number, number],
-	pixels: Float32Array,
+export interface TerrainOptions {
+	seaLevel: number;
 }
+
+const DEFAULT_OPTIONS: TerrainOptions = {
+	seaLevel: 0.5,
+};
 
 /**
  * Compute shader to extract a heightmap region
@@ -26,6 +27,7 @@ export class PlanetTerrainPipeline extends Pipeline {
 		this.uniformBuffer = new UniformBuffer(gfx, [
 			['count', 'u32'],
 			['seed', 'u32'],
+			['seaLevel', 'f32'],
 		]);
 
 		const shader = device.createShaderModule({
@@ -65,13 +67,16 @@ export class PlanetTerrainPipeline extends Pipeline {
 
 	}
 
-	async compute(mesh: SimpleMesh, seed: number) {
+	async compute(mesh: SimpleMesh, seed: number, options: Partial<TerrainOptions> = {}) {
+		options = {...DEFAULT_OPTIONS, ...options };
+
 		const { device } = this.gfx;
 		const wgSize = 256;
 
 		this.uniformBuffer.replace({
 			count: mesh.vertexCount,
 			seed,
+			seaLevel: options.seaLevel || 0,
 		});
 
 		const enc = device.createCommandEncoder({ label: 'PlanetTerrainPipeline Command Encoder' });

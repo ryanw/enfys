@@ -5,12 +5,16 @@ export function scale<T extends Vector2 | Vector3 | Vector4>(v: T, scale: number
 	return v.map((n, i) => n * scaleVec[i]) as T;
 }
 
-export function magnitude<T extends number[]>(v: T): number {
+export function magnitudeSquared<T extends number[]>(v: T): number {
 	let acc = 0;
 	for (const n of v) {
 		acc += Math.pow(n, 2);
 	}
-	return Math.sqrt(acc);
+	return acc
+}
+
+export function magnitude<T extends number[]>(v: T): number {
+	return Math.sqrt(magnitudeSquared(v));
 }
 
 /**
@@ -31,6 +35,12 @@ export function add<T extends number[]>(a: T, b: T): T {
 
 export function dot<T extends number[]>(a: T, b: T): number {
 	return a.map((n, i) => n * (b[i] || 0)).reduce((a, b) => a + b);
+}
+
+export function lerp<T extends number[]>(a: T, b: T, t: number): T {
+	const { min, max } = Math;
+	t = max(0, min(1, t));
+	return a.map((_, i) => (1 - t) * a[i] + t * b[i]) as T;
 }
 
 export function reflect(p: Point3, [origin, normal]: Plane): Point3 {

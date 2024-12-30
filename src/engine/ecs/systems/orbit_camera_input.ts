@@ -69,18 +69,18 @@ export class OrbitCameraInputSystem extends System {
 		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
 		for (const entity of entities) {
 			const trans = world.getComponent(entity, TransformComponent)!;
-			const { target, offset } = world.getComponent(entity, OrbitCameraComponent)!;
+			const { target, offset, rotation: cameraRotation } = world.getComponent(entity, OrbitCameraComponent)!;
 			if (!target) continue;
 			const { position: targetPoint, rotation: entRotation } = world.getComponent(target, TransformComponent)!;
 
-			const targetRotation = quats.multiply(entRotation, quats.quaternionFromEuler(0.4, 0, 0));
+			const targetRotation = quats.multiply(entRotation, cameraRotation);
 
 			const similar = 1.0 / max(0.1, dot(trans.rotation, targetRotation));
 			trans.rotation = quats.lerp(trans.rotation, targetRotation, 3.0 * dt * similar);
 
 			let transform = translation(...targetPoint);
 			transform = multiply(transform, rotationFromQuaternion(trans.rotation));
-			transform = multiply(transform, translation(0, 5, -this.distance));
+			transform = multiply(transform, translation(0, 0, -this.distance));
 			trans.position = transformPoint(transform, offset);
 		}
 	}
@@ -135,15 +135,10 @@ export class OrbitCameraInputSystem extends System {
 		const rot = quats.quaternionFromEuler(x * s, y * s, 0);
 		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
 		for (const entity of entities) {
-			const transform = world.getComponent(entity, TransformComponent)!;
-			//const trans = multiply(
-			//	inverse(translation(...transform.position))!,
-			//	rotationFromQuaternion(rot),
-			//	translation(...transform.position),
-			//);
-			//const p = transformPoint(trans, transform.position);
-			////transform.position = p;
+			const cam = world.getComponent(entity, OrbitCameraComponent)!;
+			cam.rotation = quats.multiply(cam.rotation, rot);
 
+			const transform = world.getComponent(entity, TransformComponent)!;
 			transform.rotation = quats.multiply(transform.rotation, rot);
 		}
 	}
