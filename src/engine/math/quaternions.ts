@@ -1,5 +1,5 @@
 import { Quaternion, Vector3 } from '.';
-import { magnitude, scale } from './vectors';
+import { magnitude, normalize, scale } from './vectors';
 
 /**
  * Create an identity Quaternion
@@ -88,4 +88,18 @@ export function quaternionToEuler([x, y, z, w]: Quaternion): Vector3 {
 	const yaw = atan2(t3, t4)
 
 	return [pitch, yaw, roll];
+}
+
+export function lerp(q0: Quaternion, q1: Quaternion, t: number): Quaternion {
+	const { min, max } = Math;
+	t = max(0, min(1, t));
+
+	const result = [
+		(1 - t) * q0[0] + t * q1[0], // x
+		(1 - t) * q0[1] + t * q1[1], // y
+		(1 - t) * q0[2] + t * q1[2], // z
+		(1 - t) * q0[3] + t * q1[3], // w
+	];
+
+	return normalize(result) as Quaternion;
 }

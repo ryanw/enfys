@@ -4,7 +4,7 @@ import { TransformComponent } from '../components';
 import { OrbitCameraComponent } from '../components/camera';
 import { World } from '../world';
 import { inverse, multiply, rotation, rotationFromQuaternion, rotationFromVector, transformPoint, translation } from 'engine/math/transform';
-import { add } from 'engine/math/vectors';
+import { add, dot } from 'engine/math/vectors';
 import * as quats from 'engine/math/quaternions';
 
 const MIN_DISTANCE = 1;
@@ -45,7 +45,7 @@ export class OrbitCameraInputSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
-		const { abs, pow } = Math;
+		const { abs, pow, max } = Math;
 		this.updateGamepads();
 
 		const rotateSpeed = 4.0;
@@ -71,15 +71,16 @@ export class OrbitCameraInputSystem extends System {
 			const trans = world.getComponent(entity, TransformComponent)!;
 			const { target, offset } = world.getComponent(entity, OrbitCameraComponent)!;
 			if (!target) continue;
-			const { position: targetPoint } = world.getComponent(target, TransformComponent)!;
+			const { position: targetPoint, rotation: entRotation } = world.getComponent(target, TransformComponent)!;
 
+			const targetRotation = quats.multiply(entRotation, quats.quaternionFromEuler(0.4, 0, 0));
 
-			trans.rotation = quats.multiply(trans.rotation, quats.quaternionFromEuler(pitch * dt, yaw * dt, 0));
-			const rotationMatrix = rotationFromQuaternion(trans.rotation);
+			const similar = 1.0 / max(0.1, dot(trans.rotation, targetRotation));
+			trans.rotation = quats.lerp(trans.rotation, targetRotation, 3.0 * dt * similar);
 
 			let transform = translation(...targetPoint);
-			transform = multiply(transform, rotationMatrix);
-			transform = multiply(transform, translation(0, 0, -this.distance));
+			transform = multiply(transform, rotationFromQuaternion(trans.rotation));
+			transform = multiply(transform, translation(0, 5, -this.distance));
 			trans.position = transformPoint(transform, offset);
 		}
 	}

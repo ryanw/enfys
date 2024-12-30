@@ -34,7 +34,7 @@ export async function main(el: HTMLCanvasElement) {
 
 	const star = prefabs.star(world, [0, 0, 0], 200);
 	const planet = prefabs.planet(world, [-600, 0, -200], 50);
-	//const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
+	const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
 	const player = prefabs.player(world, [-600, 0, -320], [0, 0, 200]);
 
 	const bugs = [];

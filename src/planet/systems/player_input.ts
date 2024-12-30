@@ -71,6 +71,7 @@ export class PlayerInputSystem extends System {
 		let yaw = 0.0;
 		let thrust = 0;
 		let roll = 0;
+		let tilt = 0;
 
 		for (const [key, value] of this.heldKeys.entries()) {
 			switch (key) {
@@ -95,13 +96,13 @@ export class PlayerInputSystem extends System {
 				case Key.Thrust:
 					if (Math.abs(value) > DEADZONE) {
 						thrust = value;
-						movement[1] = value;
+						movement[2] = value;
 					}
 					break;
 				case Key.Brake:
 					if (Math.abs(value) > DEADZONE) {
 						thrust = -value;
-						movement[1] = -value;
+						movement[2] = -value;
 					}
 					break;
 				case Key.Stable:
@@ -120,11 +121,19 @@ export class PlayerInputSystem extends System {
 				continue;
 			}
 			switch (key) {
+				//case XboxAxis.RightStickX:
 				case XboxAxis.LeftStickX:
 					roll -= value;
 					break;
 				case XboxAxis.LeftStickY:
 					pitch -= value;
+					break;
+				case XboxAxis.RightStickX:
+				//case XboxAxis.LeftStickX:
+					yaw += value;
+					break;
+				case XboxAxis.RightStickY:
+					tilt += value;
 					break;
 			}
 		}
