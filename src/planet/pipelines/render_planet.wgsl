@@ -107,6 +107,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		packedVertex.alt,
 	);
 
+	var normal = v.normal;
+
 	/*
 	var vp = normalize(v.position);
 	let scale = 1.0/4.0;
@@ -133,7 +135,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.color = vec4(1.0);
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
-	out.normal = v.normal;
+	out.normal = normal;
 	out.alt = v.alt;
 
 	return out;
@@ -159,7 +161,8 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	//out.normal = vec4(p * -1.0, 1.0);
 	let ll = pointToLonLat(p);
 
-	var n0 = terrainNoise(p, 7, material.seed, material.seaLevel);
+	var n0 = terrainNoise(p, 5, material.seed, material.seaLevel);
+	var normal = terrainNormal(p, 5, material.seed, material.seaLevel);
 
 	var brightness = 1.0;
 	if n0 <= material.seaLevel {
@@ -172,9 +175,9 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 
 
-	out.albedo = vec4(color.rgb * brightness, color.a);
-	//out.albedo = vec4(color.rgb, color.a);
-	out.normal = vec4(in.normal, 0.0);
+	//out.albedo = vec4(color.rgb * brightness, color.a);
+	out.albedo = vec4(color.rgb, color.a);
+	out.normal = vec4(normal, 0.0);
 	out.metaOutput = in.triangleId % 0xff;
 
 	return out;

@@ -63,7 +63,7 @@ export class PhysicsSystem extends System {
 			if (isPlayer) {
 				for (const { entity: ent, position, velocity: planetVelocity, force, radius } of planets) {
 					if (ent === entity) continue;
-					const friction = 10.0;
+					const friction = 2.0;
 					if (hasCollided(tra.position, position, radius)) {
 						const normal = normalize(subtract(tra.position, position));
 						tra.position = add(position, scale(normal, radius));

@@ -14,8 +14,8 @@ import { ColliderComponent } from "engine/ecs/components/collider";
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
 		new TransformComponent([0, 0, 0]),
-		new CameraComponent(1.0, 100000.0),
-		new OrbitCameraComponent(target, 16, [0, 5, 0], quaternionFromEuler(0.6, 0, 0)),
+		new CameraComponent(1, 100000.0),
+		new OrbitCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.3, 0, 0)),
 	]);
 }
 
@@ -42,11 +42,11 @@ export function planet(world: World, position: Point3, scale: number = 1, veloci
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('planet'),
-		//new PhysicsComponent(),
-		new ColliderComponent(1.01 * scale),
+		new PhysicsComponent(),
+		new ColliderComponent(scale),
 		new VelocityComponent(velocity),
 		new MaterialComponent('planet-material'),
-		new GravityComponent(100 * scale),
+		new GravityComponent(12 * scale),
 	]);
 }
 
@@ -77,7 +77,7 @@ export function bug(world: World, position: Point3 = [0, 0, 0]): Entity {
 
 export function player(world: World, position: Point3 = [0, 0, 0], velocity: Vector3 = [0, 0, 0]): Entity {
 	const { PI } = Math;
-	const scale = 20.0;
+	const scale = 3.0;
 	return world.createEntity([
 		new PlayerComponent(),
 		new PhysicsComponent(),

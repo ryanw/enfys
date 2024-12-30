@@ -35,8 +35,8 @@ export async function main(el: HTMLCanvasElement) {
 	const star = prefabs.star(world, [0, 0, 0], 2000);
 
 	const planetRad = 500;
-	const planet0 = prefabs.planet(world, [-6000, 0, 0], planetRad, [0, 0, 0]);
-	const player = prefabs.player(world, [-6000, 0, -planetRad - 100], [0, 0, 0]);
+	const planet0 = prefabs.planet(world, [-6000, 0, 0], planetRad, [0, 0, 400]);
+	const player = prefabs.player(world, [-6000, 0, -planetRad - 100], [0, 0, 400]);
 
 	//const planet1 = prefabs.planet(world, [600, 0, -200], 200, [0, 0, 700]);
 	//const planet2 = prefabs.planet(world, [3000, 0, -1000], 2000, [-1000, 0, 1000]);
@@ -85,7 +85,7 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
 	const calcNormals = new CalculateNormalsPipeline(gfx);
 
-	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.1));
+	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.01));
 
 	const playerMesh = new ShipMesh(gfx);
 	graphics.insertResource('player-ship', playerMesh);
@@ -94,7 +94,7 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	graphics.insertResource('bug-ship', bugMesh);
 
 	const planetSeed = Math.random() * 0xffffff | 0;
-	const planetMesh = new CubeSphere(gfx, 320);
+	const planetMesh = new CubeSphere(gfx, 256);
 	await planetTerrain.compute(planetMesh, planetSeed, { seaLevel: 0.3 });
 	await calcNormals.compute(planetMesh);
 	graphics.insertResource('planet', planetMesh);
