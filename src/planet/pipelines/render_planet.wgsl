@@ -53,6 +53,7 @@ struct FragmentOut {
 struct Camera {
 	view: mat4x4f,
 	projection: mat4x4f,
+	invProjection: mat4x4f,
 	resolution: vec2f,
 	t: f32,
 	isShadowMap: u32,
@@ -156,12 +157,13 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	let fp = fwidth(p);
 	let mm = max(max(fp.x, fp.y), fp.z);
-	var res = 1.0 - smoothstep(0.0, 1.0, mm*512.0);
+	var res = 1.0 - smoothstep(0.0, 1.0, mm*256.0);
 	res = clamp(pow(res, 2.0), 0.0, 1.0);
 
-	let octaves = 3 + i32(ceil(res * 5.0));
-	var n0 = terrainNoise(p, octaves, material.seed, material.seaLevel);
-	var normal = terrainNormal(p, octaves + 1, material.seed, material.seaLevel);
+	let octaves = 3 + i32(ceil(res * 4.0));
+	var n0 = terrainNoise(p, octaves, material.seed, material.seaLevel) + 0.5;
+	let scale = 1.0/2.0;
+	var normal = terrainNormal(scale, p, octaves + 1, material.seed, material.seaLevel);
 
 	var brightness = 1.0;
 	if n0 <= material.seaLevel {
@@ -174,8 +176,8 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 
 
-	//out.albedo = vec4(color.rgb * brightness, color.a);
-	out.albedo = vec4(color.rgb, color.a);
+	out.albedo = vec4(color.rgb * brightness, color.a);
+	//out.albedo = vec4(color.rgb, color.a);
 	out.normal = vec4(normal, 0.0);
 	out.metaOutput = in.triangleId % 0xff;
 

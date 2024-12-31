@@ -22,6 +22,11 @@ import { PhysicsSystem } from './systems/physics';
 import { SimpleMaterial } from 'engine/material';
 import { ShipMesh } from './meshes/ship';
 import { PlayerInputSystem } from './systems/player_input';
+import { FollowCameraSystem } from 'engine/ecs/systems/follow_camera';
+import { WaterMaterial } from './materials/water';
+import { RenderWaterPipeline } from './pipelines/render_water';
+import { FollowCameraComponent } from 'engine/ecs/components/camera';
+import { hsl } from 'engine/color';
 
 /**
  * Start the game
@@ -32,15 +37,19 @@ export async function main(el: HTMLCanvasElement) {
 	const graphics = await initGraphics(gfx);
 	const world = await initWorld(gfx);
 
-	const star = prefabs.star(world, [0, 0, 0], 2000);
 
+	const planetSpeed = 10;
 	const planetRad = 500;
-	const planet0 = prefabs.planet(world, [-6000, 0, 0], planetRad, [0, 0, 400]);
-	const player = prefabs.player(world, [-6000, 0, -planetRad - 100], [0, 0, 400]);
+	const waterDepth = 48;
+	const planet0 = prefabs.planet(world, [0, 0, 0], planetRad, [planetSpeed, 0, 0]);
+	const water0 = prefabs.water(world, [0, 0, 0], planetRad - waterDepth, [planetSpeed, 0, 0]);
+	//const rock = prefabs.rock(world, [0, 0, 0], planetRad, 0, 0]);
+	const player = prefabs.player(world, [0, -planetRad - 800, 0], [0, 0, 0]);
 
-	const planet1 = prefabs.planet(world, [600, 0, -200], 200, [0, 0, 700]);
-	const planet2 = prefabs.planet(world, [3000, 0, -1000], 2000, [-1000, 0, 1000]);
-	const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
+	//const star = prefabs.star(world, [0, 0, 0], 2000);
+	//const planet1 = prefabs.planet(world, [600, 0, -200], 200, [0, 0, 700]);
+	//const planet2 = prefabs.planet(world, [3000, 0, -1000], 2000, [-1000, 0, 1000]);
+	//const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
 
 	const bugs = [];
 	for (let i = 0; i < 100; i++) {
@@ -52,7 +61,7 @@ export async function main(el: HTMLCanvasElement) {
 		bugs.push(bug);
 	}
 
-	const camera = prefabs.orbitCamera(world, player);
+	const camera = prefabs.followCamera(world, player);
 
 	scene.currentCameraId = 1;
 	scene.primaryCameraId = 1;
@@ -80,6 +89,7 @@ async function initScene(gfx: Gfx): Promise<Scene> {
 async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	gfx.registerMaterials([
 		[PlanetMaterial, RenderPlanetPipeline],
+		[WaterMaterial, RenderWaterPipeline],
 	]);
 	const graphics = new WorldGraphics(gfx);
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
@@ -95,10 +105,24 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 
 	const planetSeed = Math.random() * 0xffffff | 0;
 	const planetMesh = new CubeSphere(gfx, 256);
-	await planetTerrain.compute(planetMesh, planetSeed, { seaLevel: 0.3 });
+	await planetTerrain.compute(planetMesh, planetSeed, { seaLevel: 0.0 });
 	await calcNormals.compute(planetMesh);
 	graphics.insertResource('planet', planetMesh);
-	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed, 0.38));
+	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed, 0.0));
+
+
+
+	const waterMesh = new Icosphere(gfx, 4);
+	await calcNormals.compute(waterMesh);
+	graphics.insertResource('water', waterMesh);
+	const hue = Math.random();
+	const shallow = hsl(hue, 0.7, 0.5, 0.1);
+	const deep = hsl((hue + 0.1) % 1.0, 0.5, 0.3, 0.8);
+	graphics.insertResource('water-material', new WaterMaterial(gfx, shallow, deep));
+
+
+
+
 
 	const moonSeed = planetSeed + 5342;
 	const moonMesh = new CubeSphere(gfx, 128);
@@ -122,6 +146,7 @@ async function initWorld(gfx: Gfx): Promise<World> {
 	world.addSystem(new PhysicsSystem(gfx));
 	world.addSystem(new FreeCameraInputSystem(gfx.canvas));
 	world.addSystem(new OrbitCameraInputSystem(gfx.canvas));
+	world.addSystem(new FollowCameraSystem(gfx.canvas));
 	world.addSystem(new PlayerInputSystem(gfx.canvas));
 	return world;
 }

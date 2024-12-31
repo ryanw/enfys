@@ -29,6 +29,7 @@ export class Light {
 			this.uniforms.push(new UniformBuffer(gfx, [
 				['view', 'mat4x4f'],
 				['projection', 'mat4x4f'],
+				['invProjection', 'mat4x4f'],
 				['resolution', 'vec2f'],
 				['t', 'f32'],
 				['isShadowMap', 'u32'],
@@ -66,6 +67,7 @@ export class Light {
 			this.uniforms[i].replace({
 				view: cascade.view,
 				projection: cascade.projection,
+				invProjection: inverse(cascade.projection)!,
 				resolution: [32, 32],
 				t: performance.now() / 1000,
 				isShadowMap: true,

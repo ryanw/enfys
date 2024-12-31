@@ -233,6 +233,7 @@ export class Gfx {
 				scene.fogColor,
 				scene.clearColor,
 			);
+			this.renderer.drawTransparencies(encoder, scene, camera, this.gbuffer.depth, this.currentTexture);
 		});
 	}
 

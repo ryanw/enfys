@@ -1,21 +1,30 @@
 import { Entity } from "engine/ecs";
 import { PlayerComponent, TransformComponent, VelocityComponent } from "engine/ecs/components";
-import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engine/ecs/components/camera";
+import { CameraComponent, FollowCameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engine/ecs/components/camera";
 import { MaterialComponent } from "engine/ecs/components/material";
 import { MeshComponent } from "engine/ecs/components/mesh";
 import { PhysicsComponent } from "engine/ecs/components/physics";
 import { World } from "engine/ecs/world";
-import { Point3, Vector3 } from "engine/math";
+import { Point3, Quaternion, Vector3 } from "engine/math";
 import { quaternionFromEuler } from "engine/math/quaternions";
 import { GravityComponent } from "./components/gravity";
 import { ParticlesComponent } from "engine/ecs/components/particles";
 import { ColliderComponent } from "engine/ecs/components/collider";
+import { normalize } from "engine/math/vectors";
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
 		new TransformComponent([0, 0, 0]),
 		new CameraComponent(1, 100000.0),
 		new OrbitCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.3, 0, 0)),
+	]);
+}
+
+export function followCamera(world: World, target: Entity): Entity {
+	return world.createEntity([
+		new TransformComponent([0, 0, 0], normalize([-0.4, 0, 0, 0.8] as Quaternion)),
+		new CameraComponent(1, 100000.0),
+		new FollowCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.3, 0, 0)),
 	]);
 }
 
@@ -34,7 +43,15 @@ export function star(world: World, position: Point3, scale: number = 1) {
 		new MeshComponent('star'),
 		new MaterialComponent('star-material'),
 		new GravityComponent(64000),
-		new ColliderComponent(1.01 * scale),
+		new ColliderComponent(scale),
+	]);
+}
+
+export function rock(world: World, position: Point3, scale: number = 1, velocity: Vector3 = [0, 0, 0]) {
+	return world.createEntity([
+		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
+		new MeshComponent('planet'),
+		new MaterialComponent('planet-material'),
 	]);
 }
 
@@ -43,10 +60,21 @@ export function planet(world: World, position: Point3, scale: number = 1, veloci
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('planet'),
 		new PhysicsComponent(),
-		new ColliderComponent(scale),
+		new ColliderComponent(scale * 0.88),
 		new VelocityComponent(velocity),
 		new MaterialComponent('planet-material'),
 		new GravityComponent(12 * scale),
+	]);
+}
+
+export function water(world: World, position: Point3, scale: number = 1, velocity: Vector3 = [0, 0, 0]) {
+	return world.createEntity([
+		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
+		new MeshComponent('water'),
+		new PhysicsComponent(),
+		new ColliderComponent(scale),
+		new VelocityComponent(velocity),
+		new MaterialComponent('water-material'),
 	]);
 }
 
@@ -81,7 +109,11 @@ export function player(world: World, position: Point3 = [0, 0, 0], velocity: Vec
 	return world.createEntity([
 		new PlayerComponent(),
 		new PhysicsComponent(),
-		new TransformComponent(position, quaternionFromEuler(PI / -2, 0, 0), [scale, scale, scale]),
+		new TransformComponent(
+			position,
+			quaternionFromEuler(PI / -1.75, 0, 0),
+			[scale, scale, scale],
+		),
 		new VelocityComponent(velocity),
 		new MeshComponent('player-ship'),
 		new ParticlesComponent('tiny-cube', 0, true),

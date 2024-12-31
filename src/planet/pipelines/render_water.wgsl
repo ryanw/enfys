@@ -2,19 +2,19 @@ struct PackedVertex {
 	position: array<f32, 3>,
 	normal: array<f32, 3>,
 	color: u32,
-	softness: f32,
+	alt: f32,
 }
 
 struct Vertex {
 	position: vec3f,
 	normal: vec3f,
 	color: u32,
-	softness: f32,
+	alt: f32,
 }
 
 struct Material {
-	color: u32,
-	seed: u32,
+	shallowColor: u32,
+	deepColor: u32,
 }
 
 struct VertexIn {
@@ -34,18 +34,15 @@ struct VertexOut {
 	@builtin(position) position: vec4f,
 	@location(0) uv: vec2f,
 	@location(1) normal: vec3f,
-	@location(2) color: vec4f,
-	@location(3) originalPosition: vec3f,
-	@location(4) modelPosition: vec3f,
-	@location(5) modelNormal: vec3f,
-	@location(6) @interpolate(flat) triangleId: u32,
-	@location(7) @interpolate(flat) quadId: u32,
+	@location(2) shallowColor: vec4f,
+	@location(3) deepColor: vec4f,
+	@location(4) alt: f32,
+	@location(5) @interpolate(flat) triangleId: u32,
+	@location(6) @interpolate(flat) quadId: u32,
 }
 
 struct FragmentOut {
-	@location(0) albedo: vec4f,
-	@location(1) normal: vec4f,
-	@location(2) metaOutput: u32,
+	@location(0) color: vec4f,
 }
 
 struct Camera {
@@ -73,7 +70,6 @@ struct Shadow {
 	color: u32,
 }
 
-
 @group(0) @binding(0)
 var<uniform> camera: Camera;
 
@@ -86,7 +82,8 @@ var<uniform> material: Material;
 @group(0) @binding(3)
 var<storage, read> vertices: array<PackedVertex>;
 
-const SEA_LEVEL = 0.5;
+@group(0) @binding(4)
+var depthBuffer: texture_depth_2d;
 
 @vertex
 fn vs_main(in: VertexIn) -> VertexOut {
@@ -96,6 +93,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		return out;
 	}
 
+	let shallowColor = unpack4x8unorm(material.shallowColor);
+	let deepColor = unpack4x8unorm(material.deepColor);
 	let variantIndex = in.variantIndex + pawn.variantIndex;
 	let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
 	let idx = in.id + vertexOffset;
@@ -105,13 +104,10 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		vec3(packedVertex.position[0], packedVertex.position[1], packedVertex.position[2]),
 		vec3(packedVertex.normal[0], packedVertex.normal[1], packedVertex.normal[2]),
 		packedVertex.color,
-		packedVertex.softness,
+		packedVertex.alt,
 	);
 
-	var vp = normalize(v.position);
-	let scale = 1.0/4.0;
-	let n0 = (max(SEA_LEVEL, terrainNoise(vp, 3)) * scale) - scale;
-	let terrainOffset = (vp * n0);
+	var normal = v.normal;
 
 	let transform = mat4x4(
 		in.transform0,
@@ -122,16 +118,19 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let offsetModel = pawn.model * transform;
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * camera.view;
-	var p = offsetModel * vec4(v.position + terrainOffset, 1.0);
+	//var p = offsetModel * vec4(v.position + terrainOffset, 1.0);
+	var p = offsetModel * vec4(v.position, 1.0);
 	var position = mvp * p;
 
 	out.position = position;
-	out.uv = v.position.xy * 0.5 + 0.5;
-	out.originalPosition = v.position;
-	out.color = vec4(1.0);
+	out.uv = v.position.xy;
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
+	out.normal = normal;
+	out.alt = v.alt;
 
+	out.shallowColor = shallowColor;
+	out.deepColor = deepColor;
 	return out;
 }
 
@@ -139,38 +138,30 @@ fn vs_main(in: VertexIn) -> VertexOut {
 @fragment
 fn fs_main(in: VertexOut) -> FragmentOut {
 	var out: FragmentOut;
-	var color = in.color;
-	if color.a == 0.0 {
+
+	let coord = vec2i(in.position.xy);
+	let depthSize = vec2f(textureDimensions(depthBuffer));
+	let uv = (in.position.xy / depthSize);
+	let depth = textureLoad(depthBuffer, coord, 0);
+	if (depth < in.position.z) {
 		discard;
 	}
 
-	let r0 = rnd3u(vec3(material.seed));
-	let r1 = rnd3u(vec3(material.seed + 100));
-	let r2 = rnd3u(vec3(material.seed + 200));
+	// Position of the rock
+	let p0 = worldFromScreen(uv, in.position.z, camera.invProjection);
 
-	let seaColor = hsl(r0, 0.4, 0.4);
-	let landColor = hsl((r0 + 0.3) % 1.0, 0.4, 0.4);
+	// Position of the water
+	let p1 = worldFromScreen(uv, depth, camera.invProjection);
 
-	var p = normalize(in.originalPosition);
-	//out.normal = vec4(p * -1.0, 1.0);
-	let ll = pointToLonLat(p);
+	// Depth between rock and water
+	let pd = (p1 - p0);
 
-	var n0 = terrainNoise(p, 2);
+	
+	let waterDepth = pow(length(pd) / 320.0, 0.333);
 
-	var brightness = 1.0;
-	if n0 <= SEA_LEVEL {
-		//brightness = n0 + (1.0 - SEA_LEVEL);
-		color = seaColor;
-	}
-	else {
-		//brightness = n0 + SEA_LEVEL;
-		color = landColor;
-	}
-
-
-	out.albedo = vec4(color.rgb * brightness, color.a);
-	out.metaOutput = in.triangleId % 0xff;
-
+	let color = mix(in.shallowColor, in.deepColor, waterDepth);
+	out.color = vec4(color.rgb * color.a, color.a);
+	//out.color = vec4(vec3(waterDepth), 1.0);
 	return out;
 }
 
@@ -192,15 +183,7 @@ fn pointToUV(point: vec3<f32>) -> vec2<f32> {
 	return lonLatToUV(pointToLonLat(point));
 }
 
-fn terrainNoise(p: vec3<f32>, octaves: i32) -> f32 {
-	var seed = vec3(f32(material.seed)/1000.0);
-	var n = fractalNoise(p/2.0 + seed, octaves);
-	if n > SEA_LEVEL {
-		// Flatter beaches, pointier mountains
-		n = SEA_LEVEL + pow((n - SEA_LEVEL)/(1.0-SEA_LEVEL), 2.0);
-	}
-	return n;
-}
-
+@import "./terrain_noise.wgsl";
 @import "engine/shaders/noise.wgsl";
+@import "engine/shaders/helpers.wgsl";
 @import "engine/shaders/color.wgsl";

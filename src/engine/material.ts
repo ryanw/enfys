@@ -14,6 +14,7 @@ export enum Skin {
  */
 export abstract class Material {
 	writeDepth = true;
+	forwardRender = false;
 	abstract bindingResource(): GPUBindingResource;
 }
 

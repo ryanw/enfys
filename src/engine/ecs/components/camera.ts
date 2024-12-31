@@ -22,5 +22,16 @@ export class OrbitCameraComponent extends Component {
 	}
 }
 
+export class FollowCameraComponent extends Component {
+	constructor(
+		public target?: Entity,
+		public distance: number = 16,
+		public offset: Vector3 = [0, 0, 0],
+		public rotation: Quaternion = [0, 0, 0, 1],
+	) {
+		super();
+	}
+}
+
 export class FreeCameraComponent extends Component {
 }

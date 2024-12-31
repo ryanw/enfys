@@ -10,11 +10,11 @@ fn terrainNoise(p: vec3<f32>, octaves: i32, seed: u32, seaLevel: f32) -> f32 {
 
 fn terrainPoint(scale: f32, p: vec3<f32>, octaves: i32, seed: u32, seaLevel: f32) -> vec3f {
 	let vp = normalize(p);
-	let n0 = terrainNoise(p, octaves, seed, seaLevel);
+	let n0 = terrainNoise(p / 2.0, octaves, seed, seaLevel);
 	return p + vp * (max(seaLevel, n0) * scale - scale/2.0);
 }
 
-fn terrainNormal(p: vec3<f32>, octaves: i32, seed: u32, seaLevel: f32) -> vec3f {
+fn terrainNormal(scale: f32, p: vec3<f32>, octaves: i32, seed: u32, seaLevel: f32) -> vec3f {
 	let d = 0.0001;
 	let v = normalize(p);
 
@@ -30,9 +30,9 @@ fn terrainNormal(p: vec3<f32>, octaves: i32, seed: u32, seaLevel: f32) -> vec3f 
 	let pp1 = p + w * d;
 	let pp2 = p + (u + w) * d;
 
-	let p0 = terrainPoint(1.0/8.0, pp0, octaves, seed, seaLevel);
-	let p1 = terrainPoint(1.0/8.0, pp1, octaves, seed, seaLevel);
-	let p2 = terrainPoint(1.0/8.0, pp2, octaves, seed, seaLevel);
+	let p0 = terrainPoint(scale, pp0, octaves, seed, seaLevel);
+	let p1 = terrainPoint(scale, pp1, octaves, seed, seaLevel);
+	let p2 = terrainPoint(scale, pp2, octaves, seed, seaLevel);
 
 	var v0 = p1 - p0;
 	var v1 = p2 - p0;

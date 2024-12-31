@@ -9,7 +9,7 @@ import { Entity } from 'engine/ecs';
 import { ParticlesComponent } from 'engine/ecs/components/particles';
 import { SoundComponent } from 'engine/ecs/components/sound';
 import * as quats from 'engine/math/quaternions';
-import { OrbitCameraComponent } from 'engine/ecs/components/camera';
+import { FollowCameraComponent } from 'engine/ecs/components/camera';
 
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
@@ -53,7 +53,7 @@ export class PlayerInputSystem extends System {
 		for (const entity of entities) {
 			this.updateMovement(dt, world, entity);
 		}
-		entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
+		entities = world.entitiesWithComponents([FollowCameraComponent, TransformComponent]);
 		for (const entity of entities) {
 			this.updateCamera(dt, world, entity);
 		}
@@ -71,7 +71,7 @@ export class PlayerInputSystem extends System {
 					break;
 			}
 		}
-		const cam = world.getComponent(entity, OrbitCameraComponent)!;
+		const cam = world.getComponent(entity, FollowCameraComponent)!;
 		cam.rotation = quats.multiply(cam.rotation, quats.quaternionFromEuler(tilt * dt, 0, 0));
 	}
 

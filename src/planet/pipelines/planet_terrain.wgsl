@@ -26,7 +26,7 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 	}
 	var vertex = vertices[idx];
 
-	let scale = 1.0/8.0;
+	let scale = 1.0/3.0;
 	var p = vec3(vertex.position[0], vertex.position[1], vertex.position[2]);
 	p = terrainPoint(scale, p, 4, u.seed, u.seaLevel);
 	vertex.position[0] = p.x;

@@ -68,11 +68,27 @@ export class Renderer {
 		// Group entities by material, render them together if possible
 		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
 			function isSimpleMesh(entity: Pawn<unknown>): entity is Pawn<SimpleMesh> {
+				// Don't render materials needing forward rendering
+				if (entity.material.forwardRender) return false;
 				return isPawnOf(entity, SimpleMesh) && (entity.material instanceof Mat);
 			}
 
 			const entities = scene.pawns.filter(isSimpleMesh);
 			pipeline.drawBatch(encoder, entities, camera, target);
+		}
+	}
+
+	drawTransparencies(encoder: GPUCommandEncoder, scene: Scene, camera: Camera, depth: GPUTexture, target: GPUTexture) {
+		// Group entities by material, render them together if possible
+		for (const [Mat, pipeline] of this.pipelines.materials.entries()) {
+			function isSimpleMesh(entity: Pawn<unknown>): entity is Pawn<SimpleMesh> {
+				// Don't render materials using deferred rendering
+				if (!entity.material.forwardRender) return false;
+				return isPawnOf(entity, SimpleMesh) && (entity.material instanceof Mat);
+			}
+
+			const entities = scene.pawns.filter(isSimpleMesh);
+			pipeline.drawTransparencies(encoder, entities, camera, depth, target);
 		}
 	}
 
@@ -85,7 +101,8 @@ export class Renderer {
 		target: GPUTexture,
 		waterColor: Color | number,
 		fogColor: Color | number,
-		clear?: Color) {
+		clear?: Color,
+	) {
 		this.pipelines.compose.compose(encoder, src, camera, light, shadows, target, waterColor, fogColor, clear);
 	}
 
