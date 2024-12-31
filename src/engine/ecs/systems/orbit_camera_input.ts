@@ -4,8 +4,9 @@ import { TransformComponent } from '../components';
 import { OrbitCameraComponent } from '../components/camera';
 import { World } from '../world';
 import { inverse, multiply, rotation, rotationFromQuaternion, rotationFromVector, transformPoint, translation } from 'engine/math/transform';
-import { add, dot } from 'engine/math/vectors';
+import { add, dot, magnitude, normalize } from 'engine/math/vectors';
 import * as quats from 'engine/math/quaternions';
+import { Quaternion } from 'engine/math';
 
 const MIN_DISTANCE = 1;
 const MAX_DISTANCE = 10000;
@@ -76,7 +77,7 @@ export class OrbitCameraInputSystem extends System {
 			const targetRotation = quats.multiply(entRotation, cameraRotation);
 
 			const similar = 1.0 / max(0.1, dot(trans.rotation, targetRotation));
-			trans.rotation = quats.lerp(trans.rotation, targetRotation, 3.0 * dt * similar);
+			trans.rotation = quats.lerp(trans.rotation, targetRotation, 1.0 * dt * similar);
 
 			let transform = translation(...targetPoint);
 			transform = multiply(transform, rotationFromQuaternion(trans.rotation));
@@ -132,14 +133,28 @@ export class OrbitCameraInputSystem extends System {
 		if (!world) return;
 
 		const s = Math.PI;
-		const rot = quats.quaternionFromEuler(x * s, y * s, 0);
+		const rot0 = quats.quaternionFromEuler(x * s, 0, 0);
+		const rot1 = quats.quaternionFromEuler(0, 0, y * s);
 		const entities = world.entitiesWithComponents([OrbitCameraComponent, TransformComponent]);
 		for (const entity of entities) {
 			const cam = world.getComponent(entity, OrbitCameraComponent)!;
-			cam.rotation = quats.multiply(cam.rotation, rot);
+			if (!cam.target) continue;
+
+			const targetTrans = world.getComponent(cam.target, TransformComponent)!;
+			const rotDiff = quats.multiply(quats.conjugate(cam.rotation), targetTrans.rotation);
+			const finalRot = quats.multiply(
+				rot0,
+				rotDiff,
+				rot1,
+				quats.conjugate(rotDiff),
+			);
+
+
+			const newCamRot = quats.multiply(cam.rotation, finalRot);
+			cam.rotation = normalize(newCamRot);
 
 			const transform = world.getComponent(entity, TransformComponent)!;
-			transform.rotation = quats.multiply(transform.rotation, rot);
+			transform.rotation = quats.multiply(transform.rotation, finalRot);
 		}
 	}
 

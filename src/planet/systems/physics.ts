@@ -61,12 +61,12 @@ export class PhysicsSystem extends System {
 			}
 
 			if (isPlayer) {
-				for (const { entity: ent, position, velocity: planetVelocity, force, radius } of planets) {
+				for (const { entity: ent, position: planetPos, velocity: planetVelocity, force, radius } of planets) {
 					if (ent === entity) continue;
 					const friction = 2.0;
-					if (hasCollided(tra.position, position, radius)) {
-						const normal = normalize(subtract(tra.position, position));
-						tra.position = add(position, scale(normal, radius));
+					if (hasCollided(tra.position, planetPos, radius)) {
+						const normal = normalize(subtract(tra.position, planetPos));
+						tra.position = add(planetPos, scale(normal, radius));
 						const relativeVel = subtract(vel.velocity, planetVelocity);
 						const dp = dot(relativeVel, normal);
 						vel.velocity = add(vel.velocity, scale(normal, -dp));
@@ -101,11 +101,7 @@ export class PhysicsSystem extends System {
 
 function calculateGravity(p: Point3, well: Point3, force: number): Vector3 {
 	const diff = subtract(well, p);
-	const distance = Math.max(10, magnitude(diff));
-	if (Math.abs(distance) < 10.0) {
-		// FIXME prevents things slingshotting when they reach the singularity
-		//return [0, 0, 0];
-	}
+	const distance = magnitude(diff);
 	const dir = normalize(diff);
 
 	return scale(dir, (1 / (distance ** 2)) * force * 1000);

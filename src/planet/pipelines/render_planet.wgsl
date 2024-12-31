@@ -156,10 +156,10 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	let fp = fwidth(p);
 	let mm = max(max(fp.x, fp.y), fp.z);
-	var res = 1.0 - smoothstep(0.0, 1.0, mm*256.0);
+	var res = 1.0 - smoothstep(0.0, 1.0, mm*512.0);
 	res = clamp(pow(res, 2.0), 0.0, 1.0);
 
-	let octaves = 3 + i32(ceil(res * 4.0));
+	let octaves = 3 + i32(ceil(res * 5.0));
 	var n0 = terrainNoise(p, octaves, material.seed, material.seaLevel);
 	var normal = terrainNormal(p, octaves + 1, material.seed, material.seaLevel);
 

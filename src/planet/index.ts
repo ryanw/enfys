@@ -38,9 +38,9 @@ export async function main(el: HTMLCanvasElement) {
 	const planet0 = prefabs.planet(world, [-6000, 0, 0], planetRad, [0, 0, 400]);
 	const player = prefabs.player(world, [-6000, 0, -planetRad - 100], [0, 0, 400]);
 
-	//const planet1 = prefabs.planet(world, [600, 0, -200], 200, [0, 0, 700]);
-	//const planet2 = prefabs.planet(world, [3000, 0, -1000], 2000, [-1000, 0, 1000]);
-	//const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
+	const planet1 = prefabs.planet(world, [600, 0, -200], 200, [0, 0, 700]);
+	const planet2 = prefabs.planet(world, [3000, 0, -1000], 2000, [-1000, 0, 1000]);
+	const moon0 = prefabs.moon(world, [-600, 0, -500], 10);
 
 	const bugs = [];
 	for (let i = 0; i < 100; i++) {

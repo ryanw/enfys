@@ -67,7 +67,7 @@ export class PlayerInputSystem extends System {
 			}
 			switch (key) {
 				case XboxAxis.RightStickY:
-					//tilt += value;
+					tilt += value;
 					break;
 			}
 		}
