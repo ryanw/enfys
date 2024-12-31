@@ -109,13 +109,6 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 	var normal = v.normal;
 
-	/*
-	var vp = normalize(v.position);
-	let scale = 1.0/4.0;
-	let n0 = (max(material.seaLevel, terrainNoise(vp, 4, material.seed)) * scale) - scale;
-	let terrainOffset = (vp * n0);
-	*/
-
 	let transform = mat4x4(
 		in.transform0,
 		in.transform1,
@@ -161,8 +154,14 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	//out.normal = vec4(p * -1.0, 1.0);
 	let ll = pointToLonLat(p);
 
-	var n0 = terrainNoise(p, 5, material.seed, material.seaLevel);
-	var normal = terrainNormal(p, 5, material.seed, material.seaLevel);
+	let fp = fwidth(p);
+	let mm = max(max(fp.x, fp.y), fp.z);
+	var res = 1.0 - smoothstep(0.0, 1.0, mm*256.0);
+	res = clamp(pow(res, 2.0), 0.0, 1.0);
+
+	let octaves = 3 + i32(ceil(res * 4.0));
+	var n0 = terrainNoise(p, octaves, material.seed, material.seaLevel);
+	var normal = terrainNormal(p, octaves + 1, material.seed, material.seaLevel);
 
 	var brightness = 1.0;
 	if n0 <= material.seaLevel {
@@ -179,6 +178,8 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	out.albedo = vec4(color.rgb, color.a);
 	out.normal = vec4(normal, 0.0);
 	out.metaOutput = in.triangleId % 0xff;
+
+	//out.albedo = hsl(res, 0.6, 0.5);
 
 	return out;
 }
