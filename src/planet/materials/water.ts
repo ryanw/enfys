@@ -11,6 +11,7 @@ export class WaterMaterial extends Material {
 
 	constructor(
 		readonly gfx: Gfx,
+		public seed: number,
 		shallowColor?: number | bigint | Color,
 		deepColor?: number | bigint | Color,
 	) {
@@ -26,16 +27,18 @@ export class WaterMaterial extends Material {
 			this._deepColor = BigInt(deepColor||0);
 		}
 		this.uniform = new UniformBuffer(gfx, [
-			['shallowColor', 'u32'],
-			['deepColor', 'u32'],
+			//['shallowColor', 'u32'],
+			//['deepColor', 'u32'],
+			['seed', 'u32'],
 		]);
 		this.updateUniform();
 	}
 
 	updateUniform() {
 		this.uniform.replace( {
-			shallowColor: this._shallowColor,
-			deepColor: this._deepColor,
+			//shallowColor: this._shallowColor,
+			//deepColor: this._deepColor,
+			seed: this.seed,
 		});
 	}
 

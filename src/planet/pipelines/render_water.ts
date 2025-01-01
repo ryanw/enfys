@@ -163,7 +163,7 @@ export class RenderWaterPipeline extends MaterialPipeline {
 		this.pipeline = device.createRenderPipeline(pipelineDescriptor);
 	}
 
-	drawBackDepth(encoder: GPUCommandEncoder, pawns: Array<Pawn<SimpleMesh>>, camera: Camera, depth: GPUTexture, target: GPUTexture) {
+	drawBackDepth(encoder: GPUCommandEncoder, pawns: Array<Pawn<SimpleMesh>>, camera: Camera, depth: GPUTexture) {
 		if (pawns.length === 0) {
 			return;
 		}
@@ -172,12 +172,6 @@ export class RenderWaterPipeline extends MaterialPipeline {
 		const depthView = depth.createView();
 		const writeDepth = pawns[0].material.writeDepth;
 		if (!writeDepth) return;
-
-		const baseAttachment: Omit<GPURenderPassColorAttachment, 'view'> = {
-			clearValue: [0, 0, 0, 0],
-			loadOp: 'load',
-			storeOp: 'store',
-		};
 
 		// Only writing to depth
 		const passDescriptor: GPURenderPassDescriptor = {
@@ -217,7 +211,7 @@ export class RenderWaterPipeline extends MaterialPipeline {
 		if (pawns.length === 0) {
 			return;
 		}
-		this.drawBackDepth(encoder, pawns, camera, depth, target);
+		this.drawBackDepth(encoder, pawns, camera, depth);
 		const { device } = this.gfx;
 
 		const depthView = depth.createView();

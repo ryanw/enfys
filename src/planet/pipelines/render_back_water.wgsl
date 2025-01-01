@@ -13,7 +13,6 @@ struct Vertex {
 }
 
 struct Material {
-	color: u32,
 	seed: u32,
 }
 
@@ -34,18 +33,13 @@ struct VertexOut {
 	@builtin(position) position: vec4f,
 	@location(0) uv: vec2f,
 	@location(1) normal: vec3f,
-	@location(2) color: vec4f,
-	@location(3) originalPosition: vec3f,
-	@location(4) modelPosition: vec3f,
-	@location(5) modelNormal: vec3f,
-	@location(6) alt: f32,
-	@location(7) @interpolate(flat) triangleId: u32,
-	@location(8) @interpolate(flat) quadId: u32,
+	@location(2) shallowColor: vec4f,
+	@location(3) deepColor: vec4f,
+	@location(4) alt: f32,
+	@location(5) @interpolate(flat) triangleId: u32,
+	@location(6) @interpolate(flat) quadId: u32,
 }
 
-struct FragmentOut {
-	@location(0) color: vec4f,
-}
 
 struct Camera {
 	view: mat4x4f,
@@ -92,10 +86,19 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		return out;
 	}
 
-	let color = unpack4x8unorm(material.color);
+	//let shallowColor = unpack4x8unorm(material.shallowColor);
+	//let deepColor = unpack4x8unorm(material.deepColor);
+
 	let variantIndex = in.variantIndex + pawn.variantIndex;
-	let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
-	let idx = in.id + vertexOffset;
+	let seed = material.seed + variantIndex;
+
+	let r0 = rnd3u(vec3(12 + seed * 7));
+	let r1 = rnd3u(vec3(1230 + seed * 13)) - 0.5;
+	let shallowColor = hsla(r0, 0.7, 0.4, 1.0);
+	let deepColor = hsla((r0 + 0.5) % 1.0, 0.5, 0.3, 1.0);
+
+
+	let idx = in.id;
 	let packedVertex = vertices[idx];
 
 	let v = Vertex(
@@ -122,25 +125,19 @@ fn vs_main(in: VertexIn) -> VertexOut {
 
 	out.position = position;
 	out.uv = v.position.xy;
-	out.originalPosition = v.position;
-	out.color = color;
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
 	out.normal = normal;
 	out.alt = v.alt;
 
+	out.shallowColor = shallowColor;
+	out.deepColor = deepColor;
 	return out;
 }
 
 
 @fragment
-fn fs_main(in: VertexOut) -> FragmentOut {
-	var out: FragmentOut;
-	var color = in.color;
-	if color.a == 0.0 {
-		discard;
-	}
-	return out;
+fn fs_main(in: VertexOut) {
 }
 
 const PI: f32 = 3.14159265;

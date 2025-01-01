@@ -66,22 +66,27 @@ export class PhysicsSystem extends System {
 				vel.velocity = add(vel.velocity, gravity);
 
 				if (isPlayer) {
-					if (hasCollided(tra.position, planet.position, planet.radius)) {
+					const collided = hasCollided(tra.position, planet.position, planet.radius);
+					if (collided) {
 						// Objects touching, snap together
-						vel.velocity = [...planet.velocity];
-						tra.position = add(planet.position, scale(normalize(dir), planet.radius));
-						continue;
+						//vel.velocity = [...planet.velocity];
+						if (distance < 0.0) {
+							tra.position = add(planet.position, scale(normalize(dir), planet.radius));
+						}
+						//continue;
 					}
 
 
+					if (Math.random() < 0.1) {
+					}
 					if (drag > 0.1) {
 						// Dampening by matching planet's speed
 						const speedDiff = subtract(planet.velocity, vel.velocity);
-						const gravDir = normalize(gravity);
+						const gravDir: Vector3 = collided ? [0,0,0] : normalize(gravity);
 						const mag = dot(speedDiff, gravDir);
 						const proj = scale(gravDir, mag);
 						const velDiff = scale(subtract(speedDiff, proj), drag);
-						vel.velocity = add(vel.velocity, scale(velDiff, dt / 2.0));
+						vel.velocity = add(vel.velocity, scale(velDiff, dt));
 					}
 				}
 

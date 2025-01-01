@@ -37,9 +37,9 @@ export async function main(el: HTMLCanvasElement) {
 	const scene = await initScene(gfx);
 	const world = await initWorld(gfx);
 
-	const rng = randomizer(Math.random() * 0x7fffffff | 0);
+	const rng = randomizer(Math.random() * 0x7fffff | 0);
 	const rnd = () => rng() * 2.0 - 1.0;
-	const graphics = await initGraphics(gfx, rng() * 0x7fffffff);
+	const graphics = await initGraphics(gfx, rng() * 0x7fffff);
 
 	const { max, abs } = Math;
 	const planetCount = 128;
@@ -118,7 +118,7 @@ async function initGraphics(gfx: Gfx, planetSeed: number): Promise<WorldGraphics
 	const waterMesh = new Icosphere(gfx, 4);
 	waterMesh.variantCount = 10000;
 	graphics.insertResource('water', waterMesh);
-	graphics.insertResource('water-material', new WaterMaterial(gfx));
+	graphics.insertResource('water-material', new WaterMaterial(gfx, planetSeed + 1231));
 
 
 	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.01));

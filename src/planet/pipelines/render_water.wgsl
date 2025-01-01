@@ -13,7 +13,6 @@ struct Vertex {
 }
 
 struct Material {
-	shallowColor: u32,
 	seed: u32,
 }
 
@@ -99,9 +98,10 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let variantIndex = in.variantIndex + pawn.variantIndex;
 	let seed = material.seed + variantIndex;
 
-	let r0 = rnd3u(vec3(seed + 4123));
-	let shallowColor = hsla(r0, 0.7, 0.4, 0.1);
-	let deepColor = hsla((r0 + 0.1) % 1.0, 0.5, 0.3, 0.8);
+	let r0 = rnd3u(vec3(12 + seed * 7));
+	let r1 = rnd3u(vec3(1230 + seed * 13)) - 0.5;
+	let shallowColor = hsla(r0, 0.7, 0.5, 0.2);
+	let deepColor = hsla((r0 + 0.4 * r1) % 1.0, 0.5, 0.3, 0.8);
 
 
 	let idx = in.id;
@@ -164,7 +164,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	let pd = (p1 - p0);
 
 	
-	let waterDepth = smoothstep(0.0, 1.0, pow(length(pd) / 64.0, 0.333));
+	let waterDepth = smoothstep(0.0, 1.0, pow(length(pd) / 512.0, 0.333));
 
 	let color = mix(in.shallowColor, in.deepColor, waterDepth);
 	out.color = vec4(color.rgb * color.a, color.a);
