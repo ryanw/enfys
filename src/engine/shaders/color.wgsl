@@ -25,9 +25,9 @@ fn hslToRgb(color: vec3<f32>) -> vec4<f32> {
 	return hsl(color.x, color.y, color.z);
 }
 
-fn hsl(h: f32, s: f32, l: f32) -> vec4<f32> {
+fn hsla(h: f32, s: f32, l: f32, a: f32) -> vec4<f32> {
 	if s == 0.0 {
-		return vec4<f32>(l, l, l, 1.0);
+		return vec4<f32>(l, l, l, a);
 	}
 
 	var q = 0.0;
@@ -42,7 +42,11 @@ fn hsl(h: f32, s: f32, l: f32) -> vec4<f32> {
 	let g = hueToRGB(p, q, h);
 	let b = hueToRGB(p, q, h - 1.0 / 3.0);
 
-	return vec4<f32>(r, g, b, 1.0);
+	return vec4<f32>(r, g, b, a);
+}
+
+fn hsl(h: f32, s: f32, l: f32) -> vec4<f32> {
+	return hsla(h, s, l, 1.0);
 }
 
 fn rgbToHsl(color: vec3<f32>) -> vec3<f32> {

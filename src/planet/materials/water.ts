@@ -11,19 +11,19 @@ export class WaterMaterial extends Material {
 
 	constructor(
 		readonly gfx: Gfx,
-		shallowColor: number | bigint | Color,
-		deepColor: number | bigint | Color,
+		shallowColor?: number | bigint | Color,
+		deepColor?: number | bigint | Color,
 	) {
 		super();
 		if (Array.isArray(shallowColor)) {
 			this._shallowColor = colorToBigInt(shallowColor);
 		} else {
-			this._shallowColor = BigInt(shallowColor);
+			this._shallowColor = BigInt(shallowColor||0);
 		}
 		if (Array.isArray(deepColor)) {
 			this._deepColor = colorToBigInt(deepColor);
 		} else {
-			this._deepColor = BigInt(deepColor);
+			this._deepColor = BigInt(deepColor||0);
 		}
 		this.uniform = new UniformBuffer(gfx, [
 			['shallowColor', 'u32'],

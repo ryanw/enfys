@@ -57,34 +57,47 @@ export class PhysicsSystem extends System {
 			// Add every planet's gravity to velocity
 			for (const planet of planets) {
 				if (planet.entity === entity) continue;
-				if (isPlayer) {
-					const distance = magnitude(subtract(planet.position, tra.position)) - planet.radius;
-					const drag = 1.0 - max(0.0, min(1.0, distance / 1000.0));
-					const gravity = calculateGravity(tra.position, planet.position, planet.force * dt);
-					vel.velocity = add(vel.velocity, gravity);
+				const distance = magnitude(subtract(planet.position, tra.position)) - planet.radius;
+				if (distance < 0.1) {
+					// Objects touching, snap together
+					vel.velocity = planet.velocity;
+					continue;
+				}
+				const drag = 1.0 - max(0.0, min(1.0, distance / 512.0));
+				const gravity = calculateGravity(tra.position, planet.position, planet.force * dt);
+				vel.velocity = add(vel.velocity, gravity);
+
+				if (drag > 0.1) {
+					// Dampening by matching planet's speed
+					const speedDiff = subtract(planet.velocity, vel.velocity);
+					const gravDir = normalize(gravity);
+					const mag = dot(speedDiff, gravDir);
+					const proj = scale(gravDir, mag);
+					const velDiff = scale(subtract(speedDiff, proj), drag);
+					vel.velocity = add(vel.velocity, scale(velDiff, dt / 2.0));
+				}
 
 
-					// Test for collisions
-					/*
-					for (const { entity: ent, position: planetPos, velocity: planetVelocity, force, radius } of planets) {
-						if (ent === entity) continue;
-						const friction = 2.0;
-						if (hasCollided(tra.position, planetPos, radius)) {
-							const normal = normalize(subtract(tra.position, planetPos));
-							tra.position = add(planetPos, scale(normal, radius));
-							const relativeVel = subtract(vel.velocity, planetVelocity);
-							const dp = dot(relativeVel, normal);
-							vel.velocity = add(vel.velocity, scale(normal, -dp));
-							const speedDiff = magnitude(subtract(vel.velocity, planetVelocity));
-							if (Math.abs(speedDiff) < 1) {
-								vel.velocity = [...planetVelocity];
-							} else {
-								vel.velocity = lerp(vel.velocity, planetVelocity, friction * dt);
-							}
+				// Test for collisions
+				/*
+				for (const { entity: ent, position: planetPos, velocity: planetVelocity, force, radius } of planets) {
+					if (ent === entity) continue;
+					const friction = 2.0;
+					if (hasCollided(tra.position, planetPos, radius)) {
+						const normal = normalize(subtract(tra.position, planetPos));
+						tra.position = add(planetPos, scale(normal, radius));
+						const relativeVel = subtract(vel.velocity, planetVelocity);
+						const dp = dot(relativeVel, normal);
+						vel.velocity = add(vel.velocity, scale(normal, -dp));
+						const speedDiff = magnitude(subtract(vel.velocity, planetVelocity));
+						if (Math.abs(speedDiff) < 1) {
+							vel.velocity = [...planetVelocity];
+						} else {
+							vel.velocity = lerp(vel.velocity, planetVelocity, friction * dt);
 						}
 					}
-					*/
 				}
+				*/
 
 			}
 		}

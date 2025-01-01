@@ -40,8 +40,9 @@ struct VertexOut {
 	@location(4) modelPosition: vec3f,
 	@location(5) modelNormal: vec3f,
 	@location(6) alt: f32,
-	@location(7) @interpolate(flat) triangleId: u32,
-	@location(8) @interpolate(flat) quadId: u32,
+	@location(7) @interpolate(flat) seed: u32,
+	@location(8) @interpolate(flat) triangleId: u32,
+	@location(9) @interpolate(flat) quadId: u32,
 }
 
 struct FragmentOut {
@@ -96,9 +97,10 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		return out;
 	}
 
-	let variantIndex = in.variantIndex + pawn.variantIndex;
-	let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
-	let idx = in.id + vertexOffset;
+	let variantIndex = 1000 * (in.variantIndex + pawn.variantIndex);
+	let seed = material.seed + variantIndex;
+
+	let idx = in.id;
 	let packedVertex = vertices[idx];
 
 	let v = Vertex(
@@ -119,8 +121,11 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let offsetModel = pawn.model * transform;
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * camera.view;
-	//var p = offsetModel * vec4(v.position + terrainOffset, 1.0);
-	var p = offsetModel * vec4(v.position, 1.0);
+
+	let scale = 1.0/3.0;
+	let offsetPoint = terrainPoint(scale, v.position, 4, seed, material.seaLevel);
+	var p = offsetModel * vec4(offsetPoint, 1.0);
+	//var p = offsetModel * vec4(v.position, 1.0);
 	var position = mvp * p;
 
 	out.position = position;
@@ -131,6 +136,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.quadId = in.id / 4u;
 	out.normal = normal;
 	out.alt = v.alt;
+
+	out.seed = seed;
 
 	return out;
 }
@@ -144,9 +151,9 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		discard;
 	}
 
-	let r0 = rnd3u(vec3(material.seed + 1000));
-	let r1 = rnd3u(vec3(material.seed + 2000));
-	let r2 = rnd3u(vec3(material.seed + 3000));
+	let r0 = rnd3u(vec3(in.seed + 1000));
+	let r1 = rnd3u(vec3(in.seed + 2000));
+	let r2 = rnd3u(vec3(in.seed + 3000));
 
 	let seaColor = hsl(r0, 0.4, 0.4);
 	let landColor = hsl(r1, 0.4, 0.4);
@@ -161,9 +168,9 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	res = clamp(pow(res, 2.0), 0.0, 1.0);
 
 	let octaves = 3 + i32(ceil(res * 4.0));
-	var n0 = terrainNoise(p, octaves, material.seed, material.seaLevel) + 0.5;
+	var n0 = terrainNoise(p, octaves, in.seed, material.seaLevel) + 0.5;
 	let scale = 1.0/2.0;
-	var normal = terrainNormal(scale, p, octaves + 1, material.seed, material.seaLevel);
+	var normal = terrainNormal(scale, p, octaves + 1, in.seed, material.seaLevel);
 
 	var brightness = 1.0;
 	if n0 <= material.seaLevel {

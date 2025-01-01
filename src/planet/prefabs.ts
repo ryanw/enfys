@@ -23,7 +23,7 @@ export function orbitCamera(world: World, target: Entity): Entity {
 export function followCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
 		new TransformComponent([0, 0, 0], normalize([-0.4, 0, 0, 0.8] as Quaternion)),
-		new CameraComponent(1, 100000.0),
+		new CameraComponent(1, 40000.0),
 		new FollowCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.3, 0, 0)),
 	]);
 }
@@ -59,11 +59,11 @@ export function planet(world: World, position: Point3, scale: number = 1, veloci
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('planet'),
-		new PhysicsComponent(),
-		new ColliderComponent(scale * 0.88),
+		//new PhysicsComponent(),
+		new ColliderComponent(scale),
 		new VelocityComponent(velocity),
 		new MaterialComponent('planet-material'),
-		new GravityComponent(12 * scale),
+		new GravityComponent(10 * scale),
 	]);
 }
 
@@ -71,8 +71,7 @@ export function water(world: World, position: Point3, scale: number = 1, velocit
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('water'),
-		new PhysicsComponent(),
-		new ColliderComponent(scale),
+		//new PhysicsComponent(),
 		new VelocityComponent(velocity),
 		new MaterialComponent('water-material'),
 	]);

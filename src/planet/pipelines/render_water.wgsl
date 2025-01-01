@@ -93,11 +93,18 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		return out;
 	}
 
-	let shallowColor = unpack4x8unorm(material.shallowColor);
-	let deepColor = unpack4x8unorm(material.deepColor);
+	//let shallowColor = unpack4x8unorm(material.shallowColor);
+	//let deepColor = unpack4x8unorm(material.deepColor);
+
 	let variantIndex = in.variantIndex + pawn.variantIndex;
-	let vertexOffset = (variantIndex % pawn.variantCount) * pawn.vertexCount;
-	let idx = in.id + vertexOffset;
+	let seed = variantIndex * 1000;
+
+	let r0 = rnd3u(vec3(seed + 1000));
+	let shallowColor = hsla(r0, 0.6, 0.4, 0.2);
+	let deepColor = hsla((r0 + 0.1) % 1.0, 0.4, 0.3, 0.8);
+
+
+	let idx = in.id;
 	let packedVertex = vertices[idx];
 
 	let v = Vertex(
@@ -157,7 +164,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	let pd = (p1 - p0);
 
 	
-	let waterDepth = pow(length(pd) / 320.0, 0.333);
+	let waterDepth = smoothstep(0.0, 1.0, pow(length(pd) / 320.0, 0.333));
 
 	let color = mix(in.shallowColor, in.deepColor, waterDepth);
 	out.color = vec4(color.rgb * color.a, color.a);

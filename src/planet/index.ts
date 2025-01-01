@@ -27,6 +27,7 @@ import { WaterMaterial } from './materials/water';
 import { RenderWaterPipeline } from './pipelines/render_water';
 import { FollowCameraComponent } from 'engine/ecs/components/camera';
 import { hsl } from 'engine/color';
+import { Point3 } from 'engine/math';
 
 /**
  * Start the game
@@ -38,13 +39,25 @@ export async function main(el: HTMLCanvasElement) {
 	const world = await initWorld(gfx);
 
 
-	const planetSpeed = 10;
-	const planetRad = 500;
-	const waterDepth = 48;
-	const planet0 = prefabs.planet(world, [0, 0, 0], planetRad, [planetSpeed, 0, 0]);
-	const water0 = prefabs.water(world, [0, 0, 0], planetRad - waterDepth, [planetSpeed, 0, 0]);
+	const { random, max, abs } = Math;
+	const rnd = () => random() * 2.0 - 1.0;
+	const planetCount = 64;
+
+	for (let i = 0; i < planetCount; i++) {
+		const spread = i === 0 ? 0 : 6400;
+		const planetSpeed = 10 + rnd() * 300.0;
+		const planetRad = 100 + abs(rnd()) * 300.0;
+		const waterDepth = 24 * rnd();
+		const waterRad = max(10, planetRad - 16 - 32 * abs(rnd()));
+
+		const position: Point3 = [rnd() * spread, rnd() * spread, rnd() * spread];
+		prefabs.planet(world, position, planetRad, [planetSpeed, planetSpeed, 0]);
+		prefabs.water(world, position, waterRad, [planetSpeed, planetSpeed, 0]);
+	}
+
+
 	//const rock = prefabs.rock(world, [0, 0, 0], planetRad, 0, 0]);
-	const player = prefabs.player(world, [0, -planetRad - 800, 0], [0, 0, 0]);
+	const player = prefabs.player(world, [0, -500, 0], [0, 0, 0]);
 
 	//const star = prefabs.star(world, [0, 0, 0], 2000);
 	//const planet1 = prefabs.planet(world, [600, 0, -200], 200, [0, 0, 700]);
@@ -86,6 +99,8 @@ async function initScene(gfx: Gfx): Promise<Scene> {
 	return scene;
 }
 
+
+
 async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	gfx.registerMaterials([
 		[PlanetMaterial, RenderPlanetPipeline],
@@ -94,32 +109,32 @@ async function initGraphics(gfx: Gfx): Promise<WorldGraphics> {
 	const graphics = new WorldGraphics(gfx);
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
 	const calcNormals = new CalculateNormalsPipeline(gfx);
+	const planetSeed = Math.random() * 0xffffff | 0;
+
+	const planetMesh = new Icosphere(gfx, 6);
+	// Will use the variantIndex as the seed
+	planetMesh.variantCount = 10000;
+	//await planetTerrain.compute(planetMesh, seed, { seaLevel: 0.0 });
+	await calcNormals.compute(planetMesh);
+	graphics.insertResource('planet', planetMesh);
+
+	graphics.insertResource('planet-material', new PlanetMaterial(gfx, 0, 0.0));
+	graphics.insertResource('water-material', new WaterMaterial(gfx));
+
+	const waterMesh = new Icosphere(gfx, 3);
+	waterMesh.variantCount = 10000;
+	await calcNormals.compute(planetMesh);
+	graphics.insertResource('water', waterMesh);
+
 
 	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.01));
+
 
 	const playerMesh = new ShipMesh(gfx);
 	graphics.insertResource('player-ship', playerMesh);
 
 	const bugMesh = new CubeMesh(gfx);
 	graphics.insertResource('bug-ship', bugMesh);
-
-	const planetSeed = Math.random() * 0xffffff | 0;
-	const planetMesh = new CubeSphere(gfx, 256);
-	await planetTerrain.compute(planetMesh, planetSeed, { seaLevel: 0.0 });
-	await calcNormals.compute(planetMesh);
-	graphics.insertResource('planet', planetMesh);
-	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed, 0.0));
-
-
-
-	const waterMesh = new Icosphere(gfx, 4);
-	await calcNormals.compute(waterMesh);
-	graphics.insertResource('water', waterMesh);
-	const hue = Math.random();
-	const shallow = hsl(hue, 0.7, 0.5, 0.1);
-	const deep = hsl((hue + 0.1) % 1.0, 0.5, 0.3, 0.8);
-	graphics.insertResource('water-material', new WaterMaterial(gfx, shallow, deep));
-
 
 
 
