@@ -8,6 +8,7 @@ import { GravityComponent } from '../components/gravity';
 import { Point3, Vector3 } from 'engine/math';
 import { Entity } from 'engine/ecs';
 import { ColliderComponent } from 'engine/ecs/components/collider';
+import { player } from '../prefabs';
 
 interface Planet {
 	entity: Entity;
@@ -57,25 +58,33 @@ export class PhysicsSystem extends System {
 			// Add every planet's gravity to velocity
 			for (const planet of planets) {
 				if (planet.entity === entity) continue;
-				const distance = magnitude(subtract(planet.position, tra.position)) - planet.radius;
-				if (distance < 0.1) {
-					// Objects touching, snap together
-					vel.velocity = planet.velocity;
-					continue;
-				}
+				const dir = subtract(tra.position, planet.position);
+				const distance = magnitude(dir) - planet.radius;
 				const drag = 1.0 - max(0.0, min(1.0, distance / 512.0));
+
 				const gravity = calculateGravity(tra.position, planet.position, planet.force * dt);
 				vel.velocity = add(vel.velocity, gravity);
 
-				if (drag > 0.1) {
-					// Dampening by matching planet's speed
-					const speedDiff = subtract(planet.velocity, vel.velocity);
-					const gravDir = normalize(gravity);
-					const mag = dot(speedDiff, gravDir);
-					const proj = scale(gravDir, mag);
-					const velDiff = scale(subtract(speedDiff, proj), drag);
-					vel.velocity = add(vel.velocity, scale(velDiff, dt / 2.0));
+				if (isPlayer) {
+					if (hasCollided(tra.position, planet.position, planet.radius)) {
+						// Objects touching, snap together
+						vel.velocity = [...planet.velocity];
+						tra.position = add(planet.position, scale(normalize(dir), planet.radius));
+						continue;
+					}
+
+
+					if (drag > 0.1) {
+						// Dampening by matching planet's speed
+						const speedDiff = subtract(planet.velocity, vel.velocity);
+						const gravDir = normalize(gravity);
+						const mag = dot(speedDiff, gravDir);
+						const proj = scale(gravDir, mag);
+						const velDiff = scale(subtract(speedDiff, proj), drag);
+						vel.velocity = add(vel.velocity, scale(velDiff, dt / 2.0));
+					}
 				}
+
 
 
 				// Test for collisions

@@ -97,8 +97,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		return out;
 	}
 
-	let variantIndex = 1000 * (in.variantIndex + pawn.variantIndex);
-	let seed = material.seed + variantIndex;
+	let variantIndex = in.variantIndex + pawn.variantIndex;
+	let seed = material.seed + 1000 * variantIndex;
 
 	let idx = in.id;
 	let packedVertex = vertices[idx];
@@ -122,8 +122,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let mv = camera.view * offsetModel;
 	let mvp = camera.projection * camera.view;
 
-	let scale = 1.0/3.0;
-	let offsetPoint = terrainPoint(scale, v.position, 4, seed, material.seaLevel);
+	let scale = 1.0/2.0;
+	let offsetPoint = terrainPoint(scale, v.position, 3, seed, material.seaLevel);
 	var p = offsetModel * vec4(offsetPoint, 1.0);
 	//var p = offsetModel * vec4(v.position, 1.0);
 	var position = mvp * p;
@@ -151,6 +151,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		discard;
 	}
 
+	let maxOctaves = 5.0;
 	let r0 = rnd3u(vec3(in.seed + 1000));
 	let r1 = rnd3u(vec3(in.seed + 2000));
 	let r2 = rnd3u(vec3(in.seed + 3000));
@@ -164,10 +165,10 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	let fp = fwidth(p);
 	let mm = max(max(fp.x, fp.y), fp.z);
-	var res = 1.0 - smoothstep(0.0, 1.0, mm*256.0);
-	res = clamp(pow(res, 2.0), 0.0, 1.0);
+	var res = 1.0 - pow(smoothstep(0.0, 1.0/32.0, mm), 0.2);
+	res = clamp(pow(res, 1.0), 0.0, 1.0);
 
-	let octaves = 3 + i32(ceil(res * 4.0));
+	let octaves = i32(ceil(1.0 + res * maxOctaves));
 	var n0 = terrainNoise(p, octaves, in.seed, material.seaLevel) + 0.5;
 	let scale = 1.0/2.0;
 	var normal = terrainNormal(scale, p, octaves + 1, in.seed, material.seaLevel);
@@ -181,6 +182,14 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 		brightness = n0 + material.seaLevel;
 		color = landColor;
 	}
+
+	/*
+	if (res >= 1.0) {
+		color = vec4(1.0);
+	} else {
+		color = hsl(f32(octaves)/8.0, 0.5, 0.5);
+	}
+	*/
 
 
 	out.albedo = vec4(color.rgb * brightness, color.a);

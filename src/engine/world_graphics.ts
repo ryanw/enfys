@@ -197,7 +197,7 @@ export class WorldGraphics {
 					pawn = scene.addMesh(mesh, material);
 					this.instanceMeshes.set(mesh, pawn);
 				}
-				const variantIndex = Math.random() * mesh.variantCount | 0;
+				const variantIndex = (mesh.instanceCount + 1  % mesh.variantCount);
 				idx = mesh.pushInstance({
 					transform,
 					instanceColor: BigInt(0xffffffff),

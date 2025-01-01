@@ -34,7 +34,8 @@ fn rnd3uu(useed: vec3<u32>) -> u32 {
 	seed.x = seed.x ^ rotr(SALT, 19u);
 	seed.y = seed.y ^ rotr(SALT, 11u);
 	seed.z = seed.z ^ rotr(SALT, 7u);
-	return pcg3d(seed).x;
+	let rnd = pcg3d(seed);
+	return rnd.x ^ rnd.y ^ rnd.z;
 }
 
 fn rnd3(seed: vec3<f32>) -> f32 {
@@ -86,7 +87,7 @@ fn fractalNoise(p: vec3<f32>, octaves: i32) -> f32 {
 	var total = 0.0;
 	var freq = 4.0;
 	for (var i: i32 = 0; i < octaves; i++) {
-		c += smoothNoise(p * freq + vec3(f32(i*1000))) * amp;
+		c += smoothNoise(p * freq + vec3(f32(i*10))) * amp;
 		total += amp;
 		freq *= 3.0;
 		amp /= 2.0;
