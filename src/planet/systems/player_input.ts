@@ -77,8 +77,8 @@ export class PlayerInputSystem extends System {
 
 	updateMovement(dt: number, world: World, entity: Entity) {
 		this.updateGamepads();
-		//this.updateLander(dt, world, entity);
-		this.updateSpace(dt, world, entity);
+		this.updateLander(dt, world, entity);
+		//this.updateSpace(dt, world, entity);
 		this.pressedKeys.clear();
 	}
 
@@ -179,7 +179,7 @@ export class PlayerInputSystem extends System {
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
 		const particles = world.getComponent(entity, ParticlesComponent);
 
-		const speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
+		const speed = this.heldKeys.has(Key.Boost) ? 256 : 64;
 		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;

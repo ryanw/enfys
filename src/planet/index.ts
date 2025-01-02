@@ -42,7 +42,7 @@ export async function main(el: HTMLCanvasElement) {
 	const graphics = await initGraphics(gfx, rng() * 0x7fffff);
 
 	const { max, abs } = Math;
-	const planetCount = 128;
+	const planetCount = 24;
 
 
 	const planets: Array<Point3> = [];
@@ -56,7 +56,7 @@ export async function main(el: HTMLCanvasElement) {
 	}
 
 	for (let i = 0; i < planetCount; i++) {
-		const spread = i === 0 ? 0 : 10000;
+		const spread = i === 0 ? 0 : 4000;
 		const planetSpeed = i;//10 + rnd() * 300.0;
 		const planetRad = 100 + abs(rnd()) * 200.0;
 		const waterRad = max(10, planetRad - 6 - 32 * abs(rnd()));
@@ -109,7 +109,7 @@ async function initGraphics(gfx: Gfx, planetSeed: number): Promise<WorldGraphics
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
 	const calcNormals = new CalculateNormalsPipeline(gfx);
 
-	const planetMesh = new CubeSphere(gfx, 48);
+	const planetMesh = new Icosphere(gfx, 6);
 	// Will use the variantIndex as the seed
 	planetMesh.variantCount = 10000;
 	graphics.insertResource('planet', planetMesh);

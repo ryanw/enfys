@@ -52,9 +52,6 @@ export class PhysicsSystem extends System {
 			const vel = world.getComponent(entity, VelocityComponent)!;
 			const isPlayer = world.hasComponent(entity, PlayerComponent);
 
-			// Apply velocity
-			tra.position = add(tra.position, scale(vel.velocity, dt));
-
 			// Add every planet's gravity to velocity
 			for (const planet of planets) {
 				if (planet.entity === entity) continue;
@@ -76,13 +73,10 @@ export class PhysicsSystem extends System {
 						//continue;
 					}
 
-
-					if (Math.random() < 0.1) {
-					}
 					if (drag > 0.1) {
 						// Dampening by matching planet's speed
 						const speedDiff = subtract(planet.velocity, vel.velocity);
-						const gravDir: Vector3 = collided ? [0,0,0] : normalize(gravity);
+						const gravDir: Vector3 = collided ? [0, 0, 0] : normalize(gravity);
 						const mag = dot(speedDiff, gravDir);
 						const proj = scale(gravDir, mag);
 						const velDiff = scale(subtract(speedDiff, proj), drag);
@@ -113,7 +107,10 @@ export class PhysicsSystem extends System {
 				}
 				*/
 
+
 			}
+			// Apply velocity
+			tra.position = add(tra.position, scale(vel.velocity, dt));
 		}
 
 		// Pull everything towards the gravity wells
