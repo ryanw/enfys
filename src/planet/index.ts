@@ -53,7 +53,7 @@ export async function main(el: HTMLCanvasElement) {
 	}
 
 	const planet = planets[1];
-	const playerStart: Point3 = add(planet.position, [0, -planet.radius - 1000.0, 0]);
+	const playerStart: Point3 = add(planet.position, [0, 0, -planet.radius - 1000.0]);
 	const player = prefabs.player(world, playerStart, [0, 0, 0]);
 	const camera = prefabs.followCamera(world, player);
 

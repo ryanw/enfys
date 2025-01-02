@@ -108,7 +108,7 @@ export class PlayerInputSystem extends System {
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
 		const particles = world.getComponent(entity, ParticlesComponent);
 
-		const speed = this.heldKeys.has(Key.Boost) ? 256 : 32;
+		const speed = this.heldKeys.has(Key.Boost) ? 256 : 320;
 		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;
@@ -200,7 +200,7 @@ export class PlayerInputSystem extends System {
 		const playerVelocity = world.getComponent(entity, VelocityComponent)!;
 		const particles = world.getComponent(entity, ParticlesComponent);
 
-		const speed = this.heldKeys.has(Key.Boost) ? 256 : 64;
+		const speed = this.heldKeys.has(Key.Boost) ? 256 : 128;
 		const rotateSpeed = 4.0;
 		const movement: Vector3 = [0, 0, 0];
 		let brake = 0.0;

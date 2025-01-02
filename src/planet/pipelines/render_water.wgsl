@@ -36,8 +36,9 @@ struct VertexOut {
 	@location(2) shallowColor: vec4f,
 	@location(3) deepColor: vec4f,
 	@location(4) alt: f32,
-	@location(5) @interpolate(flat) triangleId: u32,
-	@location(6) @interpolate(flat) quadId: u32,
+	@location(5) fragPosition: vec4f,
+	@location(6) @interpolate(flat) triangleId: u32,
+	@location(7) @interpolate(flat) quadId: u32,
 }
 
 struct FragmentOut {
@@ -92,16 +93,17 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		return out;
 	}
 
-	//let shallowColor = unpack4x8unorm(material.shallowColor);
-	//let deepColor = unpack4x8unorm(material.deepColor);
-
 	let variantIndex = in.variantIndex + pawn.variantIndex;
 	let seed = material.seed + variantIndex;
 
-	let r0 = rnd3u(vec3(12 + seed * 7));
-	let r1 = rnd3u(vec3(1230 + seed * 13)) - 0.5;
+	let r0 = rnd3u(vec3(122 + seed * 7));
+	let r1 = rnd3u(vec3(1200 + seed * 13)) - 0.5;
+
 	let shallowColor = hsla(r0, 0.7, 0.5, 0.01);
 	let deepColor = hsla((r0 + 0.4 * r1) % 1.0, 0.6, 0.3, 0.9);
+
+	//let shallowColor = hsla(r0, 0.7, 0.5, 1.0);
+	//let deepColor = shallowColor;//hsla((r0 + 0.4 * r1) % 1.0, 0.6, 0.3, 0.9);
 
 
 	let idx = in.id;
@@ -130,6 +132,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	var position = mvp * p;
 
 	out.position = position;
+	out.fragPosition = camera.view * p;
 	out.uv = v.position.xy;
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
@@ -166,9 +169,36 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	
 	let waterDepth = smoothstep(0.0, 1.0, pow(length(pd) / 1024.0, 0.2));
 
-	let color = mix(in.shallowColor, in.deepColor, waterDepth);
-	out.color = vec4(color.rgb * color.a, color.a);
+	var color = mix(in.shallowColor, in.deepColor, waterDepth);
+
+	// FIXME get as uniform
+	//let lightDir = normalize(vec3(-0.6545084971874737, -0.5877852522924731, 0.4755282581475768));
+	let lightDir = normalize(vec3(-1.0, 0.0, 0.0));
+	let shade = dot(in.normal, lightDir) * 0.5 + 0.5;
+	var view = camera.view * vec4(0.0, 0.0, 0.0, 1.0);
+	// FIXME this ain't right
+	let fragPos = in.fragPosition.xyz/in.fragPosition.w;
+	var viewDir = normalize((view.xyz/view.w) - fragPos);
+
+	let specularStrength = 1.0;
+	let shininess = 100.0;
+
+	// Compute the half-vector (H)
+	let h = normalize(lightDir + viewDir);
+
+	// Calculate the specular component using Phong's model
+	let specular = pow(max(dot(in.normal, h), 0.0), shininess);
+
+	// Multiply by the specular strength factor
+	let specularColor = specularStrength * specular * vec3(1.0);
+	color += vec4(specularColor, 0.0);
+
+
+	out.color = vec4(color.rgb * shade * color.a, color.a);
 	//out.color = vec4(vec3(waterDepth), 1.0);
+	//out.color = vec4(vec3(viewDir), 1.0);
+	//out.color = vec4(vec3(abs(viewDir)), 1.0);
+	//out.color = vec4(vec3(specular), 1.0);
 	return out;
 }
 

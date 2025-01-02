@@ -40,7 +40,7 @@ export function freeCamera(world: World): Entity {
 export function star(world: World, position: Point3, scale: number = 1) {
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
-	new MeshComponent('star'),
+		new MeshComponent('star'),
 		new MaterialComponent('star-material'),
 	]);
 }
@@ -108,7 +108,7 @@ export function player(world: World, position: Point3 = [0, 0, 0], velocity: Vec
 		new PhysicsComponent(),
 		new TransformComponent(
 			position,
-			quaternionFromEuler(PI / -1.75, -0.0, 0.0),
+			[0, 0, 0, 1],//quaternionFromEuler(PI / -1.75, -0.0, 0.0),
 			[scale, scale, scale],
 		),
 		new VelocityComponent(velocity),
