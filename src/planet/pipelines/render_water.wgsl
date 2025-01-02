@@ -116,7 +116,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		packedVertex.alt,
 	);
 
-	var normal = v.normal;
+	var normal = normalize(v.position);
 
 	let transform = mat4x4(
 		in.transform0,
@@ -149,6 +149,8 @@ fn vs_main(in: VertexIn) -> VertexOut {
 fn fs_main(in: VertexOut) -> FragmentOut {
 	var out: FragmentOut;
 
+	let normal = normalize(in.normal);
+
 	let coord = vec2i(in.position.xy);
 	let depthSize = vec2f(textureDimensions(depthBuffer));
 	let uv = (in.position.xy / depthSize);
@@ -168,13 +170,14 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	
 	let waterDepth = smoothstep(0.0, 1.0, pow(length(pd) / 1024.0, 0.2));
+	//let waterDepth = smoothstep(0.0, 1.0, pow(length(pd) / 1024.0, 3.0));
 
 	var color = mix(in.shallowColor, in.deepColor, waterDepth);
 
 	// FIXME get as uniform
 	//let lightDir = normalize(vec3(-0.6545084971874737, -0.5877852522924731, 0.4755282581475768));
 	let lightDir = normalize(vec3(-1.0, 0.0, 0.0));
-	let shade = dot(in.normal, lightDir) * 0.5 + 0.5;
+	let shade = dot(normal, lightDir) * 0.5 + 0.5;
 	var view = camera.view * vec4(0.0, 0.0, 0.0, 1.0);
 	// FIXME this ain't right
 	let fragPos = in.fragPosition.xyz/in.fragPosition.w;
@@ -187,7 +190,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	let h = normalize(lightDir + viewDir);
 
 	// Calculate the specular component using Phong's model
-	let specular = pow(max(dot(in.normal, h), 0.0), shininess);
+	let specular = pow(max(dot(normal, h), 0.0), shininess);
 
 	// Multiply by the specular strength factor
 	let specularColor = specularStrength * specular * vec3(1.0);
@@ -199,6 +202,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	//out.color = vec4(vec3(viewDir), 1.0);
 	//out.color = vec4(vec3(abs(viewDir)), 1.0);
 	//out.color = vec4(vec3(specular), 1.0);
+	//out.color = vec4(vec3(normal), 1.0);
 	return out;
 }
 

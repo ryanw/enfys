@@ -13,6 +13,7 @@ import { ColliderComponent } from "engine/ecs/components/collider";
 import { normalize } from "engine/math/vectors";
 import { OrbitComponent } from "./components/orbit";
 import { Planet } from "./galaxy";
+import { FollowComponent } from "engine/ecs/components/follow";
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
@@ -38,6 +39,16 @@ export function freeCamera(world: World): Entity {
 	]);
 }
 
+
+export function skybox(world: World, target: Entity) {
+	const s = 20_000;
+	return world.createEntity([
+		new TransformComponent([0, 0, 0], [0, 0, 0, 1], [s, s, s]),
+		new FollowComponent(target, [0, 0, 1]),
+		new MeshComponent('sky'),
+		new MaterialComponent('sky-material'),
+	]);
+}
 
 export function star(world: World, position: Point3, scale: number = 1) {
 	return world.createEntity([

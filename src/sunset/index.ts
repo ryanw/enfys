@@ -33,10 +33,10 @@ import { RenderCarPipeline } from './pipelines/render_car';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
 import { TuftMesh } from '../landscape/meshes/tuft';
 import { FlowersMesh } from '../landscape/meshes/flowers';
-import { FollowSystem } from './systems/follow';
 import { VehicleInputSystem } from './systems/vehicle_input';
 import { Icosphere, InnerIcosphere } from 'engine/meshes/icosphere';
 import { CubeMesh } from 'engine/meshes/cube';
+import { FollowSystem } from 'engine/ecs/systems/follow';
 
 const PIXEL_SIZE = 1;
 const MATERIALS: Array<MaterialTuple> = [

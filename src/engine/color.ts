@@ -24,11 +24,13 @@ export function hsl(h: number, s: number, ll: number, a: number = 1.0): Color {
 	return [r, g, b, a * 255];
 }
 
-export function colorToInt(color: Color): number {
+export function colorToInt(color: Color | number): number {
+	if (typeof color === 'number') return color;
 	const [r, g, b, a] = color;
 	return (a << 24) | (b << 16) | (g << 8) | r;
 }
 export function colorToBigInt(color: Color): bigint {
+	if (typeof color === 'bigint') return color;
 	const [r, g, b, a] = color;
 	return (BigInt(a|0) << BigInt(24)) | (BigInt(b|0) << BigInt(16)) | (BigInt(g|0) << BigInt(8)) | BigInt(r|0);
 }

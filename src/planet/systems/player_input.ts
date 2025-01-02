@@ -30,6 +30,7 @@ export class PlayerInputSystem extends System {
 		'd': Key.RollRight,
 		'q': Key.Left,
 		'e': Key.Right,
+		'f': Key.ToggleMode,
 		' ': Key.Thrust,
 		'alt': Key.Boost,
 		'shift': Key.Brake,

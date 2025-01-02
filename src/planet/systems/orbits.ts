@@ -18,8 +18,12 @@ export class OrbitsSystem extends System {
 
 		for (const entity of planets) {
 			const t = world.getComponent(entity, TransformComponent)!;
+			const v = world.getComponent(entity, VelocityComponent)!;
 			const orbit = world.getComponent(entity, OrbitComponent)!;
-			t.position = orbit.positionAtTime(performance.now()/10000.0);
+			const targetPosition = orbit.positionAtTime(performance.now()/1000.0);
+			const currentPosition = t.position;
+			v.velocity = scale(normalize(subtract(currentPosition, targetPosition)), 1000.0);
+			t.position = add(t.position, scale(v.velocity, dt));
 		}
 	}
 }

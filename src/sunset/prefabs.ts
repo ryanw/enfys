@@ -11,7 +11,7 @@ import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engi
 import { ResourceId } from "engine/resource";
 import { DecorComponent } from "engine/ecs/components/decor";
 import { ParticlesComponent } from "engine/ecs/components/particles";
-import { FollowComponent } from "./components/follow";
+import { FollowComponent } from "engine/ecs/components/follow";
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([

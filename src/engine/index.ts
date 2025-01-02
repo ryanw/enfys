@@ -305,17 +305,21 @@ export class Gfx {
 	createTexture(format: GPUTextureFormat, size: GPUExtent3DStrict = [1, 1], label?: string): GPUTexture {
 		const device = this.device;
 		let usage = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
+		const dim = Array.isArray(size) ? size.length - 1 : 1;
+		let dimension: GPUTextureDimension = (['1d', '2d', '3d'] as GPUTextureDimension[])[dim] || '2d';
 
 		if (['r32uint', 'rgba8unorm', 'rgba8uint', 'r32float'].includes(format)) {
 			usage |= GPUTextureUsage.STORAGE_BINDING;
 		}
-		if (['r32uint', 'r8uint', 'rgba8unorm', 'rgba8snorm', 'rgba16float', 'rgba32float', 'depth32float', 'depth24plus'].includes(format)) {
+		if (dimension === '2d' && ['r32uint', 'r8uint', 'rgba8unorm', 'rgba8snorm', 'rgba16float', 'rgba32float', 'depth32float', 'depth24plus'].includes(format)) {
 			usage |= GPUTextureUsage.RENDER_ATTACHMENT;
 		}
+
 
 		return device.createTexture({
 			label,
 			format,
+			dimension,
 			size,
 			usage
 		});

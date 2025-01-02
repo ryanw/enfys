@@ -8,7 +8,7 @@ export class PlanetMaterial extends Material {
 	constructor(
 		readonly gfx: Gfx,
 		readonly seed: number,
-		readonly seaLevel: number,
+		readonly seaLevel: number = 0,
 	) {
 		super();
 		this.uniform = new UniformBuffer(gfx, [
