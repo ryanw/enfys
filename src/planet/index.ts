@@ -27,7 +27,8 @@ import { WaterMaterial } from './materials/water';
 import { RenderWaterPipeline } from './pipelines/render_water';
 import { Point3 } from 'engine/math';
 import { randomizer } from 'engine/noise';
-import { magnitude, subtract } from 'engine/math/vectors';
+import { add, magnitude, subtract } from 'engine/math/vectors';
+import { Galaxy, StarSystem } from './galaxy';
 
 /**
  * Start the game
@@ -36,10 +37,29 @@ export async function main(el: HTMLCanvasElement) {
 	const gfx = await initGfx(el);
 	const scene = await initScene(gfx);
 	const world = await initWorld(gfx);
+	const graphics = await initGraphics(gfx);
 
+	const starSystem = new StarSystem(666n);
+
+
+	for (const star of starSystem.stars()) {
+		prefabs.star(world, star.position, star.radius);
+	}
+
+	const planets = Array.from(starSystem.planets());
+	for (const planet of planets) {
+		prefabs.planet(world, planet.position, planet.radius, planet.velocity);
+		prefabs.water(world, planet.position, planet.waterRadius, planet.velocity);
+	}
+
+	const planet = planets[1];
+	const playerStart: Point3 = add(planet.position, [0, -planet.radius - 1000.0, 0]);
+	const player = prefabs.player(world, playerStart, [0, 0, 0]);
+	const camera = prefabs.followCamera(world, player);
+
+	/*
 	const rng = randomizer(Math.random() * 0x7fffff | 0);
 	const rnd = () => rng() * 2.0 - 1.0;
-	const graphics = await initGraphics(gfx, rng() * 0x7fffff);
 
 	const { max, abs } = Math;
 	const planetCount = 24;
@@ -71,9 +91,8 @@ export async function main(el: HTMLCanvasElement) {
 		prefabs.planet(world, position, planetRad, [planetSpeed, planetSpeed, 0]);
 		prefabs.water(world, position, waterRad, [planetSpeed, planetSpeed, 0]);
 	}
+	*/
 
-	const player = prefabs.player(world, [0, -500, 0], [0, 0, 0]);
-	const camera = prefabs.followCamera(world, player);
 
 	scene.currentCameraId = 1;
 	scene.primaryCameraId = 1;
@@ -100,7 +119,7 @@ async function initScene(gfx: Gfx): Promise<Scene> {
 
 
 
-async function initGraphics(gfx: Gfx, planetSeed: number): Promise<WorldGraphics> {
+async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGraphics> {
 	gfx.registerMaterials([
 		[PlanetMaterial, RenderPlanetPipeline],
 		[WaterMaterial, RenderWaterPipeline],

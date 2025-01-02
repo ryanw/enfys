@@ -2,21 +2,53 @@ import { BigVector3, Point3, Vector3 } from './math';
 
 // http://www.jcgt.org/published/0009/03/02/
 export function pcg3d(v: Vector3): Vector3 {
-	let n0 = v.map(i => BigInt(i * 1664525 | 0) + BigInt(1013904223)) as BigVector3;
+	let n0 = v.map(i => (BigInt(i) * 1664525n | 0n) + 1013904223n) as BigVector3;
 
 	n0[0] += n0[1] * n0[2];
 	n0[1] += n0[2] * n0[0];
 	n0[2] += n0[0] * n0[1];
 
-	n0 = n0.map(v => v % BigInt(0xffffffff)) as BigVector3;
+	n0 = n0.map(v => v % 0xffffffffn) as BigVector3;
 
-	const n1 = n0.map(i => Number(i ^ (i >> BigInt(16))) * (1.0 / 0xffffffff)) as Vector3;
+	const n1 = n0.map(i => Number(i ^ (i >> 16n)) * (1.0 / 0xffffffff)) as Vector3;
 
 	n1[0] += n1[1] * n1[2];
 	n1[1] += n1[2] * n1[0];
 	n1[2] += n1[0] * n1[1];
 
 	return n1;
+}
+
+export function bigPcg3d(v: BigVector3): BigVector3 {
+	let n0 = v.map(i => (i * 1664525n | 0n) + (1013904223n)) as BigVector3;
+
+	n0[0] += n0[1] * n0[2];
+	n0[1] += n0[2] * n0[0];
+	n0[2] += n0[0] * n0[1];
+
+	n0 = n0.map(v => v % 0xffffffffn) as BigVector3;
+	const n1 = n0.map(i => (i ^ (i >> 16n))) as BigVector3;
+
+	return n1;
+}
+
+export function bigRandomizer(seed: bigint): Randomizer {
+	const rng = bigIntRandomizer(seed);
+	return (l: number = -1, r: number = 1) => {
+		const rndInt = rng();
+		const rndFloat = Number(rndInt) / 0xffffffff;
+		return rndFloat * (r - l) + l;
+	};
+}
+
+export type BigRandomizer = () => bigint;
+export function bigIntRandomizer(seed: bigint): BigRandomizer {
+	let rndIdx = 131313n * seed;
+	return () => {
+		const n = rndIdx++;
+		const coord = [n, n, n] as BigVector3;
+		return bigPcg3d(coord)[0];
+	};
 }
 
 export type Randomizer = (l?: number, r?: number) => number;

@@ -11,12 +11,18 @@ import { SoundComponent } from 'engine/ecs/components/sound';
 import * as quats from 'engine/math/quaternions';
 import { FollowCameraComponent } from 'engine/ecs/components/camera';
 
+export enum VehicleMode {
+	Space,
+	Lander
+}
+
 export class PlayerInputSystem extends System {
 	gamepads: Array<Gamepad> = [];
 	readonly heldKeys = new Map<Key, number>;
 	readonly pressedKeys = new Map<Key, number>;
 	readonly axis = new Map<XboxAxis, number>;
 	readonly previousButtons: Record<number, number> = {};
+	mode: VehicleMode = VehicleMode.Space;
 	bindings: Record<string, Key> = {
 		'w': Key.Forward,
 		's': Key.Backward,
@@ -34,6 +40,7 @@ export class PlayerInputSystem extends System {
 		[XboxButton[XboxButton.RightBumper]]: Key.Right,
 		[XboxButton[XboxButton.LeftTrigger]]: Key.Brake,
 		[XboxButton[XboxButton.RightTrigger]]: Key.Thrust,
+		[XboxButton[XboxButton.LeftStick]]: Key.ToggleMode,
 		[XboxAxis[XboxAxis.LeftStickX]]: Key.Left,
 		[XboxAxis[XboxAxis.LeftStickY]]: Key.Forward,
 		[XboxAxis[XboxAxis.RightStickX]]: Key.CameraYaw,
@@ -77,8 +84,22 @@ export class PlayerInputSystem extends System {
 
 	updateMovement(dt: number, world: World, entity: Entity) {
 		this.updateGamepads();
-		this.updateLander(dt, world, entity);
-		//this.updateSpace(dt, world, entity);
+		switch (this.mode) {
+			case VehicleMode.Space:
+				this.updateSpace(dt, world, entity);
+				break;
+			case VehicleMode.Lander:
+				this.updateLander(dt, world, entity);
+				break;
+		}
+
+		for (const [key, value] of this.pressedKeys.entries()) {
+			switch (key) {
+				case Key.ToggleMode:
+					this.mode = this.mode === VehicleMode.Lander ? VehicleMode.Space : VehicleMode.Lander;
+					break;
+			}
+		}
 		this.pressedKeys.clear();
 	}
 
