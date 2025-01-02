@@ -1,5 +1,5 @@
 import { Matrix4, Point3, Quaternion, Vector3 } from 'engine/math';
-import { multiply, rotation } from 'engine/math/transform';
+import { multiply, rotation, rotationFromQuaternion, scaling, translation } from 'engine/math/transform';
 
 export abstract class Component { }
 
@@ -46,12 +46,57 @@ export class VelocityComponent extends Component {
 }
 
 export class TransformComponent extends Component {
+	/**
+	 * Cache transform for faster usage
+	 */
+	private _transform!: Matrix4;
+
 	constructor(
-		public position: Point3 = [0, 0, 0],
-		public rotation: Quaternion = [0, 0, 0, 1],
-		public scale: Vector3 = [1, 1, 1],
+		private _position: Point3 = [0, 0, 0],
+		private _rotation: Quaternion = [0, 0, 0, 1],
+		private _scale: Vector3 = [1, 1, 1],
 	) {
 		super();
+		this.updateTransform();
+	}
+
+	get position(): Point3 {
+		return this._position;
+	}
+
+	get rotation(): Quaternion {
+		return this._rotation;
+	}
+
+	get scale(): Vector3 {
+		return this._scale;
+	}
+
+	set position(position: Point3) {
+		this._position = position;
+		this.updateTransform();
+	}
+
+	set rotation(rotation: Quaternion) {
+		this._rotation = rotation;
+		this.updateTransform();
+	}
+
+	set scale(scale: Vector3) {
+		this._scale = scale;
+		this.updateTransform();
+	}
+
+	get transform(): Matrix4 {
+		return this._transform;
+	}
+
+	updateTransform() {
+		this._transform = multiply(
+			translation(...this.position),
+			rotationFromQuaternion(this.rotation),
+			scaling(...this.scale),
+		);
 	}
 }
 

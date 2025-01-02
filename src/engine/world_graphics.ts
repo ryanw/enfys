@@ -27,7 +27,7 @@ import { MaterialComponent } from './ecs/components/material';
 import { colorToInt } from './color';
 import { DecorPipeline } from './pipelines/decor';
 import { add } from './math/vectors';
-import { quaternionFromEuler, quaternionToEuler } from './math/quaternions';
+import { quaternionToEuler } from './math/quaternions';
 
 export type Resource = {};
 
@@ -449,10 +449,6 @@ function transformForEntity(world: World, entity: Entity): Matrix4 {
 	if (!world.hasComponent(entity, TransformComponent)) {
 		return identity();
 	}
-	const { position, scale, rotation: rot } = world.getComponent(entity, TransformComponent)!;
-	return multiply(
-		translation(...position),
-		rotationFromQuaternion(rot),
-		scaling(...scale),
-	);
+	const { transform } = world.getComponent(entity, TransformComponent)!;
+	return transform;
 }

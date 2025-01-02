@@ -28,7 +28,10 @@ import { RenderWaterPipeline } from './pipelines/render_water';
 import { Point3 } from 'engine/math';
 import { randomizer } from 'engine/noise';
 import { add, magnitude, subtract } from 'engine/math/vectors';
-import { Galaxy, StarSystem } from './galaxy';
+import { Galaxy, Planet, StarSystem } from './galaxy';
+import { Entity } from 'engine/ecs';
+import { TransformComponent } from 'engine/ecs/components';
+import { OrbitsSystem } from './systems/orbits';
 
 /**
  * Start the game
@@ -39,7 +42,7 @@ export async function main(el: HTMLCanvasElement) {
 	const world = await initWorld(gfx);
 	const graphics = await initGraphics(gfx);
 
-	const starSystem = new StarSystem(666n);
+	const starSystem = new StarSystem(BigInt(Math.random()*0xffffffff|0));
 
 
 	for (const star of starSystem.stars()) {
@@ -47,51 +50,18 @@ export async function main(el: HTMLCanvasElement) {
 	}
 
 	const planets = Array.from(starSystem.planets());
+	const planetEntities: Array<[Planet, Entity, Entity]> = [];
 	for (const planet of planets) {
-		prefabs.planet(world, planet.position, planet.radius, planet.velocity);
-		prefabs.water(world, planet.position, planet.waterRadius, planet.velocity);
+		const position = planet.positionAtTime(0.0);
+		const p = prefabs.planet(world, position, planet);
+		const w = prefabs.water(world, position, planet);
+		planetEntities.push([planet, p, w]);
 	}
 
-	const planet = planets[1];
-	const playerStart: Point3 = add(planet.position, [0, 0, -planet.radius - 1000.0]);
+	const planet = planets[2];
+	const playerStart: Point3 = add(planet.positionAtTime(0), [0, 0, -planet.radius - 1000.0]);
 	const player = prefabs.player(world, playerStart, [0, 0, 0]);
 	const camera = prefabs.followCamera(world, player);
-
-	/*
-	const rng = randomizer(Math.random() * 0x7fffff | 0);
-	const rnd = () => rng() * 2.0 - 1.0;
-
-	const { max, abs } = Math;
-	const planetCount = 24;
-
-
-	const planets: Array<Point3> = [];
-	function isSafe(p0: Point3): boolean {
-		for (const p1 of planets) {
-			if (magnitude(subtract(p0, p1)) < 1000.0) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	for (let i = 0; i < planetCount; i++) {
-		const spread = i === 0 ? 0 : 4000;
-		const planetSpeed = i;//10 + rnd() * 300.0;
-		const planetRad = 100 + abs(rnd()) * 200.0;
-		const waterRad = max(10, planetRad - 6 - 32 * abs(rnd()));
-
-		let position: Point3 = [rnd() * spread, rnd() * spread, rnd() * spread];
-
-		if (!isSafe(position)) {
-			continue;
-		}
-		planets.push(position);
-
-		prefabs.planet(world, position, planetRad, [planetSpeed, planetSpeed, 0]);
-		prefabs.water(world, position, waterRad, [planetSpeed, planetSpeed, 0]);
-	}
-	*/
 
 
 	scene.currentCameraId = 1;
@@ -172,6 +142,7 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 async function initWorld(gfx: Gfx): Promise<World> {
 	const world = new World();
 	world.addSystem(new PhysicsSystem(gfx));
+	world.addSystem(new OrbitsSystem());
 	world.addSystem(new FreeCameraInputSystem(gfx.canvas));
 	world.addSystem(new OrbitCameraInputSystem(gfx.canvas));
 	world.addSystem(new FollowCameraSystem(gfx.canvas));
