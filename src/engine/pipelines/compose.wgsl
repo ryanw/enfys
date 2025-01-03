@@ -232,9 +232,9 @@ fn fs_main(in: VertexOut) -> @location(0) vec4f {
 	var shade = 0.0;
 
 	if length(normal) > 0.0 {
-		//let lightPos = u.light.xyz;
-		//let lightDir = normalize(pos - lightPos);
-		let lightDir = u.light.xyz;
+		let lightPos = u.light.xyz;
+		let lightDir = normalize( lightPos - pos);
+		//let lightDir = u.light.xyz;
 		shade = dot(normal, lightDir) * 0.5 + 0.5;
 	}
 
