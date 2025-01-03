@@ -41,10 +41,10 @@ export function freeCamera(world: World): Entity {
 
 
 export function skybox(world: World, target: Entity) {
-	const s = 20_000;
+	const s = 90_000;
 	return world.createEntity([
 		new TransformComponent([0, 0, 0], [0, 0, 0, 1], [s, s, s]),
-		new FollowComponent(target, [0, 0, 1]),
+		new FollowComponent(target),
 		new MeshComponent('sky'),
 		new MaterialComponent('sky-material'),
 	]);

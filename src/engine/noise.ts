@@ -2,7 +2,7 @@ import { BigVector3, Point3, Vector3 } from './math';
 
 // http://www.jcgt.org/published/0009/03/02/
 export function pcg3d(v: Vector3): Vector3 {
-	let n0 = v.map(i => (BigInt(i) * 1664525n | 0n) + 1013904223n) as BigVector3;
+	let n0 = v.map(i => BigInt((i * 1664525 + 1013904223) | 0)) as BigVector3;
 
 	n0[0] += n0[1] * n0[2];
 	n0[1] += n0[2] * n0[0];

@@ -116,7 +116,6 @@ fn vs_main(in: VertexIn) -> VertexOut {
 		packedVertex.alt,
 	);
 
-	var normal = normalize(v.position);
 
 	let transform = mat4x4(
 		in.transform0,
@@ -130,13 +129,14 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	//var p = offsetModel * vec4(v.position + terrainOffset, 1.0);
 	var p = offsetModel * vec4(v.position, 1.0);
 	var position = mvp * p;
+	var normal = normalize(p.xyz/p.w);
 
 	out.position = position;
-	out.fragPosition = camera.view * p;
+	out.fragPosition = p;
 	out.uv = v.position.xy;
 	out.triangleId = in.id / 3u;
 	out.quadId = in.id / 4u;
-	out.normal = normal;
+	out.normal = (offsetModel * vec4(normalize(v.position), 0.0)).xyz;
 	out.alt = v.alt;
 
 	out.shallowColor = shallowColor;
@@ -174,16 +174,18 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	var color = mix(in.shallowColor, in.deepColor, waterDepth);
 
+	let fragPos = in.fragPosition.xyz/in.fragPosition.w;
 	// FIXME get as uniform
 	//let lightDir = normalize(vec3(-0.6545084971874737, -0.5877852522924731, 0.4755282581475768));
-	let lightDir = normalize(vec3(-1.0, 0.0, 0.0));
-	let shade = dot(normal, lightDir) * 0.5 + 0.5;
+	let lightDir = normalize(-fragPos.xyz);
+	let shade = dot(lightDir, normal) * 0.5 + 0.5;
 	var view = camera.view * vec4(0.0, 0.0, 0.0, 1.0);
 	// FIXME this ain't right
-	let fragPos = in.fragPosition.xyz/in.fragPosition.w;
-	var viewDir = normalize((view.xyz/view.w) - fragPos);
+	let cameraPos = camera.view * vec4(0.0, 0.0, 0.0, 1.0);
+	let cp = cameraPos.xyz/cameraPos.w;
+	var viewDir = normalize(cp - fragPos);
 
-	let specularStrength = 1.0;
+	let specularStrength = 0.5;
 	let shininess = 100.0;
 
 	// Compute the half-vector (H)
@@ -199,10 +201,6 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	out.color = vec4(color.rgb * shade * color.a, color.a);
 	//out.color = vec4(vec3(waterDepth), 1.0);
-	//out.color = vec4(vec3(viewDir), 1.0);
-	//out.color = vec4(vec3(abs(viewDir)), 1.0);
-	//out.color = vec4(vec3(specular), 1.0);
-	//out.color = vec4(vec3(normal), 1.0);
 	return out;
 }
 

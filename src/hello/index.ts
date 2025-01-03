@@ -5,7 +5,7 @@
  */
 
 import { Gfx } from 'engine';
-import { EulerCamera } from 'engine/camera';
+import { QuaternionCamera } from 'engine/camera';
 import { Scene } from 'engine/scene';
 import { multiply, rotation, translation } from 'engine/math/transform';
 import { FreeCameraController } from 'engine/input/free_camera';
@@ -19,7 +19,7 @@ import { Icosahedron } from 'engine/meshes/icosahedron';
 export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 	if (el.tagName !== 'CANVAS') throw new Error('Element is not a canvas');
 	const gfx: Gfx = await Gfx.attachNotified(el);
-	const camera = new EulerCamera(gfx);
+	const camera = new QuaternionCamera(gfx);
 	const cameraController = new FreeCameraController(el, camera);
 	const scene = new Scene(gfx);
 

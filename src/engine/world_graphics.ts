@@ -1,7 +1,7 @@
 import { Gfx, Size } from 'engine';
 import { Camera, EulerCamera, QuaternionCamera } from './camera';
 import { Entity } from './ecs';
-import { EulerTransformComponent, TransformComponent } from './ecs/components';
+import { TransformComponent } from './ecs/components';
 import { CameraComponent } from './ecs/components/camera';
 import { MeshComponent } from './ecs/components/mesh';
 import { World } from './ecs/world';
@@ -209,6 +209,7 @@ export class WorldGraphics {
 
 			// Update the transform of the instance
 			// FIXME better field updating
+
 			device.queue.writeBuffer(
 				pawn.object.instanceBuffer,
 				idx * pawn.object.instanceSize,

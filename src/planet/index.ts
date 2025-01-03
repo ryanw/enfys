@@ -35,6 +35,7 @@ import { OrbitsSystem } from './systems/orbits';
 import { SkyMaterial } from './materials/sky';
 import { RenderSkyPipeline } from './pipelines/render_sky';
 import { hsl } from 'engine/color';
+import { FollowSystem } from 'engine/ecs/systems/follow';
 
 /**
  * Start the game
@@ -46,14 +47,14 @@ export async function main(el: HTMLCanvasElement) {
 	const graphics = await initGraphics(gfx);
 
 	const starSystem = new StarSystem(BigInt(Math.random() * 0xffffffff | 0));
-
-
+	const planets = Array.from(starSystem.planets());
 	const stars = Array.from(starSystem.stars());
+
+
 	for (const star of stars) {
 		prefabs.star(world, star.position, star.radius);
 	}
 
-	const planets = Array.from(starSystem.planets());
 	const planetEntities: Array<[Planet, Entity, Entity]> = [];
 	for (const planet of planets) {
 		const position = planet.positionAtTime(0.0);
@@ -152,5 +153,6 @@ async function initWorld(gfx: Gfx): Promise<World> {
 	world.addSystem(new OrbitCameraInputSystem(gfx.canvas));
 	world.addSystem(new FollowCameraSystem(gfx.canvas));
 	world.addSystem(new PlayerInputSystem(gfx.canvas));
+	world.addSystem(new FollowSystem());
 	return world;
 }

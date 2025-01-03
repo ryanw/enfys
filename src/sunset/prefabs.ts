@@ -1,44 +1,45 @@
 import { Entity } from "engine/ecs";
-import { EulerTransformComponent, VelocityComponent } from "engine/ecs/components";
+import { TransformComponent, VelocityComponent } from "engine/ecs/components";
 import { LightComponent } from "engine/ecs/components/light";
 import { MaterialComponent } from "engine/ecs/components/material";
 import { MeshComponent } from "engine/ecs/components/mesh";
 import { TerrainComponent } from "engine/ecs/components/terrain";
 import { World } from "engine/ecs/world";
-import { Point3, Vector3 } from "engine/math";
+import { Point3, Quaternion, Vector3 } from "engine/math";
 import { VehicleComponent } from "./components/vehicle";
 import { CameraComponent, FreeCameraComponent, OrbitCameraComponent } from "engine/ecs/components/camera";
 import { ResourceId } from "engine/resource";
 import { DecorComponent } from "engine/ecs/components/decor";
 import { ParticlesComponent } from "engine/ecs/components/particles";
 import { FollowComponent } from "engine/ecs/components/follow";
+import { quaternionFromEuler } from "engine/math/quaternions";
 
 export function orbitCamera(world: World, target: Entity): Entity {
 	return world.createEntity([
-		new EulerTransformComponent([0, 0, 0], [0.2, -0.2, 0]),
+		new TransformComponent([0, 0, 0], quaternionFromEuler(0.2, -0.2, 0)),
 		new CameraComponent(),
-		new OrbitCameraComponent(target, [0, 2, -4]),
+		new OrbitCameraComponent(target, 16, [0, 2, -4]),
 	]);
 }
 
 export function freeCamera(world: World): Entity {
 	return world.createEntity([
-		new EulerTransformComponent(),
+		new TransformComponent(),
 		new CameraComponent(),
 		new FreeCameraComponent(),
 	]);
 }
 
-export function light(world: World, rotation: Vector3 = [0, 0, 0]): Entity {
+export function light(world: World, rotation: Quaternion = [0, 0, 0, 1]): Entity {
 	return world.createEntity([
 		new LightComponent(),
-		new EulerTransformComponent([0, 0, 0], rotation),
+		new TransformComponent([0, 0, 0], rotation),
 	]);
 }
 
 export function sky(world: World, scale: number = 1, target: Entity) {
 	return world.createEntity([
-		new EulerTransformComponent([0, 0, 0], [0, 0, 0], [scale, scale, scale]),
+		new TransformComponent([0, 0, 0], [0, 0, 0, 1], [scale, scale, scale]),
 		new FollowComponent(target, [1, 1, 1]),
 		new MeshComponent('sky'),
 		new MaterialComponent('sky-material'),
@@ -47,7 +48,7 @@ export function sky(world: World, scale: number = 1, target: Entity) {
 
 export function sun(world: World, position: Point3, scale: number = 1, target: Entity) {
 	return world.createEntity([
-		new EulerTransformComponent(position, [0, 0, 0], [scale, scale, scale]),
+		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new FollowComponent(target, [1, 1, 1]),
 		new MeshComponent('sun'),
 		new MaterialComponent('sun-material'),
@@ -59,7 +60,7 @@ let planetIdx = 0;
 export function planet(world: World, position: Point3, scale: number = 1, speed: number = 1.0, target: Entity) {
 	planetIdx = (planetIdx + 1) % planetCount;
 	return world.createEntity([
-		new EulerTransformComponent(position, [0, 0, 0], [scale, scale, scale]),
+		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new FollowComponent(target, [1, 1, 1]),
 		new MeshComponent(`planet${planetIdx}`),
 		new MaterialComponent(`planet${planetIdx}-material`),
@@ -68,7 +69,7 @@ export function planet(world: World, position: Point3, scale: number = 1, speed:
 
 export function road(world: World, position: Point3, target: Entity) {
 	return world.createEntity([
-		new EulerTransformComponent(position),
+		new TransformComponent(position),
 		new FollowComponent(target, [0, 0, 1]),
 		new MeshComponent('road'),
 		new MaterialComponent('road-material'),
@@ -77,7 +78,7 @@ export function road(world: World, position: Point3, target: Entity) {
 
 export function car(world: World, position: Point3) {
 	return world.createEntity([
-		new EulerTransformComponent(position),
+		new TransformComponent(position),
 		new VelocityComponent([0, 0, 0], [0, 0, 0]),
 		new VehicleComponent(),
 		new MeshComponent('car'),
@@ -88,9 +89,9 @@ export function car(world: World, position: Point3) {
 
 export function building(world: World, position: Point3, size: Vector3 = [1, 1, 1]) {
 	return world.createEntity([
-		new EulerTransformComponent(
+		new TransformComponent(
 			[position[0], position[1] + size[1], position[2]],
-			[0, 0, 0],
+			[0, 0, 0, 1],
 			size,
 		),
 		new MeshComponent('building'),
@@ -99,7 +100,7 @@ export function building(world: World, position: Point3, size: Vector3 = [1, 1, 
 
 export function terrain(world: World, target?: Entity) {
 	return world.createEntity([
-		new EulerTransformComponent(),
+		new TransformComponent(),
 		new TerrainComponent(431, 456, target, false, [256, 256]),
 		new MaterialComponent('terrain-material'),
 	]);
@@ -110,7 +111,7 @@ export function decor(world: World, mesh: ResourceId, material: ResourceId, seed
 	const idx = decorRngIdx;
 	decorRngIdx += 1;
 	return world.createEntity([
-		new EulerTransformComponent([0, 0, 0], [0, 0, 0], [2, 2, 2]),
+		new TransformComponent([0, 0, 0], [0, 0, 0, 1], [2, 2, 2]),
 		new DecorComponent(mesh, seed + idx, spread, radius, target),
 		new MaterialComponent(material),
 	]);
