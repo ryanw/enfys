@@ -87,7 +87,7 @@ export class Planet {
 		this.radius = rng(200, 700);
 		const orbitOffset = rng(0.0, Math.PI * 2);
 		const orbitSpeed = rng(0.0, 1.0);
-		const orbitTilt = quaternionFromEuler(0, 0, rng(0.0, Math.PI / 2.0));
+		const orbitTilt = quaternionFromEuler(0, 0, rng(0.0, Math.PI / 6.0));
 
 		this.orbit = new Orbit(
 			orbitRadius,

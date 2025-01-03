@@ -24,7 +24,6 @@ export class OrbitsSystem extends System {
 			const diff = subtract(targetPosition, t.position);
 			const dist = magnitude(diff);
 			v.velocity = scale(normalize(diff), dist / dt);
-			t.position = add(t.position, scale(v.velocity, dt));
 		}
 	}
 }

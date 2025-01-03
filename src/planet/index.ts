@@ -48,11 +48,9 @@ export async function main(el: HTMLCanvasElement) {
 	const world = await initWorld(gfx);
 	const graphics = await initGraphics(gfx);
 
-	//const starSystem = new StarSystem(BigInt(Math.random() * 0xffffffff | 0));
-	const starSystem = new StarSystem(1n);
+	const starSystem = new StarSystem(BigInt(Math.random() * 0xffffffff | 0));
 	const planets = Array.from(starSystem.planets());
 	const stars = Array.from(starSystem.stars());
-
 
 	for (const star of stars) {
 		prefabs.star(world, star.position, star.radius);
@@ -146,8 +144,8 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 
 async function initWorld(gfx: Gfx): Promise<World> {
 	const world = new World();
-	world.addSystem(new PhysicsSystem(gfx));
 	world.addSystem(new OrbitsSystem());
+	world.addSystem(new PhysicsSystem(gfx));
 	world.addSystem(new FreeCameraInputSystem(gfx.canvas));
 	world.addSystem(new OrbitCameraInputSystem(gfx.canvas));
 	world.addSystem(new FollowCameraSystem(gfx.canvas));

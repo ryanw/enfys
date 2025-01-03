@@ -24,6 +24,19 @@ export class PhysicsSystem extends System {
 	}
 
 	override async tick(dt: number, world: World) {
+		this.tickPhysics(dt, world);
+		this.tickVelocity(dt, world);
+	}
+	tickVelocity(dt: number, world: World) {
+		const entities = world.entitiesWithComponents([VelocityComponent, TransformComponent]);
+		for (const entity of entities) {
+			const tra = world.getComponent(entity, TransformComponent)!;
+			const vel = world.getComponent(entity, VelocityComponent)!;
+			tra.position = add(tra.position, scale(vel.velocity, dt));
+		}
+	}
+
+	tickPhysics(dt: number, world: World) {
 		const bodies = world.entitiesWithComponents([GravityComponent, TransformComponent]);
 		const entities = world.entitiesWithComponents([PhysicsComponent, VelocityComponent, TransformComponent]);
 
@@ -80,37 +93,11 @@ export class PhysicsSystem extends System {
 						const mag = dot(speedDiff, gravDir);
 						const proj = scale(gravDir, mag);
 						const velDiff = scale(subtract(speedDiff, proj), drag);
-						vel.velocity = add(vel.velocity, scale(velDiff, dt));
+						// FIXME?
+						vel.velocity = planet.velocity;//add(vel.velocity, scale(velDiff, dt));
 					}
 				}
-
-
-
-				// Test for collisions
-				/*
-				for (const { entity: ent, position: planetPos, velocity: planetVelocity, force, radius } of planets) {
-					if (ent === entity) continue;
-					const friction = 2.0;
-					if (hasCollided(tra.position, planetPos, radius)) {
-						const normal = normalize(subtract(tra.position, planetPos));
-						tra.position = add(planetPos, scale(normal, radius));
-						const relativeVel = subtract(vel.velocity, planetVelocity);
-						const dp = dot(relativeVel, normal);
-						vel.velocity = add(vel.velocity, scale(normal, -dp));
-						const speedDiff = magnitude(subtract(vel.velocity, planetVelocity));
-						if (Math.abs(speedDiff) < 1) {
-							vel.velocity = [...planetVelocity];
-						} else {
-							vel.velocity = lerp(vel.velocity, planetVelocity, friction * dt);
-						}
-					}
-				}
-				*/
-
-
 			}
-			// Apply velocity
-			tra.position = add(tra.position, scale(vel.velocity, dt));
 		}
 
 		// Pull everything towards the gravity wells
