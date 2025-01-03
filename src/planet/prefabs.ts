@@ -72,16 +72,11 @@ export function planet(world: World, position: Point3, planet: Planet) {
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('planet'),
 		//new PhysicsComponent(),
-		new OrbitComponent(
-			planet.orbitRadius,
-			planet.orbitSpeed,
-			planet.orbitOffset,
-			planet.orbitTilt,
-		),
+		new OrbitComponent(planet.orbit),
 		new ColliderComponent(scale),
 		new VelocityComponent([0, 0, 0]),
 		new MaterialComponent('planet-material'),
-		new GravityComponent(10 * scale),
+		//new GravityComponent(10 * scale),
 	]);
 }
 
@@ -90,12 +85,7 @@ export function water(world: World, position: Point3, planet: Planet) {
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('water'),
-		new OrbitComponent(
-			planet.orbitRadius,
-			planet.orbitSpeed,
-			planet.orbitOffset,
-			planet.orbitTilt,
-		),
+		new OrbitComponent(planet.orbit),
 		//new PhysicsComponent(),
 		new VelocityComponent([0, 0, 0]),
 		new MaterialComponent('water-material'),

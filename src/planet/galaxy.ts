@@ -4,6 +4,7 @@ import { quaternionFromEuler } from "engine/math/quaternions";
 import { multiplyVector, rotation, rotationFromQuaternion, transformPoint } from "engine/math/transform";
 import { Randomizer, bigIntRandomizer, bigRandomizer, randomizer } from "engine/noise";
 import { magnitude } from "engine/math/vectors";
+import { Orbit } from "./orbit";
 
 export class StarSystemList {
 	constructor(
@@ -71,24 +72,29 @@ export class Star {
 }
 
 export class Planet {
+	readonly orbit: Orbit;
 	readonly radius: number;
 	readonly density: number;
 	readonly waterLevel: number;
-	readonly orbitOffset: number;
-	readonly orbitSpeed: number;
-	readonly orbitTilt: Quaternion;
 
 	constructor(
 		readonly planetSeed: bigint,
-		readonly orbitRadius: number,
+		orbitRadius: number,
 	) {
 		const rng = bigRandomizer(planetSeed);
-		this.radius = rng(200, 700);
 		this.density = rng();
 		this.waterLevel = rng(0, 100);
-		this.orbitOffset = rng(0.0, Math.PI * 2);
-		this.orbitSpeed = rng(0.0, 1.0);
-		this.orbitTilt = quaternionFromEuler(0, 0, rng(0.0, Math.PI / 2.0));
+		this.radius = rng(200, 700);
+		const orbitOffset = rng(0.0, Math.PI * 2);
+		const orbitSpeed = rng(0.0, 1.0);
+		const orbitTilt = quaternionFromEuler(0, 0, rng(0.0, Math.PI / 2.0));
+
+		this.orbit = new Orbit(
+			orbitRadius,
+			orbitSpeed,
+			orbitOffset,
+			orbitTilt,
+		);
 	}
 
 	get waterRadius(): number {
@@ -99,12 +105,9 @@ export class Planet {
 		return [0, 0, 0];
 	}
 
+
 	positionAtTime(time: number): Point3 {
-		const orbitTime = 1.0;
-		const angle = (this.orbitOffset + time / orbitTime) * this.orbitSpeed;
-		const start: Point3 = [this.orbitRadius, 0, 0];
-		const rot = multiply(rotationFromQuaternion(this.orbitTilt), rotation(0, angle, 0));
-		return transformPoint(rot, start);
+		return this.orbit.positionAtTime(time);
 	}
 }
 

@@ -2,19 +2,22 @@ const SALT: u32 = 0xDEADBEEFu;
 
 // http://www.jcgt.org/published/0009/03/02/
 fn pcg3d(v: vec3<u32>) -> vec3<u32> {
-    var n = v * 1664525u + 1013904223u;
+	var n = v * 1664525u + 1013904223u;
 
-    n.x += n.y*n.z;
-    n.y += n.z*n.x;
-    n.z += n.x*n.y;
+	n.x += n.y*n.z;
+	n.y += n.z*n.x;
+	n.z += n.x*n.y;
 
-    n ^= n >> vec3<u32>(16u);
+	n ^= n >> vec3<u32>(16u);
+	//n.x ^= rotr(n.x, 16u);
+	//n.y ^= rotr(n.y, 16u);
+	//n.z ^= rotr(n.z, 16u);
 
-    n.x += n.y*n.z;
-    n.y += n.z*n.x;
-    n.z += n.x*n.y;
+	n.x += n.y*n.z;
+	n.y += n.z*n.x;
+	n.z += n.x*n.y;
 
-    return n;
+	return n;
 }
 
 fn smoothVec(v: vec3<f32>) -> vec3<f32> {
@@ -52,26 +55,26 @@ fn fade(t: f32) -> f32 {
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
 }
 
-fn smoothNoise(v: vec3f) -> f32 {
+fn smoothNoiseScaled(v: vec3f, s: f32) -> f32 {
 	var lv = fract(v);
 	var id = floor(v);
 
 	var bnl = rnd3(id + vec3f(0.0, 0.0, 0.0));
-	var bnr = rnd3(id + vec3f(1.0, 0.0, 0.0));
+	var bnr = rnd3(id + vec3f(s, 0.0, 0.0));
 	var bn = mix(bnl, bnr, fade(lv.x));
 
-	var bfl = rnd3(id + vec3f(0.0, 0.0, 1.0));
-	var bfr = rnd3(id + vec3f(1.0, 0.0, 1.0));
+	var bfl = rnd3(id + vec3f(0.0, 0.0, s));
+	var bfr = rnd3(id + vec3f(s, 0.0, s));
 	var bf = mix(bfl, bfr, fade(lv.x));
 
 	var b = mix(bn, bf, fade(lv.z));
 
-	var tnl = rnd3(id + vec3f(0.0, 1.0, 0.0));
-	var tnr = rnd3(id + vec3f(1.0, 1.0, 0.0));
+	var tnl = rnd3(id + vec3f(0.0, s, 0.0));
+	var tnr = rnd3(id + vec3f(s, s, 0.0));
 	var tn = mix(tnl, tnr, fade(lv.x));
 
-	var tfl = rnd3(id + vec3f(0.0, 1.0, 1.0));
-	var tfr = rnd3(id + vec3f(1.0, 1.0, 1.0));
+	var tfl = rnd3(id + vec3f(0.0, s, s));
+	var tfr = rnd3(id + vec3f(s, s, s));
 	var tf = mix(tfl, tfr, fade(lv.x));
 
 	var t = mix(tn, tf, fade(lv.z));
@@ -79,6 +82,10 @@ fn smoothNoise(v: vec3f) -> f32 {
 	var c = mix(b, t, fade(lv.y));
 
 	return c;
+}
+
+fn smoothNoise(v: vec3f) -> f32 {
+	return smoothNoiseScaled(v, 1.0);
 }
 
 fn fractalNoise(p: vec3<f32>, octaves: i32) -> f32 {

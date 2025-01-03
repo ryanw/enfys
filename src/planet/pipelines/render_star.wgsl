@@ -178,7 +178,6 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 
 	var color = mix(in.shallowColor, in.deepColor, starDepth * n1);
 
-
 	out.color = vec4(color.rgb * color.a, color.a);
 	//out.color = vec4(vec3(starDepth), starDepth);
 	return out;

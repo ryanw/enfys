@@ -48,7 +48,8 @@ export async function main(el: HTMLCanvasElement) {
 	const world = await initWorld(gfx);
 	const graphics = await initGraphics(gfx);
 
-	const starSystem = new StarSystem(BigInt(Math.random() * 0xffffffff | 0));
+	//const starSystem = new StarSystem(BigInt(Math.random() * 0xffffffff | 0));
+	const starSystem = new StarSystem(1n);
 	const planets = Array.from(starSystem.planets());
 	const stars = Array.from(starSystem.stars());
 
@@ -107,8 +108,6 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 		[StarMaterial, RenderStarPipeline],
 	]);
 	const graphics = new WorldGraphics(gfx);
-	const planetTerrain = new PlanetTerrainPipeline(gfx);
-	const calcNormals = new CalculateNormalsPipeline(gfx);
 
 	const planetMesh = new Icosphere(gfx, 6);
 	planetMesh.variantCount = 10000;
@@ -116,20 +115,17 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 	graphics.insertResource('planet-material', new PlanetMaterial(gfx, planetSeed, 0.0));
 
 	const waterMesh = new Icosphere(gfx, 4);
-	await calcNormals.compute(waterMesh);
 	waterMesh.variantCount = 10000;
 	graphics.insertResource('water', waterMesh);
 	graphics.insertResource('water-material', new WaterMaterial(gfx, planetSeed + 1231));
 
 	const starMesh = new Icosphere(gfx, 4);
-	await calcNormals.compute(starMesh);
 	starMesh.variantCount = 10000;
 	graphics.insertResource('star', starMesh);
 	graphics.insertResource('star-material', new StarMaterial(gfx, planetSeed + 43221, 0.0));
 
 
 	const skyMesh = new InnerIcosphere(gfx, 2);
-	await calcNormals.compute(skyMesh);
 	graphics.insertResource('sky', skyMesh);
 	graphics.insertResource('sky-material', new SkyMaterial(gfx, planetSeed + 312, [
 		hsl(0.8, 0.4, 0.05, 0.1),

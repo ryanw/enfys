@@ -1,25 +1,16 @@
 import { Component } from "engine/ecs/components";
-import { Point3, Quaternion } from "engine/math";
-import { multiply, rotation, rotationFromQuaternion, transformPoint } from "engine/math/transform";
+import { Orbit } from "../orbit";
+import { Point3 } from "engine/math";
 
 export class OrbitComponent extends Component {
-
 	constructor(
-		public radius: number,
-		public speed: number = 1.0,
-		public offset: number = 0.0,
-		public tilt: Quaternion = [0, 0, 0, 1],
-		public origin: Point3 = [0, 0, 0],
+		public orbit: Orbit,
 	) {
 		super();
 	}
 
 	positionAtTime(time: number): Point3 {
-		const orbitTime = 1.0;
-		const angle = (this.offset + time / orbitTime) * this.speed;
-		const start: Point3 = [this.radius, 0, 0];
-		const rot = multiply(rotationFromQuaternion(this.tilt), rotation(0, angle, 0));
-		return transformPoint(rot, start);
+		return this.orbit.positionAtTime(time);
 	}
 }
 
