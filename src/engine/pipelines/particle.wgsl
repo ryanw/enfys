@@ -1,6 +1,6 @@
 struct Instance {
 	transform: array<f32, 16>,
-	color: u32,
+	colors: array<u32, 4>,
 	vertexIndex: u32,
 	live: u32,
 }
@@ -117,7 +117,12 @@ fn main(@builtin(global_invocation_id) globalId: vec3<u32>) {
 		instance.live = 0u;
 	}
 
-	instance.color = colorToUint(color);
+	instance.colors = array(
+		colorToUint(color),
+		colorToUint(color),
+		colorToUint(color),
+		colorToUint(color),
+	);
 	particle.velocity = array(velocity.x, velocity.y, velocity.z);
 	instance.transform = array(
 		1.0, 0.0, 0.0, 0.0,

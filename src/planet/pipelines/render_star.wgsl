@@ -24,7 +24,7 @@ struct VertexIn {
 	@location(4) transform1: vec4f,
 	@location(5) transform2: vec4f,
 	@location(6) transform3: vec4f,
-	@location(7) instanceColor: u32,
+	@location(7) instanceColors: vec4<u32>,
 	@location(8) variantIndex: u32,
 	@location(9) live: u32,
 }
@@ -33,12 +33,13 @@ struct VertexOut {
 	@builtin(position) position: vec4f,
 	@location(0) uv: vec2f,
 	@location(1) normal: vec3f,
-	@location(2) shallowColor: vec4f,
-	@location(3) deepColor: vec4f,
-	@location(4) alt: f32,
-	@location(5) fragPosition: vec4f,
-	@location(6) @interpolate(flat) triangleId: u32,
-	@location(7) @interpolate(flat) quadId: u32,
+	@location(2) coronaColor: vec4f,
+	@location(3) shallowColor: vec4f,
+	@location(4) deepColor: vec4f,
+	@location(5) alt: f32,
+	@location(6) fragPosition: vec4f,
+	@location(7) @interpolate(flat) triangleId: u32,
+	@location(8) @interpolate(flat) quadId: u32,
 }
 
 struct FragmentOut {
@@ -99,8 +100,9 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	let r0 = rnd3u(vec3(122 + seed * 7));
 	let r1 = rnd3u(vec3(1200 + seed * 13)) - 0.5;
 
-	let shallowColor = hsla(r0, 0.7, 0.7, 0.8);
-	let deepColor = hsla((r0 + 0.2 * r1) % 1.0, 0.6, 0.6, 1.0);
+	let coronaColor = unpack4x8unorm(in.instanceColors[0]);
+	let shallowColor = unpack4x8unorm(in.instanceColors[1]);
+	let deepColor = unpack4x8unorm(in.instanceColors[2]);
 
 	//let shallowColor = hsla(r0, 0.7, 0.5, 1.0);
 	//let deepColor = shallowColor;//hsla((r0 + 0.4 * r1) % 1.0, 0.6, 0.3, 0.9);
@@ -139,6 +141,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.normal = (offsetModel * vec4(normalize(v.position), 0.0)).xyz;
 	out.alt = v.alt;
 
+	out.coronaColor = coronaColor;
 	out.shallowColor = shallowColor;
 	out.deepColor = deepColor;
 	return out;
@@ -160,6 +163,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	}
 
 	var p = in.fragPosition.xyz / in.fragPosition.w;
+	// Core noise
 	var n0 = fractalNoise(p/128.0 + vec3(camera.t/4.0), 1)/4.0;
 	var n1 = fractalNoise(p/256.0 + vec3(n0), 3) + 0.5;
 
@@ -172,14 +176,32 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	// Depth between rock and star
 	let pd = (p1 - p0);
 
+	var starColor = vec4(0.0);
 	
 	//let starDepth = smoothstep(0.0, 1.0, pow(length(pd) / 1024.0, 0.2));
-	let starDepth = smoothstep(0.0, 1.0, pow(length(pd) / 2048.0, 1.0));
+	var starDepth = smoothstep(0.0, 1.0, pow(length(pd) / 4096.0, 2.0));
+	var coronaDepth = 0.0;
 
-	var color = mix(in.shallowColor, in.deepColor, starDepth * n1);
+	// Corona noise
+	let n2 = fractalNoise(p/420.0 + camera.t/8.0, 3)/16.0;
+	starDepth -= n2;
 
+	// Corona
+	let corona = 0.2;
+	let fuzz = corona;
+	if (starDepth < corona) {
+		coronaDepth = smoothstep(0, corona, starDepth - n2);
+		// Smooth inner edge
+		coronaDepth *= smoothstep(corona, corona-0.2, starDepth - n2)/2.0;
+
+		starColor = mix(in.coronaColor, in.shallowColor, smoothstep(corona, 0.0, coronaDepth * n1));
+		starColor.a = smoothstep(0.0, corona, starDepth);
+	} else {
+		starColor = mix(in.shallowColor, in.deepColor, smoothstep(corona, 1.0, starDepth * n1));
+	}
+
+	var color = vec4(starColor.rgb, starColor.a);
 	out.color = vec4(color.rgb * color.a, color.a);
-	//out.color = vec4(vec3(starDepth), starDepth);
 	return out;
 }
 

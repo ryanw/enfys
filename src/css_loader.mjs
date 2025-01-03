@@ -1,8 +1,8 @@
-export default function html(config = {}) {
+export default function css(config = {}) {
 	return {
-		name: 'html',
+		name: 'css',
 		transform(code, filename) {
-			if (filename.split('.').pop() !== 'html') return null;
+			if (filename.split('.').pop() !== 'css') return null;
 			let source = code;
 			if (config.stripWhitespace) {
 				source = stripWhitespace(source);

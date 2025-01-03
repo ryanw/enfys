@@ -8,6 +8,11 @@ declare module '*.html' {
 	export default source;
 }
 
+declare module '*.css' {
+	const source: string;
+	export default source;
+}
+
 declare const PRODUCTION: boolean;
 declare const DEBUG: boolean;
 

@@ -64,7 +64,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 			vertex: {
 				module: shader,
 				entryPoint: 'vs_main',
-				buffers: [offsetInstanceLayout]
+				buffers: [meshInstanceLayout]
 			},
 			fragment: {
 				module: shader,
@@ -112,7 +112,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 			vertex: {
 				module: shader,
 				entryPoint: 'vs_main',
-				buffers: [offsetInstanceLayout],
+				buffers: [meshInstanceLayout],
 			},
 			fragment: {
 				module: shader,
@@ -237,7 +237,7 @@ export class RenderMeshPipeline extends MaterialPipeline {
 	}
 }
 
-const offsetInstanceLayout: GPUVertexBufferLayout = {
+export const meshInstanceLayout: GPUVertexBufferLayout = {
 	stepMode: 'instance',
 	attributes: [
 		// Transform
@@ -245,12 +245,12 @@ const offsetInstanceLayout: GPUVertexBufferLayout = {
 		{ shaderLocation: 4, offset: 16, format: 'float32x4' },
 		{ shaderLocation: 5, offset: 32, format: 'float32x4' },
 		{ shaderLocation: 6, offset: 48, format: 'float32x4' },
-		// Instance Color
-		{ shaderLocation: 7, offset: 64, format: 'uint32' },
+		// Instance Colors
+		{ shaderLocation: 7, offset: 64, format: 'uint32x4' },
 		// Vertex Index
-		{ shaderLocation: 8, offset: 68, format: 'uint32' },
+		{ shaderLocation: 8, offset: 80, format: 'uint32' },
 		// Live
-		{ shaderLocation: 9, offset: 72, format: 'uint32' },
+		{ shaderLocation: 9, offset: 84, format: 'uint32' },
 	],
-	arrayStride: 76,
+	arrayStride: 88,
 };

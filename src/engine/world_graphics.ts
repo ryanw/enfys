@@ -184,23 +184,27 @@ export class WorldGraphics {
 				// Create
 				const mesh: SimpleMesh = this.getResource(meshResourceId);
 				pawn = this.instanceMeshes.get(mesh);
+				let material;
+				// FIXME support different material per mesh
+				const materialComp = world.getComponent(entity, MaterialComponent);
+				if (materialComp) {
+					material = this.getMaterialForComponent(materialComp);
+				}
+				else {
+					material = new SimpleMaterial(this.gfx, 0xffffffff);
+				}
 				if (!pawn) {
-					// FIXME support different material per mesh
-					const materialComp = world.getComponent(entity, MaterialComponent);
-					let material;
-					if (materialComp) {
-						material = this.getMaterialForComponent(materialComp);
-					}
-					else {
-						material = new SimpleMaterial(this.gfx, 0xffffffff);
-					}
 					pawn = scene.addMesh(mesh, material);
 					this.instanceMeshes.set(mesh, pawn);
 				}
-				const variantIndex = (mesh.instanceCount + 1  % mesh.variantCount);
+				const variantIndex = (mesh.instanceCount + 1 % mesh.variantCount);
+				const colors = material.instanceColors();
 				idx = mesh.pushInstance({
 					transform,
-					instanceColor: BigInt(0xffffffff),
+					instanceColor0: colors[0],
+					instanceColor1: colors[1],
+					instanceColor2: colors[2],
+					instanceColor3: colors[3],
 					variantIndex: BigInt(variantIndex),
 					live: 1,
 				});

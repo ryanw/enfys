@@ -1,0 +1,13 @@
+.ui {
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 100;
+	color: #fff;
+}
+.ui a {
+	color: inherit;
+}
+.ui a:hover {
+	color: #f0f;
+}

@@ -1,6 +1,7 @@
 import { Color, Gfx } from 'engine';
 import { colorToBigInt } from 'engine/color';
 import { Material } from 'engine/material';
+import { BigVector4 } from 'engine/math';
 import { UniformBuffer } from 'engine/uniform_buffer';
 
 export class StarMaterial extends Material {
@@ -8,12 +9,14 @@ export class StarMaterial extends Material {
 	readonly forwardRender = true;
 	readonly deepColor: bigint;
 	readonly shallowColor: bigint;
+	readonly coronaColor: bigint;
 
 	constructor(
 		readonly gfx: Gfx,
 		public seed: number,
-		shallowColor?: number | bigint | Color,
-		deepColor?: number | bigint | Color,
+		coronaColor: number | bigint | Color,
+		shallowColor: number | bigint | Color = coronaColor,
+		deepColor: number | bigint | Color = shallowColor,
 	) {
 		super();
 		if (Array.isArray(shallowColor)) {
@@ -26,18 +29,28 @@ export class StarMaterial extends Material {
 		} else {
 			this.deepColor = BigInt(deepColor||0);
 		}
+		if (Array.isArray(coronaColor)) {
+			this.coronaColor = colorToBigInt(coronaColor);
+		} else {
+			this.coronaColor = BigInt(coronaColor||0);
+		}
 		this.uniform = new UniformBuffer(gfx, [
-			['shallowColor', 'u32'],
-			['deepColor', 'u32'],
 			['seed', 'u32'],
 		]);
 		this.updateUniform();
 	}
 
+	instanceColors(): BigVector4 {
+		return [
+			this.coronaColor,
+			this.shallowColor,
+			this.deepColor,
+			this.deepColor,
+		];
+	}
+
 	updateUniform() {
 		this.uniform.replace( {
-			shallowColor: this.shallowColor,
-			deepColor: this.deepColor,
 			seed: this.seed,
 		});
 	}

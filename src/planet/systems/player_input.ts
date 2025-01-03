@@ -10,6 +10,9 @@ import { ParticlesComponent } from 'engine/ecs/components/particles';
 import { SoundComponent } from 'engine/ecs/components/sound';
 import * as quats from 'engine/math/quaternions';
 import { FollowCameraComponent } from 'engine/ecs/components/camera';
+import { GravityComponent } from '../components/gravity';
+import { MeshComponent } from 'engine/ecs/components/mesh';
+import { FocusableComponent } from '../components/focusable';
 
 export enum VehicleMode {
 	Space,
@@ -31,6 +34,8 @@ export class PlayerInputSystem extends System {
 		'q': Key.Left,
 		'e': Key.Right,
 		'f': Key.ToggleMode,
+		',': Key.PrevCamera,
+		'.': Key.NextCamera,
 		' ': Key.Thrust,
 		'alt': Key.Boost,
 		'shift': Key.Brake,
@@ -95,10 +100,30 @@ export class PlayerInputSystem extends System {
 		}
 
 		for (const [key, value] of this.pressedKeys.entries()) {
+			let adjust = 1;
 			switch (key) {
 				case Key.ToggleMode:
 					this.mode = this.mode === VehicleMode.Lander ? VehicleMode.Space : VehicleMode.Lander;
 					break;
+
+				case Key.PrevCamera:
+					adjust = -1;
+				case Key.NextCamera:
+					let entities = Array.from(world.entitiesWithComponents([FocusableComponent, TransformComponent]));
+					const camera: Entity = world.entitiesWithComponent(FollowCameraComponent).values().next().value;
+					const follow = world.getComponent(camera, FollowCameraComponent)!
+					const currentFocus = follow.target;
+					if (currentFocus) {
+						const currentIdx = entities.indexOf(currentFocus);
+						if (currentIdx === 0 && adjust < 0) {
+							follow.target = entities[entities.length - 1];
+						} else {
+							const nextEntity = entities[(currentIdx + adjust) % entities.length];
+							follow.target = nextEntity;
+						}
+					} else {
+						follow.target = entities[0];
+					}
 			}
 		}
 		this.pressedKeys.clear();

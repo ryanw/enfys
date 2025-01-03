@@ -1,7 +1,6 @@
 import { Gfx, calculateNormals } from 'engine';
 import { PHI, Point3 } from 'engine/math';
 import { ColorVertex, SimpleMesh } from 'engine/mesh';
-import { jiggleVertices } from '.';
 import { scale } from 'engine/math/vectors';
 
 const { cos, sin } = Math;

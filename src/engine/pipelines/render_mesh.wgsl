@@ -28,7 +28,7 @@ struct VertexIn {
 	@location(4) transform1: vec4f,
 	@location(5) transform2: vec4f,
 	@location(6) transform3: vec4f,
-	@location(7) instanceColor: u32,
+	@location(7) instanceColor: vec4<u32>,
 	@location(8) variantIndex: u32,
 	@location(9) live: u32,
 }
@@ -167,7 +167,7 @@ fn vs_main(in: VertexIn) -> VertexOut {
 	out.modelNormal = (mv * vec4(v.normal, 0.0)).xyz;
 
 	let vertexColor = uintToColor(v.color);
-	let instanceColor = uintToColor(in.instanceColor);
+	let instanceColor = uintToColor(in.instanceColor[0]);
 	let materialColor = uintToColor(material.color);
 	if vertexColor.r == 1.0 && vertexColor.g == 1.0 && vertexColor.b == 1.0 && vertexColor.a == 1.0 {
 		out.color = instanceColor * materialColor;

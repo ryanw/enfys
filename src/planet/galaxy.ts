@@ -5,6 +5,7 @@ import { multiplyVector, rotation, rotationFromQuaternion, transformPoint } from
 import { Randomizer, bigIntRandomizer, bigRandomizer, randomizer } from "engine/noise";
 import { magnitude } from "engine/math/vectors";
 import { Orbit } from "./orbit";
+import { Color, hsl } from "engine/color";
 
 export class StarSystemList {
 	constructor(
@@ -62,12 +63,24 @@ export class StarSystem {
 
 export class Star {
 	readonly radius: number;
+	readonly coronaColor: Color;
+	readonly shallowColor: Color;
+	readonly deepColor: Color;
 	constructor(
 		readonly starSeed: bigint,
 		readonly position: Point3,
 	) {
 		const rng = bigRandomizer(starSeed);
-		this.radius = rng(1000, 2000);
+		this.radius = rng(1500, 2500);
+		const h = rng();
+
+		let n0 = rng() * 0.2;
+		if (rng() < 0.5) n0 = -n0;
+		let n1 = 0.1 + rng() * 0.4;
+		if (rng() < 0.5) n1 = -n1;
+		this.coronaColor = hsl(h, 0.5, 0.65);
+		this.shallowColor = hsl((h + n0) % 1.0, 0.5, 0.6);
+		this.deepColor = hsl((h + n1) % 1.0, 0.3, 0.4);
 	}
 }
 

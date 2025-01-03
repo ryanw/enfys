@@ -37,6 +37,7 @@ import { VehicleInputSystem } from './systems/vehicle_input';
 import { Icosphere, InnerIcosphere } from 'engine/meshes/icosphere';
 import { CubeMesh } from 'engine/meshes/cube';
 import { FollowSystem } from 'engine/ecs/systems/follow';
+import { quaternionFromEuler } from 'engine/math/quaternions';
 
 const PIXEL_SIZE = 1;
 const MATERIALS: Array<MaterialTuple> = [
@@ -111,7 +112,7 @@ export async function main(el: HTMLCanvasElement): Promise<Gfx> {
 
 	const skyRadius = 3400.0;
 	const skyPoint = (dir: Vector3) => vec.scale(vec.normalize(dir), skyRadius * 0.9);
-	prefabs.light(world, [2.8, 0, 0]);
+	prefabs.light(world, quaternionFromEuler(2.8, 0, 0));
 	prefabs.sky(world, skyRadius, car);
 	prefabs.planet(world, skyPoint([100, 80, 400]), 150, 0.1, car);
 	prefabs.planet(world, skyPoint([-150, 70, 400]), 100, 0.3, car);

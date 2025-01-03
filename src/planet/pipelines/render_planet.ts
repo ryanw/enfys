@@ -7,6 +7,7 @@ import { Pawn } from 'engine/pawn';
 import { ShadowMap } from 'engine/shadow_map';
 import { DirectionalLight } from 'engine/light';
 import { MaterialPipeline } from 'engine/pipelines/material';
+import { meshInstanceLayout } from 'engine/pipelines/render_mesh';
 
 export class RenderPlanetPipeline extends MaterialPipeline {
 	private pipeline: GPURenderPipeline;
@@ -63,7 +64,7 @@ export class RenderPlanetPipeline extends MaterialPipeline {
 			vertex: {
 				module: shader,
 				entryPoint: 'vs_main',
-				buffers: [offsetInstanceLayout]
+				buffers: [meshInstanceLayout]
 			},
 			fragment: {
 				module: shader,
@@ -164,23 +165,3 @@ export class RenderPlanetPipeline extends MaterialPipeline {
 		pass.end();
 	}
 }
-
-// FIXME standardise this between material pipelines
-const offsetInstanceLayout: GPUVertexBufferLayout = {
-	stepMode: 'instance',
-	attributes: [
-		// Transform
-		{ shaderLocation: 3, offset: 0, format: 'float32x4' },
-		{ shaderLocation: 4, offset: 16, format: 'float32x4' },
-		{ shaderLocation: 5, offset: 32, format: 'float32x4' },
-		{ shaderLocation: 6, offset: 48, format: 'float32x4' },
-		// Instance Color
-		{ shaderLocation: 7, offset: 64, format: 'uint32' },
-		// Vertex Index
-		{ shaderLocation: 8, offset: 68, format: 'uint32' },
-		// Live
-		{ shaderLocation: 9, offset: 72, format: 'uint32' },
-	],
-	arrayStride: 76,
-};
-

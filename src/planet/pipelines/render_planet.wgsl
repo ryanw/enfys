@@ -26,7 +26,7 @@ struct VertexIn {
 	@location(4) transform1: vec4f,
 	@location(5) transform2: vec4f,
 	@location(6) transform3: vec4f,
-	@location(7) instanceColor: u32,
+	@location(7) instanceColors: vec4<u32>,
 	@location(8) variantIndex: u32,
 	@location(9) live: u32,
 }

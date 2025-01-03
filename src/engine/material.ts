@@ -1,6 +1,6 @@
 import { Color, Gfx } from 'engine';
 import { UniformBuffer } from './uniform_buffer';
-import { Vector4 } from './math';
+import { BigVector4, Vector4 } from './math';
 import { colorToBigInt } from './color';
 
 export enum Skin {
@@ -16,6 +16,14 @@ export abstract class Material {
 	writeDepth = true;
 	forwardRender = false;
 	abstract bindingResource(): GPUBindingResource;
+	instanceColors(): BigVector4 {
+		return [
+			0xff000000n,
+			0xff000000n,
+			0xff000000n,
+			0xff000000n,
+		];
+	}
 }
 
 /**

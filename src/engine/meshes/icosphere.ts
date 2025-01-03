@@ -1,4 +1,4 @@
-import { Gfx, calculateNormals, subdivideFace } from 'engine';
+import { Gfx, subdivideFace } from 'engine';
 import { normalize } from '../math/vectors';
 import { BuildCallback, ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
 import { ICOSAHEDRON_TRIS, ICOSAHEDRON_VERTICES } from './icosahedron';

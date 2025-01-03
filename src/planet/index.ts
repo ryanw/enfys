@@ -4,7 +4,7 @@
  * @module
  */
 
-import { Gfx, calculateNormals } from 'engine';
+import { Gfx } from 'engine';
 import { Scene } from 'engine/scene';
 import { Icosphere, InnerIcosphere } from 'engine/meshes/icosphere';
 import { PlanetMaterial } from './materials/planet';
@@ -14,23 +14,16 @@ import { World } from 'engine/ecs/world';
 import { OrbitCameraInputSystem } from 'engine/ecs/systems/orbit_camera_input';
 import { FreeCameraInputSystem } from 'engine/ecs/systems/free_camera_input';
 import * as prefabs from './prefabs';
-import { CubeSphere } from 'engine/meshes/cubesphere';
-import { PlanetTerrainPipeline } from './pipelines/planet_terrain';
-import { CalculateNormalsPipeline } from 'engine/pipelines/calculate_normals';
 import { CubeMesh } from 'engine/meshes/cube';
 import { PhysicsSystem } from './systems/physics';
-import { SimpleMaterial } from 'engine/material';
 import { ShipMesh } from './meshes/ship';
 import { PlayerInputSystem } from './systems/player_input';
 import { FollowCameraSystem } from 'engine/ecs/systems/follow_camera';
 import { WaterMaterial } from './materials/water';
 import { RenderWaterPipeline } from './pipelines/render_water';
 import { Point3 } from 'engine/math';
-import { randomizer } from 'engine/noise';
-import { add, magnitude, subtract } from 'engine/math/vectors';
-import { Galaxy, Planet, StarSystem } from './galaxy';
+import { Planet, StarSystem } from './galaxy';
 import { Entity } from 'engine/ecs';
-import { TransformComponent } from 'engine/ecs/components';
 import { OrbitsSystem } from './systems/orbits';
 import { SkyMaterial } from './materials/sky';
 import { RenderSkyPipeline } from './pipelines/render_sky';
@@ -38,6 +31,7 @@ import { hsl } from 'engine/color';
 import { FollowSystem } from 'engine/ecs/systems/follow';
 import { StarMaterial } from './materials/star';
 import { RenderStarPipeline } from './pipelines/render_star';
+import { ui } from './ui';
 
 /**
  * Start the game
@@ -47,13 +41,27 @@ export async function main(el: HTMLCanvasElement) {
 	const scene = await initScene(gfx);
 	const world = await initWorld(gfx);
 	const graphics = await initGraphics(gfx);
+	if (DEBUG) {
+		const gui = ui(el.parentElement!, world);
+	}
 
 	const starSystem = new StarSystem(BigInt(Math.random() * 0xffffffff | 0));
 	const planets = Array.from(starSystem.planets());
 	const stars = Array.from(starSystem.stars());
 
-	for (const star of stars) {
-		prefabs.star(world, star.position, star.radius);
+	for (const [i, star] of stars.entries()) {
+		const materialName = `star-material-${i}`;
+		graphics.insertResource(
+			materialName,
+			new StarMaterial(
+				gfx,
+				Number(star.starSeed),
+				star.coronaColor,
+				star.shallowColor,
+				star.deepColor,
+			),
+		);
+		prefabs.star(world, materialName, star.position, star.radius);
 	}
 
 	const planetEntities: Array<[Planet, Entity, Entity]> = [];
@@ -117,10 +125,8 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 	graphics.insertResource('water', waterMesh);
 	graphics.insertResource('water-material', new WaterMaterial(gfx, planetSeed + 1231));
 
-	const starMesh = new Icosphere(gfx, 4);
-	starMesh.variantCount = 10000;
+	const starMesh = new Icosphere(gfx, 2);
 	graphics.insertResource('star', starMesh);
-	graphics.insertResource('star-material', new StarMaterial(gfx, planetSeed + 43221, 0.0));
 
 
 	const skyMesh = new InnerIcosphere(gfx, 2);

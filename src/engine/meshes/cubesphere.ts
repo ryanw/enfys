@@ -1,4 +1,4 @@
-import { Gfx, calculateNormals } from 'engine';
+import { Gfx } from 'engine';
 import { Point2, Point3, Vector3 } from 'engine/math';
 import { add, cross, normalize, scale } from 'engine/math/vectors';
 import { ColorInstance, ColorVertex, SimpleMesh } from 'engine/mesh';
