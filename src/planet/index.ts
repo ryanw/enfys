@@ -36,6 +36,8 @@ import { SkyMaterial } from './materials/sky';
 import { RenderSkyPipeline } from './pipelines/render_sky';
 import { hsl } from 'engine/color';
 import { FollowSystem } from 'engine/ecs/systems/follow';
+import { StarMaterial } from './materials/star';
+import { RenderStarPipeline } from './pipelines/render_star';
 
 /**
  * Start the game
@@ -102,6 +104,7 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 		[PlanetMaterial, RenderPlanetPipeline],
 		[WaterMaterial, RenderWaterPipeline],
 		[SkyMaterial, RenderSkyPipeline],
+		[StarMaterial, RenderStarPipeline],
 	]);
 	const graphics = new WorldGraphics(gfx);
 	const planetTerrain = new PlanetTerrainPipeline(gfx);
@@ -118,11 +121,11 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 	graphics.insertResource('water', waterMesh);
 	graphics.insertResource('water-material', new WaterMaterial(gfx, planetSeed + 1231));
 
-	const starMesh = new Icosphere(gfx, 3);
+	const starMesh = new Icosphere(gfx, 4);
 	await calcNormals.compute(starMesh);
 	starMesh.variantCount = 10000;
 	graphics.insertResource('star', starMesh);
-	graphics.insertResource('star-material', new WaterMaterial(gfx, planetSeed + 43221, 0.0));
+	graphics.insertResource('star-material', new StarMaterial(gfx, planetSeed + 43221, 0.0));
 
 
 	const skyMesh = new InnerIcosphere(gfx, 2);
@@ -130,10 +133,10 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 	graphics.insertResource('sky', skyMesh);
 	graphics.insertResource('sky-material', new SkyMaterial(gfx, planetSeed + 312, [
 		hsl(0.8, 0.4, 0.05, 0.1),
-		hsl(Math.random(), 0.4, 0.2, 0.3),
-		hsl(Math.random(), 1.0, 0.5, 0.3),
-		hsl(Math.random(), 1.0, 0.5, 0.3),
-		hsl(Math.random(), 1.0, 0.5, 0.3),
+		hsl(Math.random(), 0.4, 0.2, 0.6),
+		hsl(Math.random(), 1.0, 0.5, 0.6),
+		hsl(Math.random(), 1.0, 0.5, 0.6),
+		hsl(Math.random(), 1.0, 0.5, 0.6),
 	]));
 
 	graphics.insertResource('tiny-cube', new CubeMesh(gfx, [0, 0, 0], 0.01));

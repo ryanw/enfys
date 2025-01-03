@@ -58,7 +58,7 @@ export function star(world: World, position: Point3, scale: number = 1) {
 	]);
 }
 
-export function rock(world: World, position: Point3, scale: number = 1, velocity: Vector3 = [0, 0, 0]) {
+export function rock(world: World, position: Point3, scale: number = 1) {
 	return world.createEntity([
 		new TransformComponent(position, [0, 0, 0, 1], [scale, scale, scale]),
 		new MeshComponent('planet'),

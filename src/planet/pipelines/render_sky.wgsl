@@ -178,7 +178,7 @@ fn fs_main(in: VertexOut) -> FragmentOut {
 	let c2 = textureLoad(colorTex, 2, 0);
 	let c3 = textureLoad(colorTex, 3, 0);
 
-	let octaves = 3;
+	let octaves = 4;
 	var n0 = skyNoise(p + vec3(camera.t/100.0, 0.0, 0.0), octaves, in.seed + 13*2);
 	var n1 = skyNoise(p + vec3(0.0, camera.t/64.0, 0.0), octaves, in.seed + 13*4);
 	var n2 = skyNoise(p + vec3(0.0, 0.0, camera.t/190.0), octaves, in.seed + 13*2);

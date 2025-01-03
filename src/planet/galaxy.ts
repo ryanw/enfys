@@ -66,7 +66,7 @@ export class Star {
 		readonly position: Point3,
 	) {
 		const rng = bigRandomizer(starSeed);
-		this.radius = rng(500, 4000);
+		this.radius = rng(1000, 2000);
 	}
 }
 
