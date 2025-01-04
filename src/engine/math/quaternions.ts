@@ -1,4 +1,5 @@
-import { Quaternion, Vector3 } from '.';
+import { Quaternion, Vector3, Vector4 } from '.';
+import * as transform from './transform';
 import { magnitude, normalize, scale } from './vectors';
 
 /**
@@ -21,6 +22,26 @@ export function conjugate([x, y, z, w]: Quaternion): Quaternion {
 export function inverse(quat: Quaternion): Quaternion {
 	const mag = magnitude(quat);
 	return scale(quat, 1 / mag);
+}
+
+export function quaternionFromAxisAngle(axis: Vector3, angle: number): Quaternion {
+	axis = normalize(axis);
+
+	const halfAngle = angle / 2;
+	const sinHalfAngle = Math.sin(halfAngle);
+	const cosHalfAngle = Math.cos(halfAngle);
+
+	const x = axis[0] * sinHalfAngle;
+	const y = axis[1] * sinHalfAngle;
+	const z = axis[2] * sinHalfAngle;
+	const w = cosHalfAngle;
+
+	return [x, y, z, w];
+}
+
+export function multiplyVector<T extends Vector3 | Vector4>(quat: Quaternion, vec: T): T {
+	const rot = transform.rotationFromQuaternion(quat);
+	return transform.multiplyVector(rot, vec);
 }
 
 /**

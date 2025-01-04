@@ -32,6 +32,7 @@ import { FollowSystem } from 'engine/ecs/systems/follow';
 import { StarMaterial } from './materials/star';
 import { RenderStarPipeline } from './pipelines/render_star';
 import { ui } from './ui';
+import { CubeSphere } from 'engine/meshes/cubesphere';
 
 /**
  * Start the game
@@ -76,7 +77,7 @@ export async function main(el: HTMLCanvasElement) {
 	const star = stars[0];
 	const playerStart: Point3 = [0, 0, -star.radius * 3];
 	const player = prefabs.player(world, playerStart, [0, 0, 0]);
-	const camera = prefabs.followCamera(world, player);
+	const camera = prefabs.orbitCamera(world, player);
 	const sky = prefabs.skybox(world, camera);
 
 
@@ -125,7 +126,7 @@ async function initGraphics(gfx: Gfx, planetSeed: number = 0): Promise<WorldGrap
 	graphics.insertResource('water', waterMesh);
 	graphics.insertResource('water-material', new WaterMaterial(gfx, planetSeed + 1231));
 
-	const starMesh = new Icosphere(gfx, 2);
+	const starMesh = new CubeSphere(gfx, 8);
 	graphics.insertResource('star', starMesh);
 
 

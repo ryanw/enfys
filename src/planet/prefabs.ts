@@ -22,7 +22,7 @@ export function orbitCamera(world: World, target: Entity): Entity {
 		new MetaComponent("Orbit Camera"),
 		new TransformComponent([0, 0, 0]),
 		new CameraComponent(1, 100000.0),
-		new OrbitCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.3, 0, 0)),
+		new OrbitCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.8, 0, 0)),
 	]);
 }
 
@@ -31,7 +31,7 @@ export function followCamera(world: World, target: Entity): Entity {
 		new MetaComponent("Follow Camera"),
 		new TransformComponent([0, 0, 0], normalize([-0.4, 0, 0, 0.8] as Quaternion)),
 		new CameraComponent(2, 100000.0),
-		new FollowCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.3, 0, 0)),
+		new OrbitCameraComponent(target, 16, [0, 0.01, 0], quaternionFromEuler(0.3, 0, 0)),
 	]);
 }
 
